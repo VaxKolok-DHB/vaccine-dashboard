@@ -398,7 +398,7 @@ function loadFollow(){
             </div>
 
          <div class="child-info" 
-            onclick="openMap('${c.tambon}','${c.house}','${c.village}')"
+            onclick="('${c.tambon}','${c.house}','${c.village}')"
             style="cursor:pointer;color:#2563eb;">
 
             📍 ${getTambonName(c.tambon)} | 🏠 ${c.house || "-"} | หมู่ ${c.village || "-"}
