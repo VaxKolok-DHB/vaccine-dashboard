@@ -654,32 +654,25 @@ td select{
 }
 .vaccine-container{
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
-  gap: 12px;
-  margin-top: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+  gap: 14px;
+  margin-top: 15px;
 }
 
 .vaccine-card{
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  border: 1px solid #e5e7eb;
-}
-
-.vaccine-card h6{
-  margin-bottom: 6px;
-  font-size: 14px;
-  color: #374151;
+  background:#ffffff;
+  border-radius:12px;
+  padding:12px;
+  border:1px solid #e5e7eb;
 }
 
 .vaccine-card label{
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  padding: 4px 0;
-  cursor: pointer;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  margin-bottom:4px;
 }
 
 .vaccine-card input{
@@ -793,6 +786,7 @@ td{
     display:block;
   }
 }
+
 </style>
 </head>
 <body>
@@ -1024,90 +1018,134 @@ td{
               
 
                 <div class="col-md-3">
-                  <div style="flex-basis:100%">
-                  <input id="birth" class="form-control" placeholder="วันเกิด">
+                  <input id="birth" type="date" class="form-control"placeholder="วันเกิด">
                 </div>
+
+              <div class="col-md-3">
+                <input id="phone" class="form-control" placeholder="เบอร์โทร">
+              </div>
+
+
         </div>
 
-
-        <div class="vaccine-container">
+       
+        <div class="mt-3">
+          <div class="vaccine-container">
 
           <!-- 👶 แรกเกิด -->
           <div class="vaccine-card">
             <h6>👶 แรกเกิด</h6>
-            <label><input type="checkbox" value="BCG"> BCG</label>
-            <label><input type="checkbox" value="HBV1"> HBV1</label>
+
+            <label>
+              <input type="checkbox" value="BCG" onchange="toggleDateInline(this,'BCG')"> BCG
+            </label>
+            <input type="date" id="date-BCG" class="form-control mb-2" style="display:none;">
+
+            <label>
+              <input type="checkbox" value="HBV1" onchange="toggleDateInline(this,'HBV1')"> HBV1
+            </label>
+            <input type="date" id="date-HBV1" class="form-control mb-2" style="display:none;">
           </div>
 
           <!-- 🍼 2 เดือน -->
           <div class="vaccine-card">
             <h6>🍼 2 เดือน</h6>
-            <label><input type="checkbox" value="DTP1"> DTP1</label>
-            <label><input type="checkbox" value="OPV1"> OPV1</label>
+
+            <label><input type="checkbox" value="DTP1" onchange="toggleDateInline(this,'DTP1')"> DTP1</label>
+            <input type="date" id="date-DTP1" class="form-control mb-2" style="display:none;">
+
+            <label><input type="checkbox" value="OPV1" onchange="toggleDateInline(this,'OPV1')"> OPV1</label>
+            <input type="date" id="date-OPV1" class="form-control mb-2" style="display:none;">
           </div>
 
           <!-- 🍼 4 เดือน -->
           <div class="vaccine-card">
             <h6>🍼 4 เดือน</h6>
-            <label><input type="checkbox" value="DTP2"> DTP2</label>
-            <label><input type="checkbox" value="OPV2"> OPV2</label>
+
+            <label><input type="checkbox" value="DTP2" onchange="toggleDateInline(this,'DTP2')"> DTP2</label>
+            <input type="date" id="date-DTP2" class="form-control mb-2" style="display:none;">
+
+            <label><input type="checkbox" value="OPV2" onchange="toggleDateInline(this,'OPV2')"> OPV2</label>
+            <input type="date" id="date-OPV2" class="form-control mb-2" style="display:none;">
           </div>
 
           <!-- 🍼 6 เดือน -->
           <div class="vaccine-card">
             <h6>🍼 6 เดือน</h6>
-            <label><input type="checkbox" value="DTP3"> DTP3</label>
-            <label><input type="checkbox" value="OPV3"> OPV3</label>
-            <label><input type="checkbox" value="HBV3"> HBV3</label>
+
+            <label><input type="checkbox" value="DTP3" onchange="toggleDateInline(this,'DTP3')"> DTP3</label>
+            <input type="date" id="date-DTP3" class="form-control mb-2" style="display:none;">
+
+            <label><input type="checkbox" value="OPV3" onchange="toggleDateInline(this,'OPV3')"> OPV3</label>
+            <input type="date" id="date-OPV3" class="form-control mb-2" style="display:none;">
+
+            <label><input type="checkbox" value="HBV3" onchange="toggleDateInline(this,'HBV3')"> HBV3</label>
+            <input type="date" id="date-HBV3" class="form-control mb-2" style="display:none;">
           </div>
 
           <!-- 👶 9-12 เดือน -->
           <div class="vaccine-card">
             <h6>👶 9-12 เดือน</h6>
-            <label><input type="checkbox" value="MMR1"> MMR1</label>
-            <label><input type="checkbox" value="JE1"> JE1</label>
+
+            <label><input type="checkbox" value="MMR1" onchange="toggleDateInline(this,'MMR1')"> MMR1</label>
+            <input type="date" id="date-MMR1" class="form-control mb-2" style="display:none;">
+
+            <label><input type="checkbox" value="JE1" onchange="toggleDateInline(this,'JE1')"> JE1</label>
+            <input type="date" id="date-JE1" class="form-control mb-2" style="display:none;">
           </div>
 
           <!-- 👶 18 เดือน -->
           <div class="vaccine-card">
             <h6>👶 18 เดือน</h6>
-            <label><input type="checkbox" value="DTP4"> DTP4</label>
-            <label><input type="checkbox" value="OPV4"> OPV4</label>
-            <label><input type="checkbox" value="MMR2"> MMR2</label>
+
+            <label><input type="checkbox" value="DTP4" onchange="toggleDateInline(this,'DTP4')"> DTP4</label>
+            <input type="date" id="date-DTP4" class="form-control mb-2" style="display:none;">
+
+            <label><input type="checkbox" value="OPV4" onchange="toggleDateInline(this,'OPV4')"> OPV4</label>
+            <input type="date" id="date-OPV4" class="form-control mb-2" style="display:none;">
+
+            <label><input type="checkbox" value="MMR2" onchange="toggleDateInline(this,'MMR2')"> MMR2</label>
+            <input type="date" id="date-MMR2" class="form-control mb-2" style="display:none;">
           </div>
 
           <!-- 🧒 2.5 - 3 ปี -->
           <div class="vaccine-card">
             <h6>🧒 2.5 - 3 ปี</h6>
-            <label><input type="checkbox" value="JE2"> JE2</label>
+
+            <label><input type="checkbox" value="JE2" onchange="toggleDateInline(this,'JE2')"> JE2</label>
+            <input type="date" id="date-JE2" class="form-control mb-2" style="display:none;">
           </div>
 
           <!-- 🎒 วัยเรียน -->
           <div class="vaccine-card">
             <h6>🎒 วัยเรียน</h6>
-            <label><input type="checkbox" value="dT"> dT</label>
-            <label><input type="checkbox" value="HPV"> HPV</label>
+
+            <label><input type="checkbox" value="dT" onchange="toggleDateInline(this,'dT')"> dT</label>
+            <input type="date" id="date-dT" class="form-control mb-2" style="display:none;">
+
+            <label><input type="checkbox" value="HPV" onchange="toggleDateInline(this,'HPV')"> HPV</label>
+            <input type="date" id="date-HPV" class="form-control mb-2" style="display:none;">
           </div>
 
           <!-- 💉 เสริม -->
           <div class="vaccine-card">
             <h6>💉 เสริม</h6>
-            <label><input type="checkbox" value="IPV"> IPV</label>
-            <label><input type="checkbox" value="HBV2"> HBV2</label>
+
+            <label><input type="checkbox" value="IPV" onchange="toggleDateInline(this,'IPV')"> IPV</label>
+            <input type="date" id="date-IPV" class="form-control mb-2" style="display:none;">
+
+            <label><input type="checkbox" value="HBV2" onchange="toggleDateInline(this,'HBV2')"> HBV2</label>
+            <input type="date" id="date-HBV2" class="form-control mb-2" style="display:none;">
           </div>
 
-        </div>
-
-
-  
-        <div class="col-md-8">
+</div>
+        <div class="col-md-5 mt-3 d-flex ">
           <input id="note" class="form-control" placeholder="หมายเหตุ">
         </div>
 
-        <div class="col-md-4">
-         <button onclick="addChildFull()" class="btn btn-inverse-success ">
-          💾 บันทึก
-        </button>
+        <div class="mt-3 d-flex justify-content-end">
+          <button onclick="addChildFull()" class="btn btn-success px-4">
+            💾 บันทึก
           </button>
         </div>
 
@@ -1204,10 +1242,15 @@ td{
     <tbody id="followTable"></tbody>
 
   </table>
+  
 </div>
 
 <!-- 🔥 ต้องอยู่นอก table -->
 <div id="mobileList" class="mobile-list"></div>
+<div class="card p-3">
+   <h3 style="margin:16px 0;color:#7495c4;font-weight:600;">📊 ติดตามอาการหลังฉีดวัคซีน</h3>
+<div id="symptomList"></div>
+
 </div>
 </div>
 
