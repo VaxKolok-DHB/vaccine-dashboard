@@ -898,121 +898,291 @@ function sendLineFollowUp(childId){
 
   });
 }
+// ======================
+// ติดตามอาการ
+// ======================
+
 function loadSymptoms(){
 
-  db.ref("symptoms").on("value", snap=>{
-    const data = snap.val();
-    const container = document.getElementById("symptomList");
+const container=
+document.getElementById(
+"symptomList"
+);
 
-    if(!data){
-      container.innerHTML = "ไม่มีข้อมูล";
-      return;
-    }
+if(!container){
 
-  
-const today = new Date().toDateString(); // 🔥 เอาวันปัจจุบัน
+console.log(
+"❌ symptomList not found"
+);
 
-const entries = Object.entries(data).reverse();
+return;
 
-container.innerHTML = "";
+}
 
-entries.forEach(([key, s])=>{
+console.log(
+"🔥 loadSymptoms start"
+);
 
-  // 🔥 กรองเฉพาะวันนี้
-  const itemDate = new Date(s.time).toDateString();
-  if(itemDate !== today) return;
 
-  const levelColor =
-    s.level?.includes("🔴") ? "#ff4d4f" :
-    s.level?.includes("🟠") ? "#faad14" :
-    "#52c41a";
+db.ref("symptoms")
+.off();
 
-  const statusDone = s.status === "ติดตามแล้ว";
 
-  const card = document.createElement("div");
+db.ref("symptoms")
+.on(
+"value",
+(snap)=>{
 
-  card.style = `
-    background:#fff;
-    border-radius:14px;
-    padding:14px;
-    margin-bottom:12px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.1);
-  `;
+try{
 
-  card.innerHTML = `
-    <div style="font-size:13px;color:#888;">
-      ⏰ ${new Date(s.time).toLocaleString()}
-    </div>
+const data=
+snap.val()||{};
 
-    <div style="font-size:16px;margin-top:6px;">
-      👶 <b>${s.name || "-"}</b>
-    </div>
+console.log(
+"🔥 data:",
+data
+);
 
-    <div style="font-size:13px;color:#888;">
-      🆔 HN: ${s.hn || "-"}
-    </div>
+container.innerHTML="";
 
-    <div style="font-size:15px;margin-top:6px;">
-      🩺 ${s.symptom}
-    </div>
 
-    <div style="font-size:15px;margin-top:6px;">
-      📞 ${s.phone || "-"}
-    </div>
+const entries=
+Object.entries(data)
+.reverse();
 
-    <div style="
-      margin-top:6px;
-      display:inline-block;
-      padding:4px 12px;
-      border-radius:20px;
-      background:${levelColor};
-      color:#fff;
-      font-size:12px;
-    ">
-      ${s.level || "ไม่ระบุ"}
-    </div>
 
-    <div style="margin-top:8px;font-size:13px;color:#555;">
-      📌 สถานะ: ${s.status || "-"}
-    </div>
+if(
+entries.length===0
+){
 
-    <button onclick="markDone('${key}')"
-      style="
-        margin-top:10px;
-        width:100%;
-        padding:10px;
-        border:none;
-        border-radius:10px;
-        background:${statusDone ? "#52c41a" : "#1677ff"};
-        color:white;
-        font-size:14px;
-        cursor:pointer;
-      ">
-      ${statusDone ? "✔ ติดตามแล้ว" : "ติดตาม"}
-    </button>
-  `;
+container.innerHTML=`
 
-  container.appendChild(card);
+<div style="
+padding:20px;
+text-align:center;
+background:#fff;
+border-radius:12px;
+color:#888;
+">
+
+ไม่มีข้อมูลติดตามอาการ
+
+</div>
+
+`;
+
+return;
+
+}
+
+
+entries.forEach(
+([key,s])=>{
+
+if(!s) return;
+
+
+let levelColor=
+"#52c41a";
+
+
+if(
+s.level?.includes("🔴")
+){
+
+levelColor=
+"#ff4d4f";
+
+}
+else if(
+s.level?.includes("🟠")
+){
+
+levelColor=
+"#faad14";
+
+}
+
+
+const statusDone=
+s.status==="ติดตามแล้ว";
+
+
+const card=
+document.createElement(
+"div"
+);
+
+
+card.className=
+"card p-3 mb-2";
+
+
+card.innerHTML=`
+
+<div style="
+font-size:12px;
+color:#888;
+">
+
+⏰ ${
+s.time
+?
+new Date(
+s.time
+)
+.toLocaleString(
+"th-TH",
+{
+timeZone:
+"Asia/Bangkok"
+}
+)
+:
+"-"
+}
+
+</div>
+
+<div style="
+margin-top:5px;
+font-size:16px;
+">
+
+👶
+<b>
+${s.name||"-"}
+</b>
+
+</div>
+
+<div>
+🆔 HN:
+${s.hn||"-"}
+</div>
+
+<div>
+🩺
+${s.symptom||"-"}
+</div>
+
+<div>
+📞
+${s.phone||"-"}
+</div>
+
+<div style="
+margin-top:6px;
+padding:4px 10px;
+display:inline-block;
+border-radius:20px;
+background:${levelColor};
+color:white;
+">
+
+${s.level||"-"}
+
+</div>
+
+<div style="
+margin-top:8px;
+">
+
+📌
+${s.status||"-"}
+
+</div>
+
+<button
+class="btn ${
+statusDone
+?
+"btn-success"
+:
+"btn-primary"
+}"
+style="
+margin-top:10px;
+width:100%;
+"
+onclick="
+markDone(
+'${key}'
+)
+">
+
+${
+statusDone
+?
+"✔ ติดตามแล้ว"
+:
+"ติดตาม"
+}
+
+</button>
+
+`;
+
+container
+.appendChild(
+card
+);
+
 });
 
+}
+catch(err){
 
-  });
+console.log(
+"❌ symptom error:",
+err
+);
 
 }
 
-// 🔘 ปุ่มกด
+});
+
+}
+
+
+
+// ======================
+// ปุ่มติดตาม
+// ======================
+
 function markDone(id){
-  db.ref("symptoms/"+id).update({
-    status: "ติดตามแล้ว",
-    level: "🟢 ปกติ" // 🔥 เปลี่ยนระดับเป็นปกติทันที
-  });
+
+db.ref(
+"symptoms/"+id
+)
+.update({
+
+status:
+"ติดตามแล้ว",
+
+level:
+"🟢 ปกติ"
+
+});
+
 }
 
-// 🚀 เรียกใช้งาน
+
+
+// ======================
+// เริ่มระบบ
+// ======================
+
+window.onload=
+function(){
+
+console.log(
+"🚀 PAGE READY"
+);
+
 loadSymptoms();
 
-
-
+};
 
 // =========================
 // 🔄 เปลี่ยนสถานะ
@@ -2130,3 +2300,11 @@ function formatDateInput(dateStr){
   // ถ้าเป็น yyyy-mm-dd อยู่แล้ว
   return dateStr;
 }
+
+
+
+
+
+
+
+
