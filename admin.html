@@ -129,6 +129,22 @@ User
 
 <div class="table-responsive">
 
+<div class="text-end">
+
+<button
+class="btn btn-danger"
+onclick="logout()">
+
+🚪 ออกจากระบบ
+
+</button>
+
+</div>
+
+
+
+
+
 <table class="table bg-white">
 
 <thead>
@@ -214,19 +230,31 @@ const db = firebase.database();
 // 📋 Activity Log
 // =========================
 
-function saveLog(action,detail){
+function saveLog(
+action,
+detail
+){
 
 const user=
-localStorage.getItem("name")
-||"Unknown";
 
-const now= new Date();
+localStorage.getItem(
+"name"
+)
 
-const id= Date.now();
+||
+"Unknown";
+
+const now=
+new Date();
+
+const id=
+Date.now();
+
 
 db.ref(
 "logs/"+id
 )
+
 .set({
 
 user:user,
@@ -240,35 +268,50 @@ now.toLocaleDateString(
 "th-TH"
 ),
 
-login:
+time:
 now.toLocaleTimeString(
 "th-TH",
 {
-hour:"2-digit",
-minute:"2-digit"
-}
-),
 
-logout:
-now.toLocaleTimeString(
-"th-TH",
-{
 hour:"2-digit",
-minute:"2digit"
-}
-)
+
+minute:"2-digit",
+
+second:"2-digit"
+
+})
 
 });
 
 }
-const currentRole=
-localStorage.getItem("role");
 
-if(currentRole!=="admin"){
 
-alert("ไม่มีสิทธิ์");
+function logout(){
 
-window.location="login.html";
+const user=
+
+localStorage.getItem(
+"name"
+)
+
+||
+"Unknown";
+
+
+saveLog(
+
+"ออกจากระบบ",
+
+`${user}
+ออกจากระบบ`
+
+);
+
+
+localStorage.clear();
+
+window.location=
+"login.html";
 
 }
 
@@ -593,9 +636,35 @@ html+=`
 
 <td>${l.date}</td>
 
-<td>${l.login}</td>
+<td>
+${
+l.action==="เข้าสู่ระบบ"
 
-<td>${l.logout}</td>
+?
+
+l.time
+
+:
+
+"-"
+
+}
+</td>
+
+<td>
+${
+l.action==="ออกจากระบบ"
+
+?
+
+l.time
+
+:
+
+"-"
+
+}
+</td>
 
 </tr>
 
@@ -678,8 +747,13 @@ status:"approved"
 .then(()=>{
 
 saveLog(
+
 "อนุมัติผู้ใช้",
-"อนุมัติ "+cid
+
+`อนุมัติ:
+
+${cid}`
+
 );
 
 loadAdmin();
