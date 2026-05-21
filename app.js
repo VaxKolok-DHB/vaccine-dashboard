@@ -2,10 +2,10 @@
 // 🔥 Firebase
 // =========================
 const firebaseConfig = {
-  apiKey: "AIzaSyAFQ-qy8Dqwxj1MA1rt7YZ04mEzRzlPsaY",
-  authDomain: "vaccine-dashboard-81107.firebaseapp.com",
-  databaseURL: "https://vaccine-dashboard-81107-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "vaccine-dashboard-81107",
+  apiKey: "HnOSpjSHma268VX3glsVJ9idzj9Uc1jjcqkJ7P11",
+  authDomain: "vaccine-dashboard-bc687.firebaseapp.com",
+  databaseURL: "https://vaccine-dashboard-bc687-default-rtdb.firebaseio.com/",
+  projectId: "vaccine-dashboard-bc687",
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -201,49 +201,210 @@ function getHospitalName(id){
 // =========================
 function login(){
 
-  let cid = document.getElementById("cid").value.replace(/\D/g,'');
+let cid=
+document
+.getElementById("cid")
+.value
+.replace(/\D/g,'');
 
-  if(cid.length !== 13){
-    document.getElementById("msg").innerText = "กรอกเลขบัตรให้ครบ";
-    return;
-  }
+const msg=
+document.getElementById(
+"msg"
+);
 
-  db.ref("users").once("value", snap=>{
+msg.innerText="";
 
-    const data = snap.val() || {};
-    let foundUser = null;
 
-    for(let id in data){
+// ตรวจเลขบัตร
 
-      const dbCid = (data[id].cid || "").replace(/\D/g,'');
+if(cid.length!==13){
 
-      if(dbCid === cid){
-        foundUser = data[id];
-        break;
-      }
-    }
+msg.innerText=
+"กรอกเลขบัตรให้ครบ 13 หลัก";
 
-    if(!foundUser){
-      document.getElementById("msg").innerText = "ไม่พบผู้ใช้";
-      return;
-    }
+return;
 
-    // ✅ เก็บข้อมูล
-    localStorage.setItem("user", cid);
-    localStorage.setItem("name", foundUser.name + " " + (foundUser.lastname || ""));
-    localStorage.setItem("role", foundUser.role || "user");
+}
 
-    // 👉 log เข้าใช้งาน
-    db.ref("loginLogs").push({
-      cid: foundUser.cid,
-      name: foundUser.name,
-      role: foundUser.role || "user",
-      loginTime: new Date().toISOString()
+
+// ค้นผู้ใช้
+
+db.ref(
+"users"
+)
+
+.once(
+"value",
+snap=>{
+
+const data=
+snap.val()||{};
+
+let foundUser=
+null;
+
+
+for(let id in data){
+
+const dbCid=
+
+(data[id].cid||"")
+
+.replace(
+/\D/g,
+''
+);
+
+if(
+dbCid===cid
+){
+
+foundUser={
+
+id:id,
+
+...data[id]
+
+};
+
+break;
+
+}
+
+}
+
+
+// ไม่พบผู้ใช้
+
+if(!foundUser){
+
+msg.innerText=
+"ไม่พบผู้ใช้";
+
+return;
+
+}
+
+
+// ถูกปฏิเสธ
+
+if(
+foundUser.status===
+"rejected"
+){
+
+msg.innerText=
+"บัญชีถูกปฏิเสธ";
+
+return;
+
+}
+
+
+// ยังไม่อนุมัติ
+
+if(
+foundUser.status!==
+"approved"
+){
+
+msg.innerText=
+"รอผู้ดูแลอนุมัติ";
+
+return;
+
+}
+
+
+
+// ===== ชื่อเต็ม =====
+
+const fullName=
+
+foundUser.name+
+
+" "+
+
+(foundUser.lastname||"");
+
+
+
+// ===== บันทึก localStorage =====
+
+localStorage.setItem(
+
+"user",
+
+foundUser.cid
+
+);
+
+
+localStorage.setItem(
+
+"name",
+
+fullName
+
+);
+
+
+// 🔥 ใช้กับระบบรับเคส
+
+  localStorage.setItem(
+
+  "username",
+
+  fullName
+
+  );
+
+
+  localStorage.setItem(
+
+  "role",
+
+  foundUser.role||
+
+  "user"
+
+);
+
+
+
+// ===== log =====
+
+    db.ref(
+    "loginLogs"
+    )
+
+    .push({
+
+    cid:
+    foundUser.cid,
+
+    name:
+    fullName,
+
+    role:
+    foundUser.role||
+
+    "user",
+
+    loginTime:
+    new Date()
+    .toISOString()
+
     });
 
-    window.location.href = "index.html";
 
-  });
+
+// ===== ไปหน้าเว็บ =====
+
+window.location.href=
+"index.html";
+
+});
 
 }
 
@@ -260,49 +421,96 @@ function goTambon(){
 // =========================
 function register(){
 
-  const name = document.getElementById("name").value.trim();
-  const lastname = document.getElementById("lastname").value.trim();
-  const cid = document.getElementById("cid").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
+  const name =
+  document.getElementById("name")
+  .value.trim();
 
-  // 🔥 validate
+  const lastname =
+  document.getElementById("lastname")
+  .value.trim();
+
+  const cid =
+  document.getElementById("cid")
+  .value.trim();
+
+  const email =
+  document.getElementById("email")
+  .value.trim();
+
+  const phone =
+  document.getElementById("phone")
+  .value.trim();
+
+  const msg =
+  document.getElementById("msg");
+
+  msg.style.color="red";
+
+  // validate
   if(!name || !lastname || !cid){
-    document.getElementById("msg").innerText = "❌ กรุณากรอกข้อมูลให้ครบ";
+
+    msg.innerText=
+    "❌ กรุณากรอกข้อมูลให้ครบ";
+
     return;
+
   }
 
-  if(cid.length !== 13){
-    document.getElementById("msg").innerText = "❌ เลขบัตรต้อง 13 หลัก";
+  if(cid.length!==13){
+
+    msg.innerText=
+    "❌ เลขบัตรต้อง 13 หลัก";
+
     return;
+
   }
 
-  // 🔍 เช็คซ้ำ
-  db.ref("users/"+cid).once("value", snap=>{
+  db.ref("users/"+cid)
+  .once("value",snap=>{
 
     if(snap.exists()){
-      document.getElementById("msg").innerText = "❌ มีผู้ใช้นี้แล้ว";
+
+      msg.innerText=
+      "❌ มีผู้ใช้นี้แล้ว";
+
       return;
+
     }
 
-    // 🔥 บันทึก
-    db.ref("users/"+cid).set({
+    db.ref("users/"+cid)
+    .set({
+
       cid,
       name,
       lastname,
       email,
       phone,
-      role:"user", // default
-      createdAt: new Date().toISOString()
+
+      role:"user",
+
+      status:"pending",
+
+      createdAt:
+      new Date().toISOString()
+
+    })
+
+    .then(()=>{
+
+      msg.style.color=
+      "green";
+
+      msg.innerText=
+      "✅ สมัครสำเร็จ รอผู้ดูแลอนุมัติ";
+
+      setTimeout(()=>{
+
+        window.location.href=
+        "login.html";
+
+      },1500);
+
     });
-
-    document.getElementById("msg").style.color = "green";
-    document.getElementById("msg").innerText = "✅ สมัครสำเร็จ";
-
-    // 🔥 redirect
-    setTimeout(()=>{
-      window.location.href = "login.html";
-    },1000);
 
   });
 
@@ -324,7 +532,7 @@ function loadFollow(){
   const hospitalFilter = document.getElementById("hospitalFilter")?.value || "all";
   const ageFilter = document.getElementById("ageFilter")?.value || "all";
   const mobileList = document.getElementById("mobileList");
-  if(mobileList) mobileList.innerHTML = "";
+  if(mobileList){mobileList.innerHTML="";}
   const isMobile = window.innerWidth < 768;
 
   db.ref("children").on("value", snap => {
@@ -393,37 +601,47 @@ function loadFollow(){
 
       // 📱 MOBILE
       if(mobileList){
-        mobileList.innerHTML += `
-        <div class="child-card">
-           <div class="child-header">
-              <div>${c.name || '-'}</div>
-              <div>${c.hn || '-'}</div>
-            </div>
 
-         <div class="child-info" 
-            style="cursor:pointer;color:#2563eb;">
+    mobileList.innerHTML += `
+    <div class="child-card">
 
-            📍 ${getTambonName(c.tambon)} | 🏠 ${c.house || "-"} | หมู่ ${c.village || "-"}
-          </div>
-          <div class="child-info">
-              <span class="age">${getAgeBadge(c.birth)}</span> 
-      | 💉 ${count} เข็ม
-          </div>
-          
+    <div class="child-header">
+    <div>${c.name || '-'}</div>
+    <div>${c.hn || '-'}</div>
+    </div>
 
-          <div class="child-footer">
-            <span class="status-badge ${count>0?'done':'notdone'}">
-              ${count>0?'ฉีดแล้ว':'ยังไม่ฉีด'}
-            </span>
+    <div class="child-info">
+    📍 ${getTambonName(c.tambon)}
+    | 🏠 ${c.house || "-"}
+    | หมู่ ${c.village || "-"}
+    </div>
 
-            <button onclick="openVaccineModal('${id}')" 
-              class="btn btn-outline-primary btn-mini">
-              💉 วัคซีน
-            </button>
-          </div>
-        </div>
-        `;
-      }
+    <div class="child-info">
+    <span class="age">
+    ${getAgeBadge(c.birth)}
+    </span>
+    | 💉 ${count} เข็ม
+    </div>
+
+    <div class="child-footer">
+
+    <span class="status-badge ${count>0?'done':'notdone'}">
+    ${count>0?'ฉีดแล้ว':'ยังไม่ฉีด'}
+    </span>
+
+    <button
+    onclick="openVaccineModal('${id}')"
+    class="btn btn-outline-primary">
+
+    💉 วัคซีน
+
+    </button>
+
+    </div>
+
+    </div>
+    `;
+    }
 
       // 🖥 TABLE
       html += `
@@ -793,6 +1011,31 @@ function toggleDateInline(cb, name){
   }
 }
 
+
+function saveLog(action,detail){
+
+db.ref("loginLogs")
+.push({
+
+name:
+localStorage.getItem("name")
+|| "Admin",
+
+action:
+action,
+
+detail:
+detail,
+
+time:
+new Date()
+.toLocaleString(
+"th-TH"
+)
+
+});
+
+}
 // =========================
 // 💾 บันทึกวัคซีน
 // =========================
@@ -831,13 +1074,59 @@ function saveVaccines(){
     };
 
     // 🔥 save แบบไม่ลบของเดิม
-    return db.ref("children/"+currentId+"/vaccines").set(merged);
-  })
-  .then(()=>{
-    sendLineFollowUp(currentId); // 🔥 ไม่ต้องส่ง vaccineList ก็ได้
-    alert("บันทึกแล้ว ✅");
-    loadFollow();
-  })
+    return Promise.all([
+
+// อัปเดตวัคซีนเด็ก
+db.ref(
+"children/"+currentId
+)
+.update({
+
+vaccines:merged,
+
+updatedAt:
+new Date()
+.toLocaleString("th-TH")
+
+}),
+
+
+    // 🔥 รีเซ็ตติดตามอาการใหม่ทุกครั้ง
+    db.ref(
+    "symptoms/"+currentId
+    )
+.update({
+
+    vaccines:merged,
+    symptom:"ยังไม่ระบุ",
+
+    level:"🟠 รอติดตาม",
+
+    status:"รอติดตาม",
+
+    priority:1,
+
+    time:Date.now(),
+
+    followedAt:null
+
+})
+
+]);
+
+
+
+
+
+
+
+sendLineFollowUp(currentId);
+
+alert("บันทึกแล้ว ✅");
+
+loadFollow();
+
+})
   .catch(err=>{
     console.error(err);
     alert("บันทึกไม่สำเร็จ ❌");
@@ -846,343 +1135,6 @@ function saveVaccines(){
 }
 
 
-
-function sendLineFollowUp(childId){
-
-  db.ref("children/"+childId).once("value")
-  .then(async snap=>{
-
-    const c = snap.val();
-    if(!c) return;
-
-    const vaccines = c.vaccines || {};
-
-    // 🔥 เอาเฉพาะที่มีวันที่
-    const entries = Object.entries(vaccines)
-      .filter(([k,v]) => v);
-
-    if(entries.length === 0) return;
-
-    // 🔥 หา "ล่าสุดจริง" (แก้ bug string compare)
-    let latestDate = entries
-      .map(([k,v])=>v)
-      .sort()
-      .pop();
-
-    // 🔥 เอาวัคซีนที่ฉีดวันล่าสุด
-    const vaccineList = entries
-      .filter(([k,v]) => v === latestDate)
-      .map(([k]) => k);
-
-    // 🔥 format วันที่
-    let showDate = latestDate;
-    if(latestDate){
-      const d = new Date(latestDate);
-      if(!isNaN(d)){
-        showDate = d.toLocaleDateString("th-TH");
-      }
-    }
-    fetch("https://vaccine-line-api.onrender.com/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name: c.name,
-        userId: c.lineUserId,
-        vaccines: vaccineList,
-        date: latestDate,
-        phone: c.phone
-      })
-    });
-
-  });
-}
-// ======================
-// ติดตามอาการ
-// ======================
-
-function loadSymptoms(){
-
-const container=
-document.getElementById(
-"symptomList"
-);
-
-if(!container){
-
-console.log(
-"❌ symptomList not found"
-);
-
-return;
-
-}
-
-console.log(
-"🔥 loadSymptoms start"
-);
-
-
-db.ref("symptoms")
-.off();
-
-
-db.ref("symptoms")
-.on(
-"value",
-(snap)=>{
-
-try{
-
-const data=
-snap.val()||{};
-
-console.log(
-"🔥 data:",
-data
-);
-
-container.innerHTML="";
-
-
-const entries=
-Object.entries(data)
-.reverse();
-
-
-if(
-entries.length===0
-){
-
-container.innerHTML=`
-
-<div style="
-padding:20px;
-text-align:center;
-background:#fff;
-border-radius:12px;
-color:#888;
-">
-
-ไม่มีข้อมูลติดตามอาการ
-
-</div>
-
-`;
-
-return;
-
-}
-
-
-entries.forEach(
-([key,s])=>{
-
-if(!s) return;
-
-
-let levelColor=
-"#52c41a";
-
-
-if(
-s.level?.includes("🔴")
-){
-
-levelColor=
-"#ff4d4f";
-
-}
-else if(
-s.level?.includes("🟠")
-){
-
-levelColor=
-"#faad14";
-
-}
-
-
-const statusDone=
-s.status==="ติดตามแล้ว";
-
-
-const card=
-document.createElement(
-"div"
-);
-
-
-card.className=
-"card p-3 mb-2";
-
-
-card.innerHTML=`
-
-<div style="
-font-size:12px;
-color:#888;
-">
-
-⏰ ${
-s.time
-?
-new Date(
-s.time
-)
-.toLocaleString(
-"th-TH",
-{
-timeZone:
-"Asia/Bangkok"
-}
-)
-:
-"-"
-}
-
-</div>
-
-<div style="
-margin-top:5px;
-font-size:16px;
-">
-
-👶
-<b>
-${s.name||"-"}
-</b>
-
-</div>
-
-<div>
-🆔 HN:
-${s.hn||"-"}
-</div>
-
-<div>
-🩺
-${s.symptom||"-"}
-</div>
-
-<div>
-📞
-${s.phone||"-"}
-</div>
-
-<div style="
-margin-top:6px;
-padding:4px 10px;
-display:inline-block;
-border-radius:20px;
-background:${levelColor};
-color:white;
-">
-
-${s.level||"-"}
-
-</div>
-
-<div style="
-margin-top:8px;
-">
-
-📌
-${s.status||"-"}
-
-</div>
-
-<button
-class="btn ${
-statusDone
-?
-"btn-success"
-:
-"btn-primary"
-}"
-style="
-margin-top:10px;
-width:100%;
-"
-onclick="
-markDone(
-'${key}'
-)
-">
-
-${
-statusDone
-?
-"✔ ติดตามแล้ว"
-:
-"ติดตาม"
-}
-
-</button>
-
-`;
-
-container
-.appendChild(
-card
-);
-
-});
-
-}
-catch(err){
-
-console.log(
-"❌ symptom error:",
-err
-);
-
-}
-
-});
-
-}
-
-
-
-// ======================
-// ปุ่มติดตาม
-// ======================
-
-function markDone(id){
-
-db.ref(
-"symptoms/"+id
-)
-.update({
-
-status:
-"ติดตามแล้ว",
-
-level:
-"🟢 ปกติ"
-
-});
-
-}
-
-
-
-// ======================
-// เริ่มระบบ
-// ======================
-
-window.onload=
-function(){
-
-console.log(
-"🚀 PAGE READY"
-);
-
-loadSymptoms();
-
-};
 
 // =========================
 // 🔄 เปลี่ยนสถานะ
@@ -1329,29 +1281,92 @@ function saveChild(data){
 }
 function addChildFull(){
 
-  const c = getFormData();
-  const vaccines = getVaccines();
+    const c=getFormData();
+    const vaccines=getVaccines();
 
-  if(!validateChild(c)) return;
+    if(!validateChild(c)) return;
 
-  saveChild({
-    ...c,          // 🔥 ใช้ตัวนี้แทนทั้งหมด
+    const data={
+
+    ...c,
     vaccines,
-    updatedAt: new Date().toLocaleString("th-TH")
-  })
-  .then(()=>{
-    alert("บันทึกแล้ว ✅");
+    updatedAt:new Date()
+    .toLocaleString("th-TH")
+
+    };
+
+    // สร้าง key ก่อน
+    const newRef=
+    db.ref("children")
+    .push();
+
+    const childId=
+    newRef.key;
+
+
+    newRef.set(data)
+
+    .then(()=>{
+
+    // สร้างข้อมูลติดตามอัตโนมัติ
+
+    return db.ref(
+    "symptoms/"+childId
+    )
+
+    .set({
+
+    name:c.name||"",
+    hn:c.hn||"",
+    phone:c.phone||"",
+
+    vaccines:vaccines,
+
+    symptom:"ยังไม่ระบุ",
+
+    level:"🟢 ปกติ",
+
+    status:"รอติดตาม",
+
+    priority:99,
+
+    time:Date.now()
+
+    });
+
+    })
+
+    .then(()=>{
+
+    alert("✅ บันทึกแล้ว");
 
     resetForm();
+
     loadFollow();
 
-  })
-  .catch(err=>{
-    console.error(err);
-    alert("บันทึกไม่สำเร็จ ❌");
-  });
+    if(confirm(
+    "ไปหน้าติดตามอาการไหม?"
+    )){
 
-}
+    window.location.href=
+    "symptoms.html";
+
+    }
+
+    })
+
+    .catch(err=>{
+
+    console.error(err);
+
+    alert(
+    "❌ บันทึกไม่สำเร็จ"
+    );
+
+    });
+
+    }
+
 
 
 function buildVillageDropdown(tambon, selected, id){
@@ -2183,7 +2198,7 @@ function getAgeBadge(birth){
 
   return `<span class="badge ${color}">${text}</span>`;
 }
-console.log("birth:", c.birth, "months:", getAgeMonths(c.birth));
+// console.log("birth:", c.birth, "months:", getAgeMonths(c.birth));
 
 
 function toggleSidebar(btn){
@@ -2237,14 +2252,14 @@ function handleUpload(e){
 //   btn.innerText = "➕ เพิ่มข้อมูล";
 // });
 
-const vaccineSelect = document.getElementById("vaccineFilter");
+// const vaccineSelect = document.getElementById("vaccineFilter");
 
-vaccineList.forEach(v => {
-  const option = document.createElement("option");
-  option.value = v;
-  option.textContent = v;
-  vaccineSelect.appendChild(option);
-});
+// vaccineList.forEach(v => {
+//   const option = document.createElement("option");
+//   option.value = v;
+//   option.textContent = v;
+//   vaccineSelect.appendChild(option);
+// });
 
 function filterData() {
   const vaccine = document.getElementById("vaccineFilter").value;
@@ -2258,7 +2273,7 @@ function filterData() {
   updateChart(filtered);
 }
 
-if (vaccine === "all") {
+if(vaccineFilter==="all") {
   // group ตามวัคซีน
   const grouped = {};
 
