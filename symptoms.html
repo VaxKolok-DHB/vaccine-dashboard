@@ -45,10 +45,7 @@ font-weight:bold;
 
 <div class="container">
 
-<div class="
-d-flex
-justify-content-between
-align-items-center
+<div class=" d-flex justify-content-between align-items-center
 mb-4
 ">
 
@@ -133,6 +130,8 @@ class="summary">
 </div>
 
 </div>
+
+
 <div class="col-md-3">
 
 <div class="card p-3">
@@ -168,7 +167,6 @@ onkeyup="loadSymptoms()"
 
 </div>
 
-
 <div id="symptomList"></div>
 
 </div>
@@ -200,511 +198,347 @@ firebaseConfig
 
 }
 
-const db=
-firebase.database();
+const db = firebase.database();
 
 function markDone(id){
 
-const staff=
-
-localStorage.getItem(
-"username"
-)
-
-||
-localStorage.getItem(
-"name"
-)
-
-||
+const staff =
+localStorage.getItem("username") ||
+localStorage.getItem("name") ||
 "เจ้าหน้าที่";
 
+db.ref("symptoms/" + id)
+.once("value")
+.then(snap => {
 
-db.ref(
-"symptoms/"+id
-)
+  const s = snap.val() || {};
 
-.once(
-"value"
-)
+  if(!s.assignedTo){
 
-.then(
-snap=>{
+    db.ref("symptoms/" + id).update({
 
-const s=
-snap.val()||{};
+      status: "กำลังติดตาม",
+      assignedTo: staff,
+      followedAt: Date.now()
 
+    });
 
-// ยังไม่มีผู้รับเคส
+  }else{
 
-if(
-!s.assignedTo
-){
+    db.ref("symptoms/" + id).update({
 
-db.ref(
-"symptoms/"+id
-)
+      status: "ติดตามเสร็จ",
+      level: "🟢 ปกติ",
+      assignedTo: staff,
+      priority: 99,
+      closedAt: Date.now()
 
-.update({
+    });
 
-status:
-"กำลังติดตาม",
-
-assignedTo:
-staff,
-
-followedAt:
-Date.now()
+  }
 
 });
 
 }
-
-// มีคนรับแล้ว → จบเคส
-
-else{
-
-db.ref(
-"symptoms/"+id
-)
-
-.update({
-
-status:
-"ปกติ",
-
-level:
-"🟢 ปกติ",
-
-assignedTo:
-staff,
-
-symptom:
-"ไม่มีอาการ",
-
-priority:
-99,
-
-closedAt:
-Date.now()
-
-});
-
-}
-
-});
-
-}
-
 
 
 
 function loadSymptoms(){
 
-const container=
+const container =
+document.getElementById("symptomList");
 
-document.getElementById(
-"symptomList"
-);
+if(!container) return;
 
-if(!container){
-return;
-}
+db.ref("symptoms").off();
 
-db.ref(
-"symptoms"
-)
+db.ref("symptoms").on("value", snap => {
 
-.off();
+const data = snap.val() || {};
 
+container.innerHTML = "";
 
-db.ref(
-"symptoms"
-)
+const keyword =
+  document.getElementById("searchHN")
+  ?.value
+  .toLowerCase() || "";
 
-.on(
+const entries =
 
-"value",
+  Object.entries(data)
 
-snap=>{
+  .filter(([k,s]) => {
 
-const data=
-snap.val()
-||
-{};
+    const hn =
+      String(s.hn || "")
+      .toLowerCase();
 
+    const name =
+      String(s.name || "")
+      .toLowerCase();
 
-container.innerHTML=
-"";
+    return (
+      hn.includes(keyword) ||
+      name.includes(keyword)
+    );
 
+  })
 
-const keyword=
+  .sort(
+    (a,b) =>
+    (a[1].priority || 99) -
+    (b[1].priority || 99)
+  );
 
-document
-.getElementById(
-"searchHN"
-)
-?.value
-.toLowerCase()
-||
-"";
+let total = 0;
+let normal = 0;
+let warning = 0;
+let critical = 0;
 
+entries.forEach(([key,s]) => {
 
-const entries=
+  total++;
 
-Object.entries(
-data
-)
+  if((s.level || "").includes("🟢")){
+    normal++;
+  }
+  else if((s.level || "").includes("🔴")){
+    critical++;
+  }
+  else{
+    warning++;
+  }
 
-.filter(
-([k,s])=>{
+  let color = "#22c55e";
 
-const hn=
+  if((s.level || "").includes("🟠")){
+    color = "#f59e0b";
+  }
 
-String(
-s.hn||""
-)
-.toLowerCase();
+  if((s.level || "").includes("🔴")){
+    color = "#ef4444";
+  }
 
-const name=
+  if(s.status === "กำลังติดตาม"){
+    color = "#3b82f6";
+  }
 
-String(
-s.name||""
-)
-.toLowerCase();
+  let vaccineText = "ไม่มีข้อมูล";
 
-return(
+  if(s.vaccines){
 
-hn.includes(
-keyword
-)
+    const vaccineValues =
+      Object.values(s.vaccines);
 
-||
+    if(vaccineValues.length){
 
-name.includes(
-keyword
-)
+      const latestDate =
+        vaccineValues
+        .sort()
+        .pop();
 
-);
+      const latestVaccines =
+        Object.entries(s.vaccines)
+        .filter(([k,v]) =>
+          v === latestDate
+        );
 
-}
+      vaccineText =
+        latestVaccines
+        .map(([k,v]) =>
+          `${k} (${v})`
+        )
+        .join("<br>");
 
-)
+    }
 
-.sort(
+  }
 
-(a,b)=>
+  const card =
+    document.createElement("div");
 
-(a[1].priority||99)
--
-(b[1].priority||99)
+  card.className =
+    "card p-3 mb-3";
 
-);
+  if(
+    (s.level || "")
+    .includes("🔴")
+  ){
+    card.style.border =
+      "2px solid red";
+  }
 
+  card.innerHTML = `
+  📍 รอบติดตาม :
+${(s.followStep || 0) + 1}
 
-let total=0;
-let normal=0;
-let warning=0;
-let critical=0;
+✅ ปกติ :
+${s.normalCount || 0}/4 ครั้ง
 
-
-entries.forEach(
-
-([key,s])=>{
-
-total++;
-
-if(
-s.level?.includes(
-"🟢"
-)
-){
-normal++;
-}
-else if(
-s.level?.includes("🔴")
-){
-
-critical++;
-
-}
-else{
-
-warning++;
-
-}
-
-let color=
-"#22c55e";
-
-
-if(
-s.level?.includes(
-"🟠"
-)
-){
-color="#f59e0b";
-}
-
-
-if(
-s.level?.includes(
-"🔴"
-)
-){
-color="#ef4444";
-}
-
-
-let vaccineText=
-"ไม่มีข้อมูล";
-
-
-if(
-s.vaccines
-){
-
-vaccineText=
-
-Object.entries(
-s.vaccines
-)
-
-.map(
-([name,date])=>
-
-`${name}
-(${date})`
-
-)
-
-.join("<br>");
-
-}
-
-
-const card=
-document.createElement(
-"div"
-);
-
-card.className=
-"card p-3 mb-3";
-
-
-if(
-s.level?.includes(
-"🔴"
-)
-){
-
-card.style.border=
-"2px solid red";
-
-}
-
-
-card.innerHTML=`
-
-<div class="d-flex justify-content-between">
-
-<div>
-
-<h5>
-
-👶 ${s.name||"-"}
-
-</h5>
-
-<div>
-
-🆔 HN:
-${s.hn||"-"}
-
-</div>
-
-<div>
-
-📞
-${s.phone||"-"}
-
-</div>
-
-</div>
-
-
-<div>
-
-<span
-class="badge"
-style="
-background:${color};
-padding:10px">
-
-${s.level||"-"}
-
-</span>
-
-</div>
-
-</div>
-
-
-<hr>
-
-
-<div>
-
-💉 <b>วัคซีน:</b>
-
-<br>
-
-${vaccineText}
-
-</div>
-
-<br>
-
-
-<div>
-
-🩺 <b>อาการ:</b>
-
-${s.symptom||"-"}
-
-</div>
-
-
-<div class="mt-2">
-
-📌
-${s.status||"-"}
-
-</div>
-
-
-<div class="mt-2">
-
-👩‍⚕️
-
+⏭ ติดตามครั้งถัดไป :
 ${
-s.assignedTo
-
-?
-
-`เจ้าหน้าที่:
-${s.assignedTo}`
-
-:
-
-"ยังไม่มีผู้รับเคส"
-
+s.nextFollowUp
+? new Date(s.nextFollowUp).toLocaleString("th-TH")
+: "-"
 }
 
-</div>
+  <div class="d-flex justify-content-between">
 
+    <div>
 
-<div class="mt-2 text-muted">
+      <h5>
+      👶 ${s.name || "-"}
+      </h5>
 
-⏰
+      <div>
+      🆔 HN:
+      ${s.hn || "-"}
+      </div>
 
-${
-s.time
+      <div>
+      📞
+      ${s.phone || "-"}
+      </div>
 
-?
+    </div>
 
-new Date(
-s.time
-)
-.toLocaleString(
-"th-TH"
-)
+    <div>
 
-:
+      <span
+      class="badge"
+      style="
+      background:${color};
+      padding:10px">
 
-"-"
-}
+      ${s.level || "-"}
 
-</div>
+      </span>
 
+    </div>
 
-<button
-onclick="markDone('${key}')"
-class="btn ${
-s.assignedTo
-?
-"btn-success"
-:
-"btn-warning"
-}
-w-100 mt-3"
->
+  </div>
 
-${
-s.assignedTo
+  <hr>
 
-?
+  <div>
 
-"✅ จบเคส"
+  💉 <b>วัคซีนล่าสุด:</b>
 
-:
+  <br>
 
-"👩‍⚕️ รับเคส"
+  ${vaccineText}
 
-}
+  </div>
 
-</button>
+  <br>
 
-`;
+  <div>
 
-container.appendChild(
-card
-);
+  🩺 <b>อาการ:</b>
+
+  ${s.symptom || "-"}
+
+  </div>
+
+  <div class="mt-2">
+
+  📌 ${s.status || "-"}
+
+  </div>
+
+  <div class="mt-2">
+
+  📍 รอบติดตาม :
+  ${(s.followStep || 0) + 1}
+
+  </div>
+
+  <div class="mt-2">
+
+  ✅ ปกติ :
+  ${s.normalCount || 0}/4 ครั้ง
+
+  </div>
+
+  <div class="mt-2">
+
+  ⏭ ติดตามครั้งถัดไป :
+
+  ${
+    s.nextFollowUp
+    ? new Date(
+        s.nextFollowUp
+      ).toLocaleString("th-TH")
+    : "-"
+  }
+
+  </div>
+
+  <div class="mt-2">
+
+  👩‍⚕️
+
+  ${
+    s.assignedTo
+    ? `เจ้าหน้าที่: ${s.assignedTo}`
+    : "ยังไม่มีผู้รับเคส"
+  }
+
+  </div>
+
+  <div class="mt-2 text-muted">
+
+  ⏰
+
+  ${
+    s.time
+    ? new Date(
+        s.time
+      ).toLocaleString("th-TH")
+    : "-"
+  }
+
+  </div>
+
+  <button
+  onclick="markDone('${key}')"
+  class="btn ${
+    s.assignedTo
+    ? "btn-success"
+    : "btn-warning"
+  } w-100 mt-3">
+
+  ${
+    s.assignedTo
+    ? "✅ จบเคส"
+    : "👩‍⚕️ รับเคส"
+  }
+
+  </button>
+
+  `;
+
+  container.appendChild(card);
 
 });
 
-
-document.getElementById(
-"totalCount"
-).innerText=
-total;
-
-
-document.getElementById(
-"normalCount"
-).innerText=
-normal;
-
-
-document.getElementById(
-"warningCount"
-).innerText=
-warning;
-
-
-
-document.getElementById(
-"criticalCount"
-).innerText=
-critical;
-
+document.getElementById("totalCount").innerText = total;
+document.getElementById("normalCount").innerText = normal;
+document.getElementById("warningCount").innerText = warning;
+document.getElementById("criticalCount").innerText = critical;
 
 });
 
 }
-
 
 document.addEventListener(
-
 "DOMContentLoaded",
-
-()=>{
-
+() => {
 loadSymptoms();
-
 }
-
 );
+
+
 
 </script>
 
