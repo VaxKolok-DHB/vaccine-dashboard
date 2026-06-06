@@ -19,453 +19,100 @@
 
 /* 🌙 โทนอ่านง่าย */
 body{
-  background:#ffffff;
-  font-family:'Segoe UI', sans-serif;
+  background:#fff;
+  font-family:'Segoe UI',sans-serif;
   color:#023f70;
+  padding-bottom:80px;
 }
 
-
-
-/* navbar */
-/* navbar */
+/* Navbar */
 .navbar{
   display:flex;
   align-items:center;
   padding:12px 16px;
-  background:#ffffff;
+  background:#fff;
   border-bottom:1px solid #e5e7eb;
 }
 
-/* left */
-.nav-left{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-/* title */
 .title{
   font-size:18px;
   font-weight:600;
 }
 
-/* hamburger */
-.menu-btn{
-  width:44px;
-  height:44px;
-  border-radius:12px;
-  background:#f3f4f6;
-  border:none;
-
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  gap:5px;
-
-  cursor:pointer;
-  transition:0.2s;
-}
-
-/* เส้น */
-.menu-btn span{
-  width:22px;
-  height:2.5px;
-  background:#111827;
-  border-radius:2px;
-  transition:0.25s;
-}
-
-/* hover desktop */
-@media (hover:hover){
-  .menu-btn:hover{
-    background:#e5e7eb;
-  }
-}
-
-/* กด */
-.menu-btn:active{
-  transform:scale(0.95);
-}
-
-/* 🔥 animation เป็น X */
-.menu-btn.active span:nth-child(1){
-  transform:rotate(45deg) translate(5px,5px);
-}
-.menu-btn.active span:nth-child(2){
-  opacity:0;
-}
-.menu-btn.active span:nth-child(3){
-  transform:rotate(-45deg) translate(5px,-5px);
-}
-
-/* 📱 mobile */
-@media(max-width:768px){
-  .table-responsive{
-    display:none;
-  }
-}
-/* sidebar */
-.sidebar{
-  position:fixed;
-  top:0;
-  left:-280px;
-  width:260px;
-  height:100%;
-  background:#f9fafb;
-  padding:20px;
-  transition:0.3s;
-  z-index:1000;
-}
-
-/* เปิด */
-.sidebar.show{
-  left:0;
-}
-
-/* โปรไฟล์ */
-.profile-box{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.avatar{
-  width:50px;
-  height:50px;
-  border-radius:50%;
-}
-
-.name{
-  font-weight:600;
-}
-
-.username{
-  font-size:13px;
-  color:#6b7280;
-}
-
-/* เมนู */
-.sidebar a{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:12px;
-  border-radius:10px;
-  color:#111827;
-  text-decoration:none;
-  margin-bottom:5px;
-}
-
-.sidebar a:hover{
-  background:#e5e7eb;
-}
-
-/* logout */
-.logout-btn{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:#dc2626;
-  color:white;
-}
-
-/* backdrop */
-.backdrop{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.4);
-  display:none;
-  z-index:999;
-}
-
-.backdrop.show{
-  display:block;
-}
-
-/* 📱 MOBILE */
-@media(max-width:768px){
-
-  .menu-btn{
-    display:block;
-  }
-
-  .nav-right{
-    position:absolute;
-    top:60px;
-    left:0;
-    width:100%;
-    background:#ffffff;
-    flex-direction:column;
-    align-items:stretch;
-    padding:15px;
-    gap:10px;
-    border-top:1px solid #e5e7eb;
-    display:none;
-  }
-
-  .nav-right.show{
-    display:flex;
-  }
-
-  .nav-right a,
-  .logout-btn{
-    width:100%;
-    padding:12px;
-    font-size:16px;
-    text-align:left;
-  }
-
-  .user-box{
-    border-top:1px solid #eee;
-    padding-top:10px;
-  }
-
-}
-
-/* 🔥 HERO */
-/* กล่อง */
+/* Hero */
 .hero-box{
   margin:20px;
   padding:25px;
   border-radius:16px;
   background:linear-gradient(90deg,#415786,#b7ddc5);
-  color:white;
+  color:#fff;
 }
 
-/* หัวข้อ */
 .hero-title{
   font-size:26px;
   font-weight:700;
 }
 
-/* ข้อความ */
 .hero-text{
   font-size:18px;
-  margin-top:5px;
 }
 
 .hero-sub{
   font-size:16px;
-  opacity:0.9;
+  opacity:.9;
 }
 
-
-/* 📱 mobile */
-@media(max-width:768px){
-  .hero-title{
-    font-size:20px;
-  }
-
-  .hero-btn{
-    width:100%;
-  }
-}
-
-/* 📊 KPI */
+/* Card */
 .card{
-  background:#ffffff;
   border-radius:12px;
   border:1px solid #e5e7eb;
 }
-.card:hover{
-  transform: translateY(-3px);
-  transition: 0.2s;
-}
-/* สี */
-.success{ background:#dcfce7; }
-.danger{ background:#fee2e2; }
-.warning{ background:#fef9c3; }
 
-/* input */
-.form-control,.form-select{
+.success{background:#dcfce7;}
+.danger{background:#fee2e2;}
+.warning{background:#fef9c3;}
+
+/* Form */
+.form-control,
+.form-select{
   height:45px;
-  font-size:16px;
   border-radius:10px;
 }
-
-.table thead th{
-  font-size:16px;
-  padding:14px;
-  white-space:nowrap;
+.table th:nth-child(4),
+.table td:nth-child(4){
+  min-width:160px;
 }
 
-.table td{
-  padding:12px 10px;
+.table th:nth-child(5),
+.table td:nth-child(5){
+  min-width:180px;
+}
+.table th:nth-child(7),
+.table td:nth-child(7){
+  min-width:190px;
+}
+
+/* Table */
+.table td,
+.table th{
   white-space:nowrap;
 }
 
 .table-container{
-  width:100%;
   overflow-x:auto;
 }
 
-.table{
-  min-width:900px; /* ปรับตามจริง */
-  border-collapse:collapse;
+/* Mobile Card */
+.mobile-list{
+  display:none;
 }
-
-select.form-select{
-  min-width:140px;
-  font-size:15px;
-}
-/* mobile */
-@media(max-width:768px){
-
-  table{
-    font-size:14px;
-  }
-
-  .table td input,
-  .table select{
-    min-width:140px;
-    height:45px;
-  }
-
-}
-@media(max-width:768px){
-  .table-container{
-    display:none;
-  }
-}
-
-
-@media(max-width:768px){
-
-  .mobile-list{
-    display:block;
-    padding:10px;
-  }
-
-  .mobile-card{
-    background:#ffffff;
-    border-radius:16px;
-    padding:15px;
-    margin-bottom:12px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.05);
-  }
-
-  .mobile-card .name{
-    font-size:16px;
-    font-weight:600;
-    margin-bottom:5px;
-  }
-
-  .mobile-row{
-    font-size:14px;
-    margin:2px 0;
-    color:#374151;
-  }
-
-}
-
-/* คลิกได้ */
-.avatar-wrapper{
-  cursor:pointer;
-  position:relative;
-}
-.avatar-wrapper{
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.avatar{
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  object-fit:cover;
-  border:2px solid #ddd;
-}
-
-.avatar-wrapper:hover{
-  opacity:0.8;
-}
-
-.name{
-  font-weight:600;
-}
-
-.email{
-  font-size:13px;
-  color:#6b7280;
-}
-.menu-btn{
-  width:35px;
-  height:35px;
-  border-radius:12px;
-  background:#e5e7eb;
-  border:none;
-
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  gap:5px;
-}
-
-.menu-btn span{
-  width:10px;
-  height:2.5px;
-  background:#111827;
-  border-radius:2px;
-}
-
-
-
-/* 🖥 Desktop */
-.table-container{
-  display:block;
-}
-
-
-/* 📱 Mobile */
-@media(max-width:768px){
-
-  .table-container{
-    display:none !important;
-  }
-
-  .mobile-list{
-    display:block !important;
-    padding:10px;
-  }
- #followTable{
-    display:none !important;
-  }
-}
- 
-
 
 .child-card{
   background:#fff;
   border-radius:16px;
   padding:14px;
   margin-bottom:12px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-
-.child-header{
-  display:flex;
-  justify-content:space-between;
-  font-weight:600;
-  font-size:15px;
-  margin-bottom:6px;
-}
-
-.child-info{
-  font-size:13px;
-  color:#374151;
-  margin-bottom:4px;
-}
-
-.child-footer{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
 }
 
 .status-badge.done{
@@ -482,301 +129,129 @@ select.form-select{
   border-radius:8px;
 }
 
-.chart-desc{
-  background:#f9fafb;
-  border-radius:12px;
-  padding:12px 16px;
-  margin-top:10px;
-  font-size:14px;
-  color:#374151;
-  line-height:1.6;
-}
-.chart-desc b{
-  color:#111827;
-}
-
-
-
-/* 🔥 กล่องวัคซีน */
-.vaccine-box{
-  background:#f8fafc;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:8px;
-}
-
-/* 🔥 หัวข้อ */
-.vaccine-title{
-  font-weight:600;
-  font-size:13px;
-  margin-bottom:5px;
-  color:#334155;
-}
-
-/* 🔥 checkbox */
-.vaccine-item{
-  display:flex;
-  align-items:center;
-  gap:5px;
-  font-size:13px;
-}
-
-/* 🔥 grid */
-.vaccine-grid{
-  display:grid;
-  grid-template-columns: repeat(4,1fr);
-  gap:6px;
-}
-/* ช่องวัคซีนในตาราง */
-.vaccine-cell{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-
-  border:1px solid #e5e7eb;
-  background:#ffffff;
-  border-radius:8px;
-
-  padding:6px 8px;
-  cursor:pointer;
-
-  transition:all .15s ease;
-}
-
-.vaccine-cell:hover{
-  border-color:#3b82f6;
-  background:#f8fafc;
-}
-
-/* ไอคอน */
-.vac-icon{
-  font-size:16px;
-  color:#3b82f6;
-}
-
-/* ตัวเลขเล็ก ๆ */
-.vac-count{
-  font-size:12px;
-  color:#64748b;
-}
-.vaccine-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  width:80px;
-  height:42px;
-  border-radius:14px;
-  background:#f1e7e7;
-  border:1px solid #ddd;
-  font-weight:600;
-  font-size:18px;
-  color:#dc2626;
-  transition:0.2s;
-}
-.vaccine-btn:hover{
-  transform:scale(1.05);
-}
-
-td select{
-  min-width: 190px;
-}
-
-
-/* ซ่อนข้อความ */
-.sidebar.hide span,
-.sidebar.hide h5{
-  display:none;
-}
-/* mobile sidebar */
-@media(max-width:768px){
-
-  .sidebar{
-    position:fixed;
-    top:0;
-    left:-260px;
-    width:260px;
-    height:100%;
-    z-index:1000;
-  }
-
-  .sidebar.show{
-    left:0;
-  }
-
-  /* ฉากหลัง */
-  .backdrop{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.4);
-    z-index:999;
-    display:none;
-  }
-
-  .backdrop.show{
-    display:block;
-  }
-}
-
-@media(max-width:768px){
-  .vaccine-grid{
-    grid-template-columns: repeat(2,1fr);
-  }
-}
-
-@media(max-width:768px){
-  .sidebar-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-  }
-
-  .sidebar-header h5{
-    font-size:15px;
-  }
-}
-/* ตอนหุบ */
-.sidebar.hide{
-  width:70px;
-  overflow:hidden;
-}
-
-
-#villageBox select{
-  width: 100%;
-  min-width: 150px;
-}
-.form-control, .form-select{
-  width: 100%;
-  max-width: 100%;
-}
+/* Vaccine */
 .vaccine-container{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
-  gap: 14px;
-  margin-top: 15px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;
 }
 
 .vaccine-card{
-  background:#ffffff;
+  background:#fff;
+  border:1px solid #e5e7eb;
   border-radius:12px;
   padding:12px;
-  border:1px solid #e5e7eb;
 }
 
-.vaccine-card label{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:6px;
-  font-size:13px;
-  margin-bottom:4px;
-}
-
-.vaccine-card input{
-  accent-color: #22c55e; /* สีเขียว */
-}
-.vaccine-card input:checked + span{
-  color:#22c55e;
-}
-
-
-#vaccineEditor h6{
-  color:#374151;
-  margin-bottom:5px;
-  border-bottom:1px solid #eee;
-  padding-bottom:3px;
-}
-
-#vaccineEditor label{
-  background:#f9fafb;
-  padding:6px 10px;
-  border-radius:8px;
-}
-.age-cell{
-  font-weight: 200;
-  
-}
-td{
-  white-space: nowrap;
-}
-.age-cell{
-  white-space: nowrap;
-}
-.age-badge{
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:600;
-  white-space: nowrap;
-}
-
-
-.modal-body div:hover{
-  background:#f1f5f9;
-  transition:0.2s;
-}
-
-.mobile-list{
-  display:none;
-}
-#addBtn{
-  width:auto;         
-  padding:8px 16px;    
-  font-size:14px;      
-  border-radius:10px;
-}
-.btn{
-  border-radius:10px;
-  font-size:14px;
-  padding:8px 14px;
-}
-
+/* Description */
 .chart-desc{
   background:#f9fafb;
   border-radius:12px;
   padding:12px 16px;
   font-size:14px;
+}
+
+/* Scroll Top */
+#scrollTopBtn{
+  position:fixed;
+  bottom:90px;
+  right:20px;
+  width:45px;
+  height:45px;
+  border:none;
+  border-radius:50%;
+  background:#16a34a;
+  color:#fff;
+  display:none;
+}
+
+/* Bottom Nav */
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:65px;
+  background:#fff;
+  border-top:1px solid #ddd;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  z-index:9999;
+}
+
+.bottom-nav a{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-decoration:none;
   color:#374151;
-  line-height:1.6;
-}
-#followChart{
-  max-width: 100%;
-}
-#scrollTopBtn{
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 999;
-  display: none;
-
-  background: #16a34a;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 45px;
-  height: 45px;
-  font-size: 20px;
-
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  cursor: pointer;
+  font-size:12px;
 }
 
-#scrollTopBtn:hover{
-  background: #15803d;
+.bottom-nav i{
+  font-size:20px;
 }
-#scrollTopBtn{
-  transition: all 0.3s ease;
+
+
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:20px;
+
+  padding:12px 20px;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
 }
+
+.title{
+  font-size:24px;
+  font-weight:700;
+  color:#1e3a8a;
+  margin-right:auto;
+}
+
+.topbar a{
+  text-decoration:none;
+  color:#374151;
+  font-weight:500;
+}
+
+.topbar a:hover{
+  color:#2563eb;
+}
+
+.name{
+  font-weight:600;
+  color:#059669;
+}
+.logout-link{
+  color:#110a4c;
+  text-decoration:none;
+  font-weight:500;
+}
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding:12px 20px;
+}
+
+.title{
+  margin-right:auto;
+  font-weight:700;
+}
+
+.nav-avatar{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+
 
 @media(max-width:768px){
-  .table-container{
-    display: none !important;
-  }
-}
-
-@media (max-width: 768px){
   .table-responsive{
     display:none;
   }
@@ -786,59 +261,223 @@ td{
   }
 }
 
+/* Desktop */
+@media (min-width:1200px){
+  .container{
+    max-width:1400px;
+  }
+}
+
+/* Tablet */
+@media (max-width:992px){
+
+  .topbar{
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .hero-title{
+    font-size:22px;
+  }
+
+  .card{
+    margin-bottom:10px;
+  }
+}
+
+/* Mobile */
+@media (max-width:768px){
+
+  .topbar{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .title{
+    font-size:20px;
+  }
+
+  .hero-box{
+    margin:10px;
+    padding:15px;
+  }
+
+  .hero-title{
+    font-size:20px;
+  }
+
+  .hero-text,
+  .hero-sub{
+    font-size:14px;
+  }
+
+  .table-responsive{
+    display:none;
+  }
+
+  .mobile-list{
+    display:block;
+  }
+
+  .vaccine-container{
+    grid-template-columns:1fr;
+  }
+}
+@media (max-width:768px){
+
+  .topbar{
+    flex-wrap:wrap;
+    gap:8px;
+    padding:10px;
+  }
+
+  .title{
+    width:100%;
+    font-size:18px;
+    margin-bottom:10px;
+  }
+
+  .topbar a{
+    font-size:14px;
+  }
+
+
+}
+ 
+
+.child-card{
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:15px;
+  box-shadow:0 3px 12px rgba(0,0,0,.08);
+  border:1px solid #eef2f7;
+}
+
+.child-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:12px;
+}
+
+.child-name{
+  font-size:18px;
+  font-weight:700;
+  color:#111827;
+}
+
+.child-hn{
+  font-size:13px;
+  color:#6b7280;
+  margin-top:3px;
+}
+
+.child-info{
+  font-size:14px;
+  color:#374151;
+  margin-bottom:6px;
+}
+
+.child-meta{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+  margin-bottom:12px;
+}
+
+.age-badge{
+  color:white;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:13px;
+}
+
+.vaccine-count{
+  background:#ecfdf5;
+  color:#059669;
+  padding:4px 10px;
+  border-radius:999px;
+  font-weight:600;
+  font-size:13px;
+}
+
+.child-footer{
+  display:flex;
+  justify-content:flex-end;
+}
+
+.status-badge{
+  font-size:13px;
+  font-weight:600;
+  padding:6px 10px;
+  border-radius:999px;
+}
+
+.status-badge.done{
+  background:#dcfce7;
+  color:#15803d;
+}
+
+.status-badge.notdone{
+  background:#fee2e2;
+  color:#dc2626;
+}
 </style>
 </head>
 <body>
 
-<!-- 🔵 NAVBAR -->
-<nav class="navbar">
+<nav class="topbar">
 
-  <div class="nav-left">
-    <button class="menu-btn" onclick="toggleSidebar(this)">
-      <span></span>
-      <span></span>
-      <span></span>
+  <span class="title">
+  ระบบติดตามวัคซีน (VaxKolok-DHB)
+  </span>
+
+  <a href="index.html">
+    <i class="fa fa-home"></i> หน้าแรก
+  </a>
+
+  <a href="symptoms.html">
+    <i class="fa fa-heartbeat"></i> ติดตามอาการ
+  </a>
+
+  <a href="admin.html" id="adminMenu">
+    <i class="fa fa-cog"></i> Admin
+  </a>
+
+  <div class="dropdown">
+
+    <button class="btn btn-light dropdown-toggle"
+            data-bs-toggle="dropdown">
+
+      <img id="profileImg"
+           class="nav-avatar"
+           src="https://cdn-icons-png.flaticon.com/512/847/847969.png">
+
+      <span class="userInfo"></span>
+
     </button>
 
-    <span class="title">ระบบติดตามวัคซีน (VaxKolok-DHB)</span>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><hr class="dropdown-divider"></li>
+
+      <li>
+        <a class="dropdown-item text-danger"
+           href="#"
+           onclick="logout()">
+
+          <i class="fa fa-right-from-bracket"></i>
+          ออกจากระบบ
+
+        </a>
+      </li>
+
+    </ul>
+
   </div>
 
 </nav>
 
-<!-- 🔥 SIDEBAR (แบบในรูป) -->
-<div class="sidebar" id="sidebar">
-
-  <div class="profile-box">
-
-  <!-- รูป -->
-<label for="uploadImg" class="avatar-wrapper">
-  <img id="profileImg" 
-       src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
-       class="avatar">
-
-  <input type="file" id="uploadImg" accept=".png,.jpg,.jpeg" hidden>
-</label>
-
-<div>
-  <div class="name userInfo"></div>
-  <div class="username" id="userEmail"></div>
-</div>
-
-</div>
-
-  <hr>
-
-  <!-- 📋 MENU -->
-  <a href="index.html"><i class="fa fa-home"></i> หน้าแรก</a>
-  <a href="symptoms.html"><i class="fa fa-heartbeat"></i>ติดตามอาการ</a>
-  <a href="admin.html" id="adminMenu"><i class="fa fa-cog"></i> Admin</a>
-  <hr>
-
-  <button onclick="logout()" class="logout-btn">
-    <i class="fa fa-sign-out-alt"></i> ออกจากระบบ
-  </button>
-
-</div>
 
 <!-- 🔥 BACKDROP -->
 <div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
@@ -920,6 +559,36 @@ td{
 <option value="all">🏥 ทุกหน่วยบริการ</option>
 </select>
 </div>
+
+
+
+
+  <!-- IMPORT -->
+  <!-- <div class="container mt-3">
+  <div class="mb-3">
+
+  <input
+  type="file"
+  id="excelFile"
+  accept=".xlsx,.xls">
+
+  <button
+  onclick="importExcel()">
+
+  นำเข้าข้อมูล
+
+  </button>
+
+  </div>
+  </div> -->
+
+
+
+
+
+
+
+
 
 
 <div class="col-md-3">
@@ -1031,111 +700,199 @@ td{
         <div class="mt-3">
           <div class="vaccine-container">
 
-          <!-- 👶 แรกเกิด -->
-          <div class="vaccine-card">
-            <h6>👶 แรกเกิด</h6>
+<!-- 👶 แรกเกิด -->
+<div class="vaccine-card">
 
-            <label>
-              <input type="checkbox" value="BCG" onchange="toggleDateInline(this,'BCG')"> BCG
-            </label>
-            <input type="date" id="date-BCG" class="form-control mb-2" style="display:none;">
+<h6>👶 แรกเกิด</h6>
 
-            <label>
-              <input type="checkbox" value="HBV1" onchange="toggleDateInline(this,'HBV1')"> HBV1
-            </label>
-            <input type="date" id="date-HBV1" class="form-control mb-2" style="display:none;">
-          </div>
+<label>
+<input type="checkbox"
+value="BCG"
+onchange="toggleDateInline(this,'BCG')">
 
-          <!-- 🍼 2 เดือน -->
-          <div class="vaccine-card">
-            <h6>🍼 2 เดือน</h6>
+BCG
+</label>
 
-            <label><input type="checkbox" value="DTP1" onchange="toggleDateInline(this,'DTP1')"> DTP1</label>
-            <input type="date" id="date-DTP1" class="form-control mb-2" style="display:none;">
+<input type="date"
+id="date-BCG"
+class="form-control mb-2"
+style="display:none;">
 
-            <label><input type="checkbox" value="OPV1" onchange="toggleDateInline(this,'OPV1')"> OPV1</label>
-            <input type="date" id="date-OPV1" class="form-control mb-2" style="display:none;">
-          </div>
+<label>
+<input type="checkbox"
+value="HBV1"
+onchange="toggleDateInline(this,'HBV1')">
 
-          <!-- 🍼 4 เดือน -->
-          <div class="vaccine-card">
-            <h6>🍼 4 เดือน</h6>
+HBV1
+</label>
 
-            <label><input type="checkbox" value="DTP2" onchange="toggleDateInline(this,'DTP2')"> DTP2</label>
-            <input type="date" id="date-DTP2" class="form-control mb-2" style="display:none;">
+<input type="date"
+id="date-HBV1"
+class="form-control mb-2"
+style="display:none;">
 
-            <label><input type="checkbox" value="OPV2" onchange="toggleDateInline(this,'OPV2')"> OPV2</label>
-            <input type="date" id="date-OPV2" class="form-control mb-2" style="display:none;">
-          </div>
+</div>
 
-          <!-- 🍼 6 เดือน -->
-          <div class="vaccine-card">
-            <h6>🍼 6 เดือน</h6>
 
-            <label><input type="checkbox" value="DTP3" onchange="toggleDateInline(this,'DTP3')"> DTP3</label>
-            <input type="date" id="date-DTP3" class="form-control mb-2" style="display:none;">
+<!-- 🍼 2 เดือน -->
+<div class="vaccine-card">
 
-            <label><input type="checkbox" value="OPV3" onchange="toggleDateInline(this,'OPV3')"> OPV3</label>
-            <input type="date" id="date-OPV3" class="form-control mb-2" style="display:none;">
+<h6>🍼 2 เดือน</h6>
 
-            <label><input type="checkbox" value="HBV3" onchange="toggleDateInline(this,'HBV3')"> HBV3</label>
-            <input type="date" id="date-HBV3" class="form-control mb-2" style="display:none;">
-          </div>
+<label>
+<input type="checkbox"
+value="DTP1"
+onchange="toggleDateInline(this,'DTP1')">
 
-          <!-- 👶 9-12 เดือน -->
-          <div class="vaccine-card">
-            <h6>👶 9-12 เดือน</h6>
+DTP1
+</label>
 
-            <label><input type="checkbox" value="MMR1" onchange="toggleDateInline(this,'MMR1')"> MMR1</label>
-            <input type="date" id="date-MMR1" class="form-control mb-2" style="display:none;">
+<input type="date"
+id="date-DTP1"
+class="form-control mb-2"
+style="display:none;">
 
-            <label><input type="checkbox" value="JE1" onchange="toggleDateInline(this,'JE1')"> JE1</label>
-            <input type="date" id="date-JE1" class="form-control mb-2" style="display:none;">
-          </div>
+<label>
+<input type="checkbox"
+value="OPV1"
+onchange="toggleDateInline(this,'OPV1')">
 
-          <!-- 👶 18 เดือน -->
-          <div class="vaccine-card">
-            <h6>👶 18 เดือน</h6>
+OPV1
+</label>
 
-            <label><input type="checkbox" value="DTP4" onchange="toggleDateInline(this,'DTP4')"> DTP4</label>
-            <input type="date" id="date-DTP4" class="form-control mb-2" style="display:none;">
+<input type="date"
+id="date-OPV1"
+class="form-control mb-2"
+style="display:none;">
 
-            <label><input type="checkbox" value="OPV4" onchange="toggleDateInline(this,'OPV4')"> OPV4</label>
-            <input type="date" id="date-OPV4" class="form-control mb-2" style="display:none;">
+<label>
+<input type="checkbox"
+value="Rota"
+onchange="toggleDateInline(this,'Rota')">
 
-            <label><input type="checkbox" value="MMR2" onchange="toggleDateInline(this,'MMR2')"> MMR2</label>
-            <input type="date" id="date-MMR2" class="form-control mb-2" style="display:none;">
-          </div>
+Rota
+</label>
 
-          <!-- 🧒 2.5 - 3 ปี -->
-          <div class="vaccine-card">
-            <h6>🧒 2.5 - 3 ปี</h6>
+<input type="date"
+id="date-Rota"
+class="form-control mb-2"
+style="display:none;">
 
-            <label><input type="checkbox" value="JE2" onchange="toggleDateInline(this,'JE2')"> JE2</label>
-            <input type="date" id="date-JE2" class="form-control mb-2" style="display:none;">
-          </div>
+</div>
 
-          <!-- 🎒 วัยเรียน -->
-          <div class="vaccine-card">
-            <h6>🎒 วัยเรียน</h6>
 
-            <label><input type="checkbox" value="dT" onchange="toggleDateInline(this,'dT')"> dT</label>
-            <input type="date" id="date-dT" class="form-control mb-2" style="display:none;">
+<!-- 🍼 4 เดือน -->
+<div class="vaccine-card">
 
-            <label><input type="checkbox" value="HPV" onchange="toggleDateInline(this,'HPV')"> HPV</label>
-            <input type="date" id="date-HPV" class="form-control mb-2" style="display:none;">
-          </div>
+<h6>🍼 4 เดือน</h6>
 
-          <!-- 💉 เสริม -->
-          <div class="vaccine-card">
-            <h6>💉 เสริม</h6>
+<label>
+<input type="checkbox"
+value="DTP2"
+onchange="toggleDateInline(this,'DTP2')">
 
-            <label><input type="checkbox" value="IPV" onchange="toggleDateInline(this,'IPV')"> IPV</label>
-            <input type="date" id="date-IPV" class="form-control mb-2" style="display:none;">
+DTP2
+</label>
 
-            <label><input type="checkbox" value="HBV2" onchange="toggleDateInline(this,'HBV2')"> HBV2</label>
-            <input type="date" id="date-HBV2" class="form-control mb-2" style="display:none;">
-          </div>
+<input type="date"
+id="date-DTP2"
+class="form-control mb-2"
+style="display:none;">
+
+<label>
+<input type="checkbox"
+value="OPV2"
+onchange="toggleDateInline(this,'OPV2')">
+
+OPV2
+</label>
+
+<input type="date"
+id="date-OPV2"
+class="form-control mb-2"
+style="display:none;">
+
+<label>
+<input type="checkbox"
+value="HBV2"
+onchange="toggleDateInline(this,'HBV2')">
+
+HBV2
+</label>
+
+<input type="date"
+id="date-HBV2"
+class="form-control mb-2"
+style="display:none;">
+
+</div>
+
+
+<!-- 🍼 6 เดือน -->
+<div class="vaccine-card">
+
+<h6>🍼 6 เดือน</h6>
+
+<label><input type="checkbox" value="DTP3" onchange="toggleDateInline(this,'DTP3')"> DTP3</label>
+<input type="date" id="date-DTP3" class="form-control mb-2" style="display:none;">
+
+<label><input type="checkbox" value="OPV3" onchange="toggleDateInline(this,'OPV3')"> OPV3</label>
+<input type="date" id="date-OPV3" class="form-control mb-2" style="display:none;">
+
+<label><input type="checkbox" value="HBV3" onchange="toggleDateInline(this,'HBV3')"> HBV3</label>
+<input type="date" id="date-HBV3" class="form-control mb-2" style="display:none;">
+
+<label><input type="checkbox" value="IPV" onchange="toggleDateInline(this,'IPV')"> IPV</label>
+<input type="date" id="date-IPV" class="form-control mb-2" style="display:none;">
+
+</div>
+
+
+<!-- 👶 9-12 เดือน -->
+<div class="vaccine-card">
+
+<h6>👶 9-12 เดือน</h6>
+
+<label><input type="checkbox" value="MMR1" onchange="toggleDateInline(this,'MMR1')"> MMR1</label>
+<input type="date" id="date-MMR1" class="form-control mb-2" style="display:none;">
+
+<label><input type="checkbox" value="JE1" onchange="toggleDateInline(this,'JE1')"> JE1</label>
+<input type="date" id="date-JE1" class="form-control mb-2" style="display:none;">
+
+</div>
+
+
+<!-- 👶 18 เดือน -->
+<div class="vaccine-card">
+
+<h6>👶 18 เดือน</h6>
+
+<label><input type="checkbox" value="DTP4" onchange="toggleDateInline(this,'DTP4')"> DTP4</label>
+<input type="date" id="date-DTP4" class="form-control mb-2" style="display:none;">
+
+<label><input type="checkbox" value="OPV4" onchange="toggleDateInline(this,'OPV4')"> OPV4</label>
+<input type="date" id="date-OPV4" class="form-control mb-2" style="display:none;">
+
+<label><input type="checkbox" value="MMR2" onchange="toggleDateInline(this,'MMR2')"> MMR2</label>
+<input type="date" id="date-MMR2" class="form-control mb-2" style="display:none;">
+
+</div>
+
+
+<!-- 🧒 2.5-3 ปี -->
+<div class="vaccine-card">
+
+<h6>🧒 2.5 - 3 ปี</h6>
+
+<label><input type="checkbox" value="JE2" onchange="toggleDateInline(this,'JE2')"> JE2</label>
+<input type="date" id="date-JE2" class="form-control mb-2" style="display:none;">
+
+</div>
+
+</div>
+
+         
+          
 
 </div>
         <div class="col-md-5 mt-3 d-flex ">
@@ -1191,6 +948,7 @@ td{
           <option value="all">💉 ทุกวัคซีน</option>
         </select>
       </div>
+      
 
       <!-- 📅 ไตรมาส -->
       <div class="col-6 col-md-6">
@@ -1230,6 +988,7 @@ td{
         <th>วันเกิด</th>
         <th>อายุ</th>
         <th>วัคซีน</th>
+        <th>ผู้ดูแล</th>
         <th>หมายเหตุ</th>
         <th>เวลา</th>
         <th>ลบ</th>
@@ -1243,20 +1002,11 @@ td{
 </div>
  <div id="mobileList" class="mobile-list"></div>
 </div>
+
 </div>
 
 
 
-
-
-
-<!-- IMPORT -->
-<div class="container mt-3">
-<div class="card p-3">
-<input type="file" id="fileInput" class="form-control mb-2">
-<button onclick="importExcel()" class="btn btn-success">📥 Import Excel</button>
-</div>
-</div>
 
 
 <!-- 🔥 ต้องอยู่ก่อน </body> -->
@@ -1308,67 +1058,28 @@ if(!localStorage.getItem("user")){
 }
 
 document.addEventListener("DOMContentLoaded", ()=>{
-      // 🔹 ดึง email
-  document.getElementById("userEmail").innerText = localStorage.getItem("email") || "-";
+
 
   // 🔹 ดึงชื่อ
-  document.querySelectorAll(".userInfo").forEach(el=>{
-    el.innerText = localStorage.getItem("name") || "ไม่พบชื่อ";
-  });
-
-  // 🔹 โหลดรูป
-  const savedImg = localStorage.getItem("profileImg");
-
-  if(savedImg){
-    document.getElementById("profileImg").src = savedImg;
-  }
-
-  // 🔹 อัปโหลดรูป
-  document.getElementById("uploadImg").addEventListener("change", function(e){
-     
-    const mobileList =
-    document.getElementById("mobileList");
-    console.log(mobileList);
-
-    const file = e.target.files[0];
-    if(!file) return;
-
-    // ✅ เช็คประเภทไฟล์
-    const allowed = ["image/png","image/jpeg"];
-    if(!allowed.includes(file.type)){
-      alert("อัปโหลดได้เฉพาะ PNG / JPG");
-      return;
-    }
-
-    // ✅ เช็คขนาด
-    if(file.size > 2 * 1024 * 1024){
-      alert("ไฟล์ต้องไม่เกิน 2MB");
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = function(ev){
-      const base64 = ev.target.result;
-
-      document.getElementById("profileImg").src = base64;
-
-      localStorage.setItem("profileImg", base64);
-    };
-
-    reader.readAsDataURL(file);
+document.querySelectorAll(".userInfo")
+.forEach(el=>{
+  el.innerText =
+  localStorage.getItem("name") || "ผู้ใช้งาน";
+});
 
   });
   loadFollow();
   loadvaccineChart();
 
-
-  
-});
-
 /* admin */
-if(localStorage.getItem("role") !== "admin"){
-  document.getElementById("adminMenu").style.display="none";
+const adminMenu =
+document.getElementById("adminMenu");
+
+if(
+  adminMenu &&
+  localStorage.getItem("role") !== "admin"
+){
+  adminMenu.style.display = "none";
 }
 console.log(localStorage.getItem("profileImg"));
 
