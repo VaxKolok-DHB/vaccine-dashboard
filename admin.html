@@ -1,63 +1,75 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Admin Dashboard</title>
+<title>จัดการผู้ใช้งาน</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
 
 body{
-background:#f1f5f9;
-padding:15px;
-font-family:system-ui;
+background:#f4f6fb;
+padding:20px;
 }
 
 .top-card{
 background:white;
 padding:20px;
-border-radius:18px;
-margin-bottom:15px;
-box-shadow:0 4px 12px rgba(0,0,0,.05);
+border-radius:20px;
+margin-bottom:20px;
+box-shadow:0 2px 10px rgba(0,0,0,.05);
 }
 
-.mobile-card{
-display:none;
+.badge-role{
+padding:6px 12px;
+border-radius:20px;
+color:white;
+font-size:12px;
 }
 
-.log-card{
-display:none;
+.user{
+background:#2563eb;
 }
 
-table{
-border-radius:15px;
-overflow:hidden;
+.admin{
+background:#9333ea;
 }
 
-@media(max-width:768px){
-
-table{
-display:none;
+.approved{
+background:#16a34a;
 }
 
-.mobile-card,
-.log-card{
+.pending{
+background:#f59e0b;
+}
 
-display:block;
+.timeline-card{
+
 background:white;
 padding:15px;
 margin-bottom:10px;
 border-radius:15px;
-box-shadow:0 4px 10px rgba(0,0,0,.05);
+border-left:5px solid #3b82f6;
 
 }
 
+.login{
+border-left-color:#22c55e;
+}
+
+.logout{
+border-left-color:#ef4444;
+}
+
+.edit{
+border-left-color:#f59e0b;
 }
 
 </style>
@@ -66,37 +78,63 @@ box-shadow:0 4px 10px rgba(0,0,0,.05);
 
 <body>
 
+<div class="container">
+
 <div class="top-card">
 
-<h4>👑 จัดการผู้ใช้งาน</h4>
 
-<div class="row mt-3">
 
-<div class="col">
+<div class=" d-flex justify-content-between align-items-center
+mb-4
+">
+<h2>
+👑 จัดการผู้ใช้งาน
+</h2>
 
-<input
-id="search"
-class="form-control"
-placeholder="🔍 ค้นหาชื่อ">
+<a
+href="index.html"
+class="
+btn
+btn-outline-secondary
+">
+
+⬅ กลับหน้าแรก
+
+</a>
 
 </div>
 
-<div class="col">
+<div class="row mt-4">
+
+<div class="col-md-6">
+
+<input
+id="searchInput"
+class="form-control"
+placeholder="🔍 ค้นหาชื่อ"
+onkeyup="loadAdmin()"
+>
+
+</div>
+
+<div class="col-md-6">
 
 <select
 id="roleFilter"
-class="form-select">
+class="form-select"
+onchange="loadAdmin()"
+>
 
-<option value="all">
+<option value="">
 ทุก Role
 </option>
 
 <option value="admin">
-Admin
+admin
 </option>
 
 <option value="user">
-User
+user
 </option>
 
 </select>
@@ -105,9 +143,11 @@ User
 
 </div>
 
-<div class="mt-3">
+<br>
 
-<span class="badge bg-warning">
+<span
+class="badge bg-warning"
+>
 
 ⏳ รออนุมัติ :
 <span id="pendingCount">
@@ -120,38 +160,25 @@ User
 
 </div>
 
-</div>
 
 
 <div class="top-card">
 
-<h4>👥 รายชื่อผู้ใช้งาน</h4>
+<h3>
+
+👥 รายชื่อผู้ใช้งาน
+
+</h3>
 
 <div class="table-responsive">
 
-<div class="text-end">
-
-<button
-class="btn btn-danger"
-onclick="logout()">
-
-🚪 ออกจากระบบ
-
-</button>
-
-</div>
-
-
-
-
-
-<table class="table bg-white">
+<table class="table">
 
 <thead>
 
 <tr>
 
-<th>เลขบัตร</th>
+<th>CID</th>
 <th>ชื่อ</th>
 <th>Role</th>
 <th>สถานะ</th>
@@ -169,49 +196,31 @@ onclick="logout()">
 
 </div>
 
-<div id="mobileList"></div>
+<div id="mobileList">
 
 </div>
+
+</div>
+
 
 
 <div class="top-card">
 
-<h4>📋 ประวัติการใช้งาน</h4>
+<h3>
 
-<div class="table-responsive">
+📋 ประวัติการใช้งาน
 
-<table class="table">
+</h3>
 
-<thead>
-
-<tr>
-
-<th>ผู้ใช้</th>
-<th>การกระทำ</th>
-<th>รายละเอียด</th>
-<th>วันที่</th>
-<th>🟢 เวลาเข้า</th>
-<th>🔴 เวลาออก</th>
-
-</tr>
-
-</thead>
-
-<tbody id="logTable">
-
-</tbody>
-
-</table>
+<div id="activityTimeline">
 
 </div>
 
-<div id="mobileLog"></div>
+</div>
 
 </div>
 
 
-
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase.js"></script>
 
 <script>
 
@@ -226,120 +235,34 @@ const db = firebase.database();
 
 
 
-// =========================
-// 📋 Activity Log
-// =========================
-
-function saveLog(
-action,
-detail
-){
-
-const user=
-
-localStorage.getItem(
-"name"
-)
-
-||
-"Unknown";
-
-const now=
-new Date();
-
-const id=
-Date.now();
-
-
-db.ref(
-"logs/"+id
-)
-
-.set({
-
-user:user,
-
-action:action,
-
-detail:detail,
-
-date:
-now.toLocaleDateString(
-"th-TH"
-),
-
-time:
-now.toLocaleTimeString(
-"th-TH",
-{
-
-hour:"2-digit",
-
-minute:"2-digit",
-
-second:"2-digit"
-
-})
-
-});
-
-}
-
-
-function logout(){
-
-const user=
-
-localStorage.getItem(
-"name"
-)
-
-||
-"Unknown";
-
-
-saveLog(
-
-"ออกจากระบบ",
-
-`${user}
-ออกจากระบบ`
-
-);
-
-
-localStorage.clear();
-
-window.location=
-"login.html";
-
-}
-
-
-
-function maskCid(cid){
-
-if(!cid)return "-";
-
-return cid.substring(0,4)+
-"XXXXX"+
-cid.substring(9);
-
-}
-
-
-
 function loadAdmin(){
 
-let keyword=
+db.ref(
+"users"
+)
+
+.on(
+
+"value",
+
+snap=>{
+
+const data=
+snap.val()||{};
+
+let html="";
+
+let pending=0;
+
+const keyword=
 document
 .getElementById(
-"search"
+"searchInput"
 )
 .value
 .toLowerCase();
 
-let role=
+const role=
 document
 .getElementById(
 "roleFilter"
@@ -347,99 +270,72 @@ document
 .value;
 
 
-db.ref("users")
-
-.once("value",snap=>{
-
-let data=
-snap.val()||{};
-
-let html="";
-let mobile="";
-let pending=0;
-
-
 Object.keys(data)
-.forEach(cid=>{
 
-let u=data[cid];
+.forEach(id=>{
 
-let status=
-u.status||
-"pending";
+const u=
+data[id];
 
 if(
-keyword &&
-!(u.name||"")
-.toLowerCase()
-.includes(keyword)
-){
-
-return;
-
-}
-
-
-if(
-role!="all"
-&&
-u.role!=role
-){
-
-return;
-
-}
-
-
-if(
-status==="pending"
+u.status==="pending"
 ){
 
 pending++;
 
 }
 
+if(
 
-const badge=
+keyword &&
+!u.name
+?.toLowerCase()
+.includes(
+keyword
+)
 
-status==="approved"
+){
 
-?
+return;
 
-"bg-success"
+}
 
-:
 
-status==="rejected"
+if(
 
-?
+role &&
+u.role!==role
 
-"bg-danger"
+){
 
-:
+return;
 
-"bg-warning";
-
+}
 
 
 html+=`
 
 <tr>
 
-<td>${maskCid(u.cid)}</td>
-
 <td>
 
-${u.name}
-${u.lastname||""}
+${u.cid||"-"}
 
 </td>
 
 <td>
 
-<span class="badge bg-primary">
+${u.name||"-"}
 
-${u.role||"user"}
+</td>
+
+<td>
+
+<span
+class="badge-role ${u.role}"
+>
+
+${u.role||"-"}
 
 </span>
 
@@ -447,9 +343,11 @@ ${u.role||"user"}
 
 <td>
 
-<span class="badge ${badge}">
+<span
+class="badge-role ${u.status}"
+>
 
-${status}
+${u.status||"-"}
 
 </span>
 
@@ -457,36 +355,7 @@ ${status}
 
 <td>
 
-${
-status==="pending"
-
-?
-
-`
-
-<button
-class="btn btn-success btn-sm me-1"
-onclick="approveUser('${u.cid}')">
-
-✅
-
-</button>
-
-<button
-class="btn btn-danger btn-sm"
-onclick="rejectUser('${u.cid}')">
-
-❌
-
-</button>
-
-`
-
-:
-
-`-`
-
-}
+-
 
 </td>
 
@@ -494,105 +363,27 @@ onclick="rejectUser('${u.cid}')">
 
 `;
 
-
-
-mobile+=`
-
-<div class="mobile-card">
-
-<h6>
-
-${u.name}
-${u.lastname||""}
-
-</h6>
-
-<div>
-
-🆔 ${maskCid(u.cid)}
-
-</div>
-
-<div class="mt-2">
-
-<span class="badge ${badge}">
-
-${status}
-
-</span>
-
-</div>
-
-</div>
-
-`;
-
 });
 
 
-adminTable.innerHTML=
+document
+.getElementById(
+"adminTable"
+)
+.innerHTML=
 html;
 
-mobileList.innerHTML=
-mobile;
 
-pendingCount.innerText=
+document
+.getElementById(
+"pendingCount"
+)
+.innerText=
 pending;
 
 });
 
 }
-
-
-
-function saveLog(action,detail){
-
-const user=
-
-localStorage
-.getItem("name")
-
-||"Admin";
-
-
-const now=
-new Date();
-
-const date=
-now.toLocaleDateString(
-"th-TH"
-);
-
-const time=
-now.toLocaleTimeString(
-"th-TH",
-{
-hour:"2-digit",
-minute:"2-digit"
-}
-);
-
-const id=
-Date.now();
-
-
-db.ref(
-"logs/"+id
-)
-
-.set({
-
-user:user,
-action:action,
-detail:detail,
-date:date,
-login:time,
-logout:time
-
-});
-
-}
-
 
 
 function loadLogs(){
@@ -601,18 +392,20 @@ db.ref(
 "logs"
 )
 
-.limitToLast(20)
+.limitToLast(
+100
+)
 
 .on(
+
 "value",
+
 snap=>{
 
 const data=
 snap.val()||{};
 
 let html="";
-let mobile="";
-
 
 Object.keys(data)
 
@@ -620,96 +413,75 @@ Object.keys(data)
 
 .forEach(id=>{
 
-let l=
+const l=
 data[id];
-
 
 html+=`
 
-<tr>
+<div class="timeline-card">
 
-<td>${l.user}</td>
+<div class="d-flex justify-content-between">
 
-<td>${l.action}</td>
-
-<td>${l.detail}</td>
-
-<td>${l.date}</td>
-
-<td>
-${
-l.action==="เข้าสู่ระบบ"
-
-?
-
-l.time
-
-:
-
-"-"
-
-}
-</td>
-
-<td>
-${
-l.action==="ออกจากระบบ"
-
-?
-
-l.time
-
-:
-
-"-"
-
-}
-</td>
-
-</tr>
-
-`;
-
-
-mobile+=`
-
-<div class="log-card">
+<div>
 
 <b>
 
-${l.user}
+👤 ${l.user||"-"}
 
 </b>
 
-<hr>
+<span class="badge bg-primary">
 
-<div>
+${l.role||"user"}
 
-📌 ${l.action}
+</span>
+
+<br>
+
+📌 ${l.action||"-"}
+
+<br>
+
+📝 ${l.detail||"-"}
+
+<br>
+
+${
+l.before
+?
+
+`🔹ก่อน:
+${l.before}
+<br>`
+
+:
+
+""
+}
+
+${
+l.after
+?
+
+`🔸หลัง:
+${l.after}
+<br>`
+
+:
+
+""
+}
 
 </div>
 
 <div>
 
-${l.detail}
+🕒
+${l.date}
+<br>
+${l.time}
 
 </div>
-
-<div>
-
-📅 ${l.date}
-
-</div>
-
-<div>
-
-🟢 ${l.login}
-
-</div>
-
-<div>
-
-🔴 ${l.logout}
 
 </div>
 
@@ -719,95 +491,128 @@ ${l.detail}
 
 });
 
-
-logTable.innerHTML=
+document
+.getElementById(
+"activityTimeline"
+)
+.innerHTML=
 html;
 
-mobileLog.innerHTML=
-mobile;
-
 });
 
 }
-
-
-
-function approveUser(cid){
-
-db.ref(
-"users/"+cid
-)
-
-.update({
-
-status:"approved"
-
-})
-
-.then(()=>{
-
 saveLog(
 
-"อนุมัติผู้ใช้",
+"แก้วัคซีน",
 
-`อนุมัติ:
+"HN : "+child.hn,
 
-${cid}`
+JSON.stringify(
+oldVaccine
+),
+
+JSON.stringify(
+newVaccine
+)
 
 );
 
-loadAdmin();
-
-});
-
-}
-
-
-
-function rejectUser(cid){
-
-db.ref(
-"users/"+cid
-)
-
-.update({
-
-status:"rejected"
-
-})
-
-.then(()=>{
-
 saveLog(
-"ปฏิเสธผู้ใช้",
-"ปฏิเสธ "+cid
+"เข้าสู่ระบบ",
+"Login"
 );
 
-loadAdmin();
+function saveLog(
+action,
+detail="",
+before="",
+after=""
+){
+
+const user=
+localStorage.getItem("name")
+||
+"Unknown";
+
+const role=
+localStorage.getItem("role")
+||
+"user";
+
+db.ref("loginLogs")
+.push({
+
+name:user,
+
+role:role,
+
+action:action,
+
+detail:detail,
+
+before:before,
+
+after:after,
+
+date:
+new Date()
+.toLocaleDateString(
+"th-TH"
+),
+
+time:
+new Date()
+.toLocaleTimeString(
+"th-TH"
+),
+
+timestamp:
+Date.now()
 
 });
 
 }
 
 
+function logout(){
+
+saveLog(
+"ออกจากระบบ",
+"Logout"
+);
+
+localStorage.removeItem(
+"user"
+);
+
+localStorage.removeItem(
+"name"
+);
+
+localStorage.removeItem(
+"role"
+);
+
+window.location=
+"login.html";
+
+}
+document.addEventListener(
+
+"DOMContentLoaded",
+
+()=>{
 
 loadAdmin();
 
 loadLogs();
 
 
-search
-.addEventListener(
-"input",
-loadAdmin
+
+}
 );
 
 
-roleFilter
-.addEventListener(
-"change",
-loadAdmin
-);
 
 </script>
 
