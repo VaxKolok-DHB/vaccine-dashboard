@@ -22,41 +22,76 @@ const tambonMap = {
 };
 
 // =========================
-// 💉 รายการวัคซีนทั้งหมด
+// 💉 รายการวัคซีน
 // =========================
-const vaccineList = [
-  "BCG","HBV1","HBV2","HBV3","DTP1","DTP2","DTP3",
-  "OPV1","OPV2","OPV3","IPV","MMR1","JE1","JE2",
-  "DTP4","OPV4","MMR2","dT","HPV"
+const vaccineList=[
+
+"BCG",
+
+"HBV1",
+"HBV2",
+"HBV3",
+
+"IPV1",
+"IPV2",
+
+"DTP1",
+"DTP2",
+"DTP3",
+"DTP4",
+"DTP5",
+
+"OPV1",
+"OPV2",
+"OPV3",
+"OPV4",
+"OPV5",
+
+"MMR1",
+"MMR2",
+
+"JE1",
+"JE2",
+
+"Rota1",
+"Rota2",
+"Rota3"
+
 ];
 
+const vaccineData=[
 
-const vaccineData = [
-  { name: "BCG", quarter: "Q1", percent: 95 },
-  { name: "HBV1", quarter: "Q1", percent: 90 },
-  { name: "HBV2", quarter: "Q1", percent: 88 },
-  { name: "HBV3", quarter: "Q1", percent: 85 },
+{name:"BCG",quarter:"Q1",percent:95},
 
-  { name: "DTP1", quarter: "Q1", percent: 80 },
-  { name: "DTP2", quarter: "Q1", percent: 78 },
-  { name: "DTP3", quarter: "Q1", percent: 75 },
-  { name: "DTP4", quarter: "Q1", percent: 70 },
+{name:"HBV1",quarter:"Q1",percent:90},
+{name:"HBV2",quarter:"Q1",percent:88},
+{name:"HBV3",quarter:"Q1",percent:85},
 
-  { name: "OPV1", quarter: "Q1", percent: 82 },
-  { name: "OPV2", quarter: "Q1", percent: 79 },
-  { name: "OPV3", quarter: "Q1", percent: 77 },
-  { name: "OPV4", quarter: "Q1", percent: 72 },
+{name:"IPV1",quarter:"Q1",percent:84},
+{name:"IPV2",quarter:"Q1",percent:82},
 
-  { name: "IPV", quarter: "Q1", percent: 68 },
+{name:"DTP1",quarter:"Q1",percent:80},
+{name:"DTP2",quarter:"Q1",percent:78},
+{name:"DTP3",quarter:"Q1",percent:76},
+{name:"DTP4",quarter:"Q1",percent:74},
+{name:"DTP5",quarter:"Q1",percent:72},
 
-  { name: "MMR1", quarter: "Q1", percent: 60 },
-  { name: "MMR2", quarter: "Q1", percent: 55 },
+{name:"OPV1",quarter:"Q1",percent:70},
+{name:"OPV2",quarter:"Q1",percent:68},
+{name:"OPV3",quarter:"Q1",percent:66},
+{name:"OPV4",quarter:"Q1",percent:64},
+{name:"OPV5",quarter:"Q1",percent:62},
 
-  { name: "JE1", quarter: "Q1", percent: 50 },
-  { name: "JE2", quarter: "Q1", percent: 45 },
+{name:"MMR1",quarter:"Q1",percent:60},
+{name:"MMR2",quarter:"Q1",percent:58},
 
-  { name: "dT", quarter: "Q1", percent: 65 },
-  { name: "HPV", quarter: "Q1", percent: 58 }
+{name:"JE1",quarter:"Q1",percent:55},
+{name:"JE2",quarter:"Q1",percent:53},
+
+{name:"Rota1",quarter:"Q1",percent:50},
+{name:"Rota2",quarter:"Q1",percent:48},
+{name:"Rota3",quarter:"Q1",percent:46}
+
 ];
 // =========================
 // 💉 หน่วยบริการ
@@ -351,22 +386,22 @@ fullName
 
 // 🔥 ใช้กับระบบรับเคส
 
-  localStorage.setItem(
+localStorage.setItem(
 
-  "username",
+"username",
 
-  fullName
+fullName
 
-  );
+);
 
 
-  localStorage.setItem(
+localStorage.setItem(
 
-  "role",
+"role",
 
-  foundUser.role||
+foundUser.role||
 
-  "user"
+"user"
 
 );
 
@@ -391,9 +426,17 @@ fullName
 
     "user",
 
-    loginTime:
-    new Date()
-    .toISOString()
+    date:
+      new Date()
+      .toLocaleDateString(
+      "th-TH"
+      ),
+
+      loginTime:
+      new Date()
+      .toLocaleTimeString(
+      "th-TH"
+      )
 
     });
 
@@ -522,7 +565,15 @@ function register(){
 // 📊 โหลดข้อมูล + ตาราง + กราฟ
 // =========================
 let followChart;
-let chartMode = "percent"; // percent | village
+let chartMode="percent";
+let childRef=null;
+let allChildren=[];
+let ROW_HEIGHT=65;
+let VISIBLE_ROWS=40;
+// 🔥 pagination
+const PAGE_SIZE=6000;
+let lastKey=null;
+let isLoading=false;
 
 function loadFollow(){
 
@@ -535,19 +586,43 @@ function loadFollow(){
   if(mobileList){mobileList.innerHTML="";}
   const isMobile = window.innerWidth < 768;
 
-  db.ref("children").on("value", snap => {
+  if(childRef){
+  childRef.off();
+}
+
+childRef=
+db.ref("children")
+.orderByKey()
+.limitToFirst(PAGE_SIZE);
+
+
+childRef.once("value",snap=>{
 
     const data = snap.val() || {};
-    let html = "";
+    
+    const html=[];
+    const mobileHtml=[];
     let done = 0;
     let notdone = 0;
-
-    // 🔥 ใช้เก็บข้อมูลหมู่
     let villageMap = {};
     
     for(let id in data){
 
     let c = data[id] || {};
+        // 🔥 filter จากกราฟวัคซีน
+
+    if(
+      selectedVaccine !== "all"
+    ){
+
+      if(
+        !c.vaccines ||
+        !c.vaccines[selectedVaccine]
+      ){
+        continue;
+      }
+
+    }
     
     if(!c.name?.trim() || !c.cid?.trim()) continue;
 
@@ -581,10 +656,14 @@ function loadFollow(){
       }
 
       // ✅ นับวัคซีน
-      const count = c.vaccines ? Object.keys(c.vaccines).length : 0;
+      const count = c.vaccines? Object.keys(c.vaccines).length: 0;
 
-      if(count > 0) done++;
-      else notdone++;
+      // ✅ ครบเมื่อ >= 10 เข็ม
+      if(count >= 10){
+        done++;
+      }else{
+        notdone++;
+      }
 
       // 🔥 นับหมู่
       let v = c.village || "ไม่ระบุ";
@@ -593,58 +672,70 @@ function loadFollow(){
         villageMap[v] = {done:0, notdone:0};
       }
 
-      if(count > 0){
-        villageMap[v].done++;
-      }else{
-        villageMap[v].notdone++;
-      }
+      if(count >= 10){villageMap[v].done++;}else{villageMap[v].notdone++;}
 
       // 📱 MOBILE
-      if(mobileList){
+     if(isMobile){
 
-    mobileList.innerHTML += `
-    <div class="child-card">
+mobileHtml.push(`
+<div class="child-card">
 
-    <div class="child-header">
-    <div>${c.name || '-'}</div>
-    <div>${c.hn || '-'}</div>
+  <div class="child-top">
+
+    <div>
+      <div class="child-name">
+        👶 ${c.name || '-'}
+      </div>
+
+      <div class="child-hn">
+        HN : ${c.hn || '-'}
+      </div>
     </div>
 
-    <div class="child-info">
+    <span class="status-badge ${count>=10?'done':'notdone'}">
+      ${count>=10?'✔︎ ฉีดครบ':'✘ ยังไม่ครบ'}
+    </span>
+
+  </div>
+
+  <div class="child-info">
     📍 ${getTambonName(c.tambon)}
-    | 🏠 ${c.house || "-"}
-    | หมู่ ${c.village || "-"}
-    </div>
+  </div>
 
-    <div class="child-info">
-    <span class="age">
-    ${getAgeBadge(c.birth)}
+  <div class="child-info">
+    🏠 บ้าน ${c.house || "-"} | หมู่ ${c.village || "-"}
+  </div>
+
+  <div class="child-meta">
+
+    <span class="age-badge">
+      ${getAgeBadge(c.birth)}
     </span>
-    | 💉 ${count} เข็ม
-    </div>
 
-    <div class="child-footer">
-
-    <span class="status-badge ${count>0?'done':'notdone'}">
-    ${count>0?'ฉีดแล้ว':'ยังไม่ฉีด'}
+    <span class="vaccine-count">
+      💉 ${count} เข็ม
     </span>
+
+  </div>
+
+  <div class="child-footer">
 
     <button
-    onclick="openVaccineModal('${id}')"
-    class="btn btn-outline-primary">
+      onclick="openVaccineModal('${id}')"
+      class="btn btn-primary ">
 
-    💉 วัคซีน
+      💉 ดูวัคซีน
 
     </button>
 
-    </div>
+  </div>
 
-    </div>
-    `;
-    }
+</div>
+`);
+}
 
       // 🖥 TABLE
-      html += `
+    html.push(`
 <tr data-id="${id}">
 
 <td><input value="${c.hn || ''}"onchange="autoSave('${id}','hn',this.value)"></td>
@@ -705,6 +796,23 @@ onchange="autoSave('${id}','hospital',this.value)">
             </div>
 
           </td>
+<td>
+
+<input
+value="${c.caregiver || ''}"
+
+onchange="
+autoSave(
+'${id}',
+'caregiver',
+this.value
+)"
+
+placeholder="ชื่อผู้ดูแล"
+
+>
+
+</td>
 
 <td><input value="${c.note||""}" onchange="autoSave('${id}','note',this.value)"></td>
 
@@ -714,19 +822,23 @@ onchange="autoSave('${id}','hospital',this.value)">
 
 <td>
 <select onchange="updateStatus('${id}',this.value)">
-<option value="pending" ${count===0?'selected':''}>ยังไม่ฉีด</option>
-<option value="done" ${count>0?'selected':''}>ฉีดแล้ว</option>
+<option value="pending" ${count<10?'selected':''}>ยังไม่ครบ</option>
+<option value="done" ${count>=10?'selected':''}>ฉีดครบ</option>
 </select>
 </td>
 
 </tr>
-`;
+
+`);
     }
 
    const followTable = document.getElementById("followTable");
 
+if(mobileList){
+    mobileList.innerHTML=mobileHtml.join("");
+    }
 if(followTable){
-   followTable.innerHTML = html;
+   followTable.innerHTML=html.join("");
 }
     // 🔥 KPI
     document.getElementById("total").innerText = done + notdone;
@@ -760,7 +872,9 @@ if(followTable){
 
 
 // 🔥 สลับกราฟ
-if(followChart) followChart.destroy();
+if(
+followChart && typeof followChart.destroy==="function")
+{followChart.destroy(); }
 
 let labels = [];
 let datasets = [];
@@ -993,43 +1107,51 @@ function openVaccineModal(id){
 }
 
 
-function toggleDateInline(cb, name){
-  const input = document.getElementById("date-"+name);
+function toggleDateInline(checkbox,vaccine){
 
-  if(!input) return;
+  const dateInput =
+  document.getElementById(
+    "date-"+vaccine
+  );
 
-  if(cb.checked){
-    input.style.display = "block";
+  if(checkbox.checked){
 
-    if(!input.value){
-      input.value = new Date().toISOString().split("T")[0];
-    }
+    dateInput.style.display="";
 
   }else{
-    input.style.display = "none";
-    input.value = "";
+
+    dateInput.style.display="none";
+    dateInput.value=""; // ล้างวันที่ทันที
+
   }
+
 }
 
+function saveLog(action,field,oldValue,newValue){
 
-function saveLog(action,detail){
-
-db.ref("loginLogs")
-.push({
+db.ref("loginLogs").push({
 
 name:
-localStorage.getItem("name")
-|| "Admin",
+localStorage.getItem("name") || "Admin",
 
-action:
-action,
+role:
+localStorage.getItem("role") || "user",
+
+action:action,
 
 detail:
-detail,
+`${field}
+: ${oldValue}
+→
+${newValue}`,
+
+date:
+new Date().toLocaleDateString(
+"th-TH"
+),
 
 time:
-new Date()
-.toLocaleString(
+new Date().toLocaleTimeString(
 "th-TH"
 )
 
@@ -1041,99 +1163,119 @@ new Date()
 // =========================
 function saveVaccines(){
 
-  let newVaccines = {};
-  let vaccineList = [];
+  let newVaccines={};
+  let vaccineList=[];
 
-  document.querySelectorAll("#vaccineEditor .vaccine-item").forEach(item=>{
-    const cb = item.querySelector("input[type=checkbox]");
-    const name = cb.value;
-    const date = item.querySelector("input[type=date]").value;
+  document
+  .querySelectorAll(
+  "#vaccineEditor .vaccine-item"
+  )
+  .forEach(item=>{
 
-    // 🔥 ถ้าติ๊กแต่ไม่มีวันที่ → auto วันนี้
-    let finalDate = date;
+    const cb=
+    item.querySelector(
+    "input[type=checkbox]"
+    );
+
+    const name=
+    cb.value;
+
+    const date=
+    item.querySelector(
+    "input[type=date]"
+    ).value;
+
+    let finalDate=date;
+
+    // ถ้าติ๊กแต่ไม่เลือกวัน
     if(cb.checked && !date){
-      finalDate = new Date().toISOString().split("T")[0];
+
+      finalDate=
+      new Date()
+      .toISOString()
+      .split("T")[0];
+
     }
 
+    // เก็บเฉพาะที่ติ๊ก
     if(cb.checked){
-      newVaccines[name] = finalDate;
+
+      newVaccines[name]=finalDate;
       vaccineList.push(name);
+
     }
+
   });
 
-  // 🔥 ดึงของเก่าก่อน
-  db.ref("children/"+currentId+"/vaccines").once("value")
-  .then(snap=>{
+  Promise.all([
 
-    const oldVaccines = snap.val() || {};
+  db.ref("children/"+currentId)
+  .update({
+    vaccines:newVaccines,
+    updatedAt:new Date().toLocaleString("th-TH")
+  }),
 
-    // 🔥 รวมของเก่า + ใหม่
-    const merged = {
-      ...oldVaccines,
-      ...newVaccines
-    };
+  db.ref("symptoms/"+currentId)
+  .update({
 
-    // 🔥 save แบบไม่ลบของเดิม
-    return Promise.all([
-
-// อัปเดตวัคซีนเด็ก
-db.ref(
-"children/"+currentId
-)
-.update({
-
-vaccines:merged,
-
-updatedAt:
-new Date()
-.toLocaleString("th-TH")
-
-}),
-
-
-    // 🔥 รีเซ็ตติดตามอาการใหม่ทุกครั้ง
-    db.ref(
-    "symptoms/"+currentId
-    )
-.update({
-
-    vaccines:merged,
+    vaccines:newVaccines,
     symptom:"ยังไม่ระบุ",
-
     level:"🟠 รอติดตาม",
-
     status:"รอติดตาม",
-
     priority:1,
-
     time:Date.now(),
-
     followedAt:null
 
+  })
+
+])
+
+.then(()=>{
+
+  alert("บันทึกแล้ว ✅");
+
+  // ทำส่วนอื่นแยก
+  try{
+
+    sendLineFollowUp(currentId);
+
+  }catch(e){
+
+    console.log(
+    "LINE error:",
+    e
+    );
+
+  }
+
+  try{
+
+    loadFollow();
+
+  }catch(e){
+
+    console.log(
+    "load error:",
+    e
+    );
+
+  }
+
 })
 
-]);
+.catch(err=>{
 
+  console.error(
+  "Firebase error:",
+  err
+  );
 
+  alert(
+  "บันทึกไม่สำเร็จ ❌"
+  );
 
-
-
-
-
-sendLineFollowUp(currentId);
-
-alert("บันทึกแล้ว ✅");
-
-loadFollow();
-
-})
-  .catch(err=>{
-    console.error(err);
-    alert("บันทึกไม่สำเร็จ ❌");
-  });
-
+});
 }
-
 
 
 // =========================
@@ -1153,23 +1295,65 @@ function updateStatus(id,status){
 // =========================
 let saveTimer = {};
 
-function autoSave(id, field, value){
+function autoSave(id,field,value){
 
-  clearTimeout(saveTimer[id + field]);
+clearTimeout(
+saveTimer[id+field]
+);
 
-  saveTimer[id + field] = setTimeout(()=>{
+saveTimer[id+field]=setTimeout(()=>{
 
-    db.ref("children/"+id).update({
-      [field]: value,
-      updatedAt: new Date().toLocaleString("th-TH")
-    })
-    .then(()=>{
-      showSaved(); // 🔥 แสดงว่าบันทึกแล้ว
-    });
+db.ref(
+"children/"+id
+)
 
-  }, 500);
+.once("value")
+
+.then(snap=>{
+
+const oldData=snap.val()||{};
+const oldValue=oldData[field]||"-";
+
+return db.ref(
+"children/"+id
+)
+
+.update({
+
+[field]:value,
+
+updatedAt:
+new Date()
+.toLocaleString(
+"th-TH"
+)
+
+})
+
+.then(()=>{
+
+saveLog(
+
+"แก้ไขข้อมูล",
+
+field,
+
+oldValue,
+
+value
+
+);
+
+showSaved();
+
+});
+
+});
+
+},800);
 
 }
+
 
 function showSaved(){
 
@@ -1355,15 +1539,16 @@ function addChildFull(){
 
     })
 
-    .catch(err=>{
+   .catch(err=>{
 
-    console.error(err);
+  console.error("ERROR:", err);
 
-    alert(
-    "❌ บันทึกไม่สำเร็จ"
-    );
+  alert(
+    "เกิดข้อผิดพลาด:\n" +
+    err.message
+  );
 
-    });
+});
 
     }
 
@@ -1437,9 +1622,42 @@ function deleteChild(id){
 // logout
 // =========================
 function logout(){
-  localStorage.removeItem("user");
-  localStorage.removeItem("name"); 
-  location.href="login.html";
+
+db.ref("loginLogs")
+.push({
+
+name:
+localStorage.getItem("name"),
+
+role:
+localStorage.getItem("role"),
+
+action:
+"ออกจากระบบ",
+
+date:
+new Date()
+.toLocaleDateString(
+"th-TH"
+),
+
+logoutTime:
+new Date()
+.toLocaleTimeString(
+"th-TH"
+)
+
+})
+
+.then(()=>{
+
+localStorage.clear();
+
+location.href=
+"login.html";
+
+});
+
 }
 
 
@@ -1447,18 +1665,31 @@ function logout(){
 // importExcel
 // =========================
 // 🔥 map วัคซีน
-const vaccineMap = {
-  "041":"BCG",
-  "D21":"DTP1",
-  "D22":"DTP2",
-  "D23":"DTP3",
-  "081":"MMR1",
-  "082":"MMR2",
-  "061":"JE1",
-  "062":"JE2",
-  "R21":"OPV1",
-  "R22":"OPV2",
-  "R23":"OPV3"
+const vaccineMap={
+
+"041":"BCG",
+
+"D21":"DTP1",
+"D22":"DTP2",
+"D23":"DTP3",
+"D24":"DTP4",
+"D25":"DTP5",
+
+"IP1":"IPV1",
+"IP2":"IPV2",
+
+"R21":"OPV1",
+"R22":"OPV2",
+"R23":"OPV3",
+"R24":"OPV4",
+"R25":"OPV5",
+
+"081":"MMR1",
+"082":"MMR2",
+
+"061":"JE1",
+"062":"JE2"
+
 };
 
 // 🔥 แปลง JSON → vaccines
@@ -1488,158 +1719,409 @@ function convertHDCtoVaccines(text){
 }
 
 
-// 🔥 IMPORT EXCEL
-function importExcel(){
 
-  const file = document.getElementById("fileInput").files[0];
-  if(!file){
-    alert("กรุณาเลือกไฟล์");
-    return;
-  }
 
-  const reader = new FileReader();
 
-  reader.onload = function(e){
+function getTambonByHospital(code){
 
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, {type:'array'});
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
+const map={
 
-    let countSave = 0;
+"10170":"puyoh",
+"10168":"pasemas",
+"10658":"pasemas",
 
-    rows.forEach(r=>{
+"10169":"munoh",
 
-      if(!r || r.length < 2) return;
+"77729":"kolok",
+"77728":"kolok"
 
-      let hn="", cid="", name="", tambon="", house="", village="", birth="", note="";
-      let hospital = "";
-      let vaccines = {};
+};
 
-      r.forEach(cell=>{
+return map[String(code)] || "";
 
-        let val = (cell+"").trim();
-        if(!val) return;
-
-        // 🔹 CID
-        if(/^\d{13}$/.test(val)){
-          cid = val;
-          return;
-        }
-
-        // 🔹 HN
-        if(/^\d{4,6}$/.test(val) && !hn){
-          hn = val;
-        }
-
-        // 🔥 hospital code (10168,10170)
-        if(/^\d{5}$/.test(val)){
-          hospital = val;
-        }
-
-        // 🔥 วันเกิด
-        let d = val.replace(/-/g,'/');
-        if(/\d{1,2}\/\d{1,2}\/\d{4}/.test(d)){
-          birth = d;
-          return;
-        }
-
-        // 🔥 บ้าน
-        if(/\d+\/\d+/.test(val)){
-          house = val;
-          return;
-        }
-        else if(/^\d{2,4}$/.test(val) && !house){
-          house = val;
-        }
-
-        // 🔥 หมู่
-        if(/^\d{1,2}$/.test(val) && !val.includes("/") && !village){
-          village = val.padStart(2,'0');
-          return;
-        }
-
-        // 🔹 ชื่อ
-        if(val.includes("ด.ช") || val.includes("ด.ญ")){
-          name = val;
-        }
-
-        // 🔹 หมายเหตุ
-        if(val.includes("ปฏิเสธ") || val.includes("ย้าย") || val.includes("ป่วย")){
-          note = val;
-        }
-
-        // 🔹 ตำบล
-        let t = val.replace(/\s/g,'');
-        if(t.includes("โก-ลก")) tambon = "kolok";
-        else if(t.includes("มูโนะ")) tambon = "munoh";
-        else if(t.includes("ปูโยะ")) tambon = "puyoh";
-        else if(t.includes("ปาเสมัส")) tambon = "pasemas";
-
-        // 🔥 วัคซีนจาก JSON
-        if(typeof cell === "string" && cell.includes("VACCINTYPE")){
-          vaccines = {
-            ...vaccines,
-            ...convertHDCtoVaccines(cell)
-          };
-        }
-
-      });
-
-      // 🔥 ลบ **** ออกจากชื่อ
-      name = name.replace(/\*+/g,"");
-
-      // 🔥 กันข้อมูลขยะ
-      if(!name || !cid){
-        return;
-      }
-
-      // 🔥 fallback HN
-      if(!hn){
-        hn = Date.now() + Math.floor(Math.random()*1000);
-      }
-
-      // 🔥 map hospital → tambon
-      if(!tambon){
-        if(hospital === "10168") tambon = "pasemas";
-        else if(hospital === "10170") tambon = "puyoh";
-        else if(hospital === "10169") tambon = "munoh";
-        else if(hospital === "77729" || hospital === "77728") tambon = "kolok";
-        else tambon = "kolok";
-      }
-
-      // 🔥 format หมู่
-      if(village){
-        village = parseInt(village).toString();
-      }
-
-      // 🔥 save ลง Firebase
-      db.ref("children").push({
-        hn,
-        cid,
-        name,
-        tambon,
-        hospital,
-        house,
-        village,
-        birth,
-        note,
-        vaccines,
-        updatedAt: new Date().toLocaleString("th-TH")
-      });
-
-      countSave++;
-
-    });
-
-    alert("นำเข้าแล้ว " + countSave + " รายการ ✅");
-
-    loadFollow();
-  };
-
-  reader.readAsArrayBuffer(file);
 }
 
+
+
+
+
+async function importExcel(){
+
+const file=
+document.getElementById(
+"excelFile"
+).files[0];
+
+if(!file){
+
+alert(
+"กรุณาเลือกไฟล์"
+);
+
+return;
+
+}
+
+const reader=
+new FileReader();
+
+reader.onload=async(e)=>{
+
+const workbook=
+XLSX.read(
+e.target.result,
+{type:"binary"}
+);
+
+const sheet=
+workbook.Sheets[
+workbook.SheetNames[0]
+];
+
+const rows=
+XLSX.utils.sheet_to_json(
+sheet
+);
+
+
+// 🔥 โหลดข้อมูลเดิม
+const snap=
+await db.ref(
+"children"
+)
+.once("value");
+
+const oldData=
+snap.val()||{};
+
+
+// 🔥 map HN → firebase key
+const hnMap={};
+
+Object.entries(
+oldData
+)
+
+.forEach(
+([key,c])=>{
+
+const hn=
+String(
+c.hn||""
+).trim();
+
+const hos=
+String(
+c.hospital||""
+).trim();
+
+if(
+
+hn &&
+hos
+
+){
+
+const uniqueKey=
+hn+"_"+hos;
+
+hnMap[
+uniqueKey
+]=key;
+
+}
+
+});
+
+
+let updates={};
+
+let addCount=0;
+let updateCount=0;
+
+
+rows.forEach(r=>{
+
+const hn=
+cleanValue(
+r.pid
+);
+const hos=
+cleanValue(
+r.hoscode
+);
+
+const uniqueKey=
+hn+"_"+hos;
+
+
+if(!hn) return;
+
+
+// 🔥 ถ้ามี HN ใช้อันเดิม
+let id=
+hnMap[
+uniqueKey
+];
+
+if(id){
+
+updateCount++;
+
+}else{
+
+id=
+db.ref()
+.child(
+"children"
+)
+.push().key;
+
+addCount++;
+
+}
+
+
+const child={
+
+hn:hn,
+
+cid:
+cleanValue(
+r.cid
+),
+
+name:
+(
+cleanValue(
+r.name
+)
++" "+
+cleanValue(
+r.lname
+)
+).trim(),
+
+birth:
+cleanValue(
+r.birth
+),
+
+hospital:
+cleanValue(
+r.hoscode
+),
+
+tambon:
+getTambonByHospital(
+r.hoscode
+),
+
+house:
+cleanValue(
+r.addr
+),
+
+vaccines:{},
+
+updatedAt:
+new Date()
+.toLocaleString(
+"th-TH"
+)
+
+};
+
+
+// 💉 map วัคซีน
+const vaccineFields={
+
+BCG:"bcg_date",
+
+HBV1:"hbv1_date",
+HBV2:"hbv2_date",
+HBV3:"hbv3_date",
+
+IPV1:"ipv1_date",
+IPV2:"ipv2_date",
+
+DTP1:"dtp1_date",
+DTP2:"dtp2_date",
+DTP3:"dtp3_date",
+DTP4:"dtp4_date",
+DTP5:"dtp5_date",
+
+OPV1:"opv1_date",
+OPV2:"opv2_date",
+OPV3:"opv3_date",
+OPV4:"opv4_date",
+OPV5:"opv5_date",
+
+MMR1:"mmr1_date",
+MMR2:"mmr2_date",
+
+JE1:"je1_date",
+JE2:"je2_date",
+
+Rota1:"rota1_date",
+Rota2:"rota2_date",
+Rota3:"rota3_date"
+
+};
+
+
+Object.entries(
+vaccineFields
+)
+
+.forEach(
+
+([name,field])=>{
+
+const value=
+cleanValue(
+r[field]
+);
+
+if(value){
+
+child.vaccines[
+name
+]=value;
+
+}
+
+}
+
+);
+
+
+// 🔥 ถ้ามี HN เดิมจะทับ
+if(hnMap[hn]){
+
+const oldChild=
+oldData[id]||{};
+
+
+// 🔥 เก็บข้อมูลเดิมไว้
+child.name=
+oldChild.name ||
+child.name;
+
+child.birth=
+oldChild.birth ||
+child.birth;
+
+child.cid=
+oldChild.cid ||
+child.cid;
+
+child.hospital=
+oldChild.hospital ||
+child.hospital;
+
+child.tambon=
+oldChild.tambon ||
+child.tambon;
+
+child.house=
+oldChild.house ||
+child.house;
+
+
+// 🔥 รวมวัคซีนเดิม+ใหม่
+child.vaccines={
+
+...(oldChild.vaccines||{}),
+
+...(child.vaccines||{})
+
+};
+
+}
+
+updates[id]=child;
+
+});
+
+
+db.ref(
+"children"
+)
+
+.update(
+updates
+)
+
+.then(()=>{
+
+alert(
+
+`✅ เพิ่มใหม่ ${addCount} รายการ
+🔄 อัปเดต ${updateCount} รายการ`
+
+);
+
+loadFollow();
+
+})
+
+.catch(err=>{
+
+console.log(
+err
+);
+
+alert(
+"❌ นำเข้าไม่สำเร็จ"
+);
+
+});
+
+};
+
+reader.readAsBinaryString(
+file
+);
+
+}
+
+
+
+
+
+function cleanValue(v){
+
+if(
+v===null ||
+v===undefined
+){
+return "";
+}
+
+v=
+String(v)
+.trim();
+
+if(
+
+v==="<NA>" ||
+
+v==="NaN" ||
+
+v==="null" ||
+
+v==="undefined"
+
+){
+
+return "";
+
+}
+
+return v;
+
+}
 
 
 
@@ -1718,18 +2200,14 @@ function reloadRealtime(){
 
 function changeTambon(el){
 
-  let tr = el.closest("tr");
-  let id = tr.getAttribute("data-id");
+let tr=el.closest("tr");
+let id=tr.getAttribute("data-id");
 
-  let newTambon = el.value;
+autoSave(id,"tambon",el.value);
+autoSave(id,"village","");
 
-  db.ref("children/"+id).update({
-    tambon: newTambon,
-    village: "", // reset หมู่
-    updatedAt: new Date().toLocaleString("th-TH")
-  });
+loadFollow();
 
-  loadFollow(); // รีเฟรช dropdown หมู่ทันที
 }
 
 function autoSaveVillage(id, value){
@@ -1745,204 +2223,390 @@ function autoSaveVillage(id, value){
 
 
 
+let selectedVaccine = "all";
 
 function loadvaccineChart(){
 
-  console.log("🔥 vaccine chart working");
+console.log("🔥 vaccine chart working");
 
-  const vaccineFilter = document.getElementById("vaccineFilter")?.value || "all";
-  const quarterFilter = document.getElementById("quarterFilter")?.value || "all";
+const vaccineFilter =
+document.getElementById(
+"vaccineFilter"
+)?.value || "all";
 
-  db.ref("children").once("value", snapshot => {
+selectedVaccine = vaccineFilter;
 
-    const data = snapshot.val();
+db.ref("children")
 
-    if(!data || Object.keys(data).length === 0){
-      console.log("ไม่มีข้อมูล");
-      return;
-    }
+.once("value")
 
-    let total = Object.keys(data).length;
+.then(snapshot=>{
 
-    let vaccines = {
-      BCG:0, HBV1:0, HBV2:0, HBV3:0,
-      DTP1:0, DTP2:0, DTP3:0, DTP4:0,
-      OPV1:0, OPV2:0, OPV3:0, OPV4:0,
-      IPV:0,
-      MMR1:0, MMR2:0,
-      JE1:0, JE2:0,
-      dT:0, HPV:0
-    };
+const data=
+snapshot.val()||{};
 
-    for(let id in data){
-      let c = data[id];
+if(
+Object.keys(data).length===0
+){
 
-      for(let v in vaccines){
+console.log(
+"ไม่มีข้อมูล"
+);
 
-        // 🔹 filter วัคซีน
-        if(vaccineFilter !== "all" && v !== vaccineFilter) continue;
+return;
 
-        if(c.vaccines && c.vaccines[v]){
-
-          // 🔹 filter ไตรมาส
-          if(quarterFilter !== "all"){
-            const date = c.vaccines[v];
-            const month = new Date(date).getMonth()+1;
-
-            let q = "Q1";
-            if(month>=4 && month<=6) q="Q2";
-            else if(month>=7 && month<=9) q="Q3";
-            else if(month>=10) q="Q4";
-
-            if(q !== quarterFilter) continue;
-          }
-
-          vaccines[v]++;
-        }
-      }
-    }
-
-    let labels = [];
-    let values = [];
-
-    for(let v in vaccines){
-
-      if(vaccineFilter !== "all" && v !== vaccineFilter) continue;
-
-      labels.push(v);
-
-      let percent = total > 0 ? (vaccines[v]/total)*100 : 0;
-      values.push(percent);
-    }
-
-    const ctx = document.getElementById("vaccineChart");
-    if(!ctx){
-      console.log("ไม่เจอ canvas");
-      return;
-    }
-
-    // 🔥 กันกราฟซ้อน
-    if(window.vaccineChart && typeof window.vaccineChart.destroy === "function"){
-    window.vaccineChart.destroy();
-    }
-    window.vaccineChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: "% การฉีดวัคซีน",
-          data: values,
-          tension: 0.4,
-          borderColor: "#4CAF50"
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales:{
-          y:{
-            beginAtZero:true,
-            max:100
-          }
-        }
-      }
-    });
-// =========================
-// 📊 DESCRIPTION
-// =========================
-const max = Math.max(...values);
-const min = Math.min(...values);
-const maxIndex = values.indexOf(max);
-const minIndex = values.indexOf(min);
-const maxVaccine = labels[maxIndex];
-const minVaccine = labels[minIndex];
-
-
-const el = document.getElementById("vaccineDescription");
-if(!el) return;
-
-// 🔹 กันไม่มีข้อมูล
-if(values.length === 0){
-  el.innerHTML = `❌ ไม่มีข้อมูล`;
-  return;
 }
 
-// 🔥 กรณีเลือกวัคซีนเดียว
-if(values.length === 1){
 
-  let text = `
-  <b>💉 ${labels[0]}</b><br>
-  Coverage: ${values[0].toFixed(1)}%<br>
-  🟢 สูงสุด: ${maxVaccine} (${max.toFixed(1)}%)<br>
-  🔴 ต่ำสุด: ${minVaccine} (${min.toFixed(1)}%)<br>
-  `;
+// 🔥 ตำบล
+const tambons=[
 
-  // 🔴 ยังไม่มีการฉีด
-  if(values[0] === 0){
-    text += `<br><span style="color:#dc2626"> ‼️ ยังไม่มีการฉีดวัคซีน</span>`;
-  }
+"munoh",
+"puyoh",
+"pasemas",
+"kolok"
 
-  // 🟡 ต่ำกว่าเกณฑ์
-  else if(values[0] < 80){
-    text += `<br><span style="color:#f59e0b">⚠️ ต่ำกว่าเกณฑ์ (80%)</span>`;
-  }
+];
 
-  // 🟢 ผ่านเกณฑ์
-  else{
-    text += `<br><span style="color:#16a34a">✅ ผ่านเกณฑ์</span>`;
-  }
 
-  el.innerHTML = text;
-  return;
-}
-// 🔥 ถ้าทุกค่ามันเท่ากัน
-if(max === min){
+// 🔥 ชื่อไทย
+const tambonName={
 
-  let text = `
-  <b>📊 สรุปความครอบคลุมวัคซีน</b><br>
-  📌 ค่าทุกวัคซีนเท่ากัน (${max.toFixed(1)}%)<br>
-  📈 จำนวนวัคซีน: ${labels.length}
-  `;
+munoh:"มูโนะ",
+puyoh:"ปูโยะ",
+pasemas:"ปาเสมัส",
+kolok:"สุไหงโก-ลก"
 
-  if(max === 0){
-    text += `<br><span style="color:#dc2626">🔴 ยังไม่มีการฉีดวัคซีน</span>`;
-  }
+};
 
-  el.innerHTML = text;
-  return;
-}
+const labels=
+tambons.map(
+t=>tambonName[t]
+);
 
-// 🔥 ปกติ (หลายตัว)
-let text = `
-<b>📊 สรุปความครอบคลุมวัคซีน</b><br>
-📈 จำนวนวัคซีน: ${labels.length}<br>
-🟢 สูงสุด: ${maxVaccine} (${max.toFixed(1)}%)<br>
-🔴 ต่ำสุด: ${minVaccine} (${min.toFixed(1)}%)<br>
-`;
-// 🔥 แจ้งเตือนต่ำกว่าเกณฑ์
-if(min < 80){
-  text += `<br><span style="color:#f59e0b">⚠️ มีวัคซีนต่ำกว่าเกณฑ์</span>`;
-}
+let datasets=[];
 
-el.innerHTML = text;
-      
-  });
+
+// 🔥 เลือกวัคซีนเดียว
+if(
+vaccineFilter!=="all"
+){
+
+let values=[];
+
+tambons.forEach(t=>{
+
+let count=0;
+
+for(
+let id in data
+){
+
+const c=
+data[id];
+
+if(
+
+c.tambon===t &&
+c.vaccines &&
+c.vaccines[vaccineFilter]
+
+){
+
+count++;
+
 }
 
-document.addEventListener("DOMContentLoaded", ()=>{
+}
 
-  const select = document.getElementById("vaccineFilter");
-
-  if(!select) return;
-
-  vaccineList.forEach(v=>{
-    const op = document.createElement("option");
-    op.value = v;
-    op.textContent = v;
-    select.appendChild(op);
-  });
+values.push(
+count
+);
 
 });
+
+datasets=[{
+
+label:
+vaccineFilter,
+
+data:
+values,
+
+borderWidth:1
+
+}];
+
+}
+
+
+// 🔥 ทุกวัคซีน
+else{
+
+vaccineList.forEach(v=>{
+
+let values=[];
+
+tambons.forEach(t=>{
+
+let count=0;
+
+for(
+let id in data
+){
+
+const c=
+data[id];
+
+if(
+
+c.tambon===t &&
+c.vaccines &&
+c.vaccines[v]
+
+){
+
+count++;
+
+}
+
+}
+
+values.push(
+count
+);
+
+});
+
+datasets.push({
+
+label:v,
+
+data:values,
+
+borderWidth:1
+
+});
+
+});
+
+}
+
+
+// 🔥 canvas
+const ctx=
+document.getElementById(
+"vaccineChart"
+);
+
+if(!ctx){
+
+return;
+
+}
+
+
+// 🔥 กันกราฟซ้อน
+if(
+
+window.vaccineChart &&
+typeof
+window.vaccineChart.destroy==="function"
+
+){
+
+window.vaccineChart.destroy();
+
+}
+
+
+// 🔥 สร้างกราฟแท่ง
+window.vaccineChart=
+
+new Chart(
+
+ctx,
+
+{
+
+type:"bar",
+
+data:{
+
+labels:labels,
+
+datasets:datasets
+
+},
+
+options:{
+
+responsive:true,
+
+maintainAspectRatio:false,
+
+plugins:{
+
+legend:{
+
+position:"bottom"
+
+}
+
+},
+
+interaction:{
+
+mode:"index",
+intersect:false
+
+},
+
+scales:{
+
+y:{
+
+beginAtZero:true,
+
+title:{
+
+display:true,
+
+text:"จำนวนคน"
+
+}
+
+}
+
+}
+
+}
+
+}
+
+);
+
+
+// =====================
+// 📊 DESCRIPTION
+// =====================
+
+const el=
+document.getElementById(
+"vaccineDescription"
+);
+
+if(!el) return;
+
+
+// เลือกวัคซีนเดียว
+if(
+vaccineFilter!=="all"
+){
+
+const values=
+datasets[0].data;
+
+const max=
+Math.max(...values);
+
+const min=
+Math.min(...values);
+
+const maxIndex=
+values.indexOf(max);
+
+const minIndex=
+values.indexOf(min);
+
+
+el.innerHTML=`
+
+<b>
+💉 ${vaccineFilter}
+</b>
+
+<br>
+
+🟢 สูงสุด:
+${labels[maxIndex]}
+(${max} คน)
+
+<br>
+
+🔴 ต่ำสุด:
+${labels[minIndex]}
+(${min} คน)
+
+`;
+
+}else{
+
+el.innerHTML=`
+
+<b>
+📊 เปรียบเทียบวัคซีนทั้งหมด
+</b>
+
+<br>
+
+แสดงจำนวนคนฉีดแยกตามตำบล
+
+`;
+
+}
+
+});
+
+}
+
+document.addEventListener(
+"DOMContentLoaded",
+()=>{
+
+const select=
+document.getElementById(
+"vaccineFilter"
+);
+
+if(!select)
+return;
+
+
+// กันซ้ำ
+select.innerHTML=
+`<option value="all">ทุกวัคซีน</option>`;
+
+
+vaccineList.forEach(v=>{
+
+const op=
+document.createElement(
+"option"
+);
+
+op.value=v;
+
+op.textContent=v;
+
+select.appendChild(
+op
+);
+
+});
+
+select.addEventListener(
+"change",
+()=>{
+
+  loadvaccineChart();
+  loadFollow();
+
+});
+
+});
+
+
 
 
 
@@ -2143,19 +2807,59 @@ db.ref("villageCare").set({
 
 
 function parseThaiDate(birth){
-  if(!birth) return null;
 
-  if(birth.includes("-")){
-    return new Date(birth);
-  }
+if(!birth) return null;
 
-  if(birth.includes("/")){
-    let [d,m,y] = birth.split("/").map(Number);
-    if(y > 2500) y -= 543; // พ.ศ → ค.ศ
-    return new Date(y, m-1, d);
-  }
+// 🔥 Excel date เป็นตัวเลข
+if(typeof birth==="number"){
 
-  return null;
+const date=
+new Date(
+(birth-25569)
+*86400*1000
+);
+
+return date;
+
+}
+
+// 🔥 แปลงเป็น string ก่อน
+birth=
+String(birth);
+
+
+// yyyy-mm-dd
+if(birth.includes("-")){
+
+return new Date(birth);
+
+}
+
+
+// dd/mm/yyyy
+if(birth.includes("/")){
+
+let [d,m,y]=
+birth
+.split("/")
+.map(Number);
+
+if(y>2500){
+
+y-=543;
+
+}
+
+return new Date(
+y,
+m-1,
+d
+);
+
+}
+
+return null;
+
 }
 
 function getAgeMonths(birth){
@@ -2273,20 +2977,20 @@ function filterData() {
   updateChart(filtered);
 }
 
-if(vaccineFilter==="all") {
-  // group ตามวัคซีน
-  const grouped = {};
+// if(vaccineFilter==="all") {
+//   // group ตามวัคซีน
+//   const grouped = {};
 
-  filtered.forEach(d => {
-    if (!grouped[d.name]) grouped[d.name] = 0;
-    grouped[d.name] += d.percent;
-  });
+//   filtered.forEach(d => {
+//     if (!grouped[d.name]) grouped[d.name] = 0;
+//     grouped[d.name] += d.percent;
+//   });
 
-  const labels = Object.keys(grouped);
-  const values = Object.values(grouped);
+//   const labels = Object.keys(grouped);
+//   const values = Object.values(grouped);
 
-  updateChartCustom(labels, values);
-}
+//   updateChartCustom(labels, values);
+// }
 
 
 function formatDate(dateStr){
@@ -2302,21 +3006,111 @@ function formatDate(dateStr){
 }
 
 function formatDateInput(dateStr){
-  if(!dateStr) return "";
 
-  // ถ้าเป็น dd/mm/yyyy → แปลง
-  if(dateStr.includes("/")){
-    const parts = dateStr.split("/");
-    if(parts.length === 3){
-      return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
-    }
-  }
+if(!dateStr) return "";
 
-  // ถ้าเป็น yyyy-mm-dd อยู่แล้ว
-  return dateStr;
+// 🔥 Excel number
+if(typeof dateStr==="number"){
+
+const date=
+new Date(
+(dateStr-25569)
+*86400*1000
+);
+
+return date
+.toISOString()
+.split("T")[0];
+
+}
+
+dateStr=
+String(dateStr);
+
+if(dateStr.includes("/")){
+
+const parts=
+dateStr.split("/");
+
+return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
+
+}
+
+return dateStr;
+
 }
 
 
+
+function loadMore(){
+
+if(!lastKey) return;
+
+isLoading=true;
+
+db.ref(
+"children"
+)
+
+.orderByKey()
+
+.startAfter(
+lastKey
+)
+
+.limitToFirst(
+PAGE_SIZE
+)
+
+.once(
+"value",
+snap=>{
+
+const data=
+snap.val();
+
+if(!data){
+
+isLoading=false;
+return;
+
+}
+
+renderChildren(
+data
+);
+
+lastKey=
+Object.keys(data).pop();
+
+isLoading=false;
+
+});
+
+}
+
+window.addEventListener(
+"scroll",
+()=>{
+
+if(isLoading) return;
+
+if(
+
+window.innerHeight+
+window.scrollY
+
+>=
+
+document.body.offsetHeight-300
+
+){
+
+loadMore();
+
+}
+
+});
 
 
 
