@@ -264,13 +264,7 @@ return;
 
 // ค้นผู้ใช้
 
-db.ref(
-"users"
-)
-
-.once(
-"value",
-snap=>{
+db.ref("users").once("value",snap=>{
 
 const data=
 snap.val()||{};
@@ -564,6 +558,9 @@ function register(){
 // =========================
 // 📊 โหลดข้อมูล + ตาราง + กราฟ
 // =========================
+
+let currentPage = 1;
+const rowsPerPage = 30;
 let followChart;
 let chartMode="percent";
 let childRef=null;
@@ -599,9 +596,9 @@ db.ref("children")
 childRef.once("value",snap=>{
 
     const data = snap.val() || {};
-    
-    const html=[];
-    const mobileHtml=[];
+    const html = [];
+    const mobileHtml = [];
+    const filteredData = [];
     let done = 0;
     let notdone = 0;
     let villageMap = {};
@@ -734,6 +731,26 @@ mobileHtml.push(`
 `);
 }
 
+ 
+filteredData.push({
+  id,
+  c,
+  count
+});
+   }
+
+const start =
+(currentPage - 1) * rowsPerPage;
+
+const end =
+start + rowsPerPage;
+
+const pageData =
+filteredData.slice(start,end);
+
+pageData.forEach(row=>{
+
+ const {id,c,count} = row;
       // 🖥 TABLE
     html.push(`
 <tr data-id="${id}">
@@ -830,8 +847,8 @@ placeholder="ชื่อผู้ดูแล"
 </tr>
 
 `);
-    }
-
+    
+});
    const followTable = document.getElementById("followTable");
 
 if(mobileList){
@@ -840,6 +857,9 @@ if(mobileList){
 if(followTable){
    followTable.innerHTML=html.join("");
 }
+renderPagination(
+ filteredData.length
+);
     // 🔥 KPI
     document.getElementById("total").innerText = done + notdone;
     document.getElementById("done").innerText = done;
@@ -1060,6 +1080,86 @@ function setMode(mode){
   loadFollow();
 }
 
+
+function renderPagination(totalRows){
+
+ const totalPages =
+ Math.ceil(totalRows / rowsPerPage);
+
+ let html = "";
+
+ html += `
+ <button
+ class="btn btn-sm btn-secondary me-1"
+ ${currentPage===1?"disabled":""}
+ onclick="changePage(${currentPage-1})">
+
+ ◀
+
+ </button>
+ `;
+
+ for(let i=1;i<=totalPages;i++){
+
+   if(
+      i===1 ||
+      i===totalPages ||
+      Math.abs(i-currentPage)<=2
+   ){
+
+      html += `
+      <button
+      class="btn btn-sm ${
+      i===currentPage
+      ? "btn-primary"
+      : "btn-outline-primary"
+      } me-1"
+
+      onclick="changePage(${i})">
+
+      ${i}
+
+      </button>
+      `;
+   }
+
+ }
+
+ html += `
+ <button
+ class="btn btn-sm btn-secondary"
+ ${currentPage===totalPages?"disabled":""}
+ onclick="changePage(${currentPage+1})">
+
+ ▶
+
+ </button>
+ `;
+
+ document.getElementById(
+ "pagination"
+ ).innerHTML = html;
+}
+
+
+function changePage(page){
+
+ currentPage = page;
+
+ loadFollow();
+
+}
+
+
+
+
+
+
+
+
+
+
+
 // =========================
 // 💉 เปิด Modal วัคซีน
 // =========================
@@ -1127,37 +1227,6 @@ function toggleDateInline(checkbox,vaccine){
 
 }
 
-function saveLog(action,field,oldValue,newValue){
-
-db.ref("loginLogs").push({
-
-name:
-localStorage.getItem("name") || "Admin",
-
-role:
-localStorage.getItem("role") || "user",
-
-action:action,
-
-detail:
-`${field}
-: ${oldValue}
-→
-${newValue}`,
-
-date:
-new Date().toLocaleDateString(
-"th-TH"
-),
-
-time:
-new Date().toLocaleTimeString(
-"th-TH"
-)
-
-});
-
-}
 // =========================
 // 💾 บันทึกวัคซีน
 // =========================
@@ -1207,74 +1276,68 @@ function saveVaccines(){
 
   });
 
-  Promise.all([
 
-  db.ref("children/"+currentId)
-  .update({
-    vaccines:newVaccines,
-    updatedAt:new Date().toLocaleString("th-TH")
-  }),
 
-  db.ref("symptoms/"+currentId)
-  .update({
+db.ref("children/"+currentId)
+.once("value")
+.then(snap=>{
 
-    vaccines:newVaccines,
-    symptom:"ยังไม่ระบุ",
-    level:"🟠 รอติดตาม",
-    status:"รอติดตาม",
-    priority:1,
-    time:Date.now(),
-    followedAt:null
+  const child = snap.val() || {};
 
-  })
+  return Promise.all([
 
-])
+    db.ref("children/"+currentId)
+    .update({
+      vaccines:newVaccines,
+      updatedAt:new Date().toLocaleString("th-TH")
+    }),
 
+    db.ref("symptoms/"+currentId)
+    .update({
+
+      name: child.name || "",
+      hn: child.hn || "",
+      cid: child.cid || "",
+      birth: child.birth || "",
+      house: child.house || "",
+
+      vaccines:newVaccines,
+      symptom:"ยังไม่ระบุ",
+      level:"🟠 รอติดตาม",
+      status:"รอติดตาม",
+      priority:1,
+      time:Date.now(),
+      followedAt:null
+
+    })
+
+  ]);
+
+})
 .then(()=>{
 
   alert("บันทึกแล้ว ✅");
 
-  // ทำส่วนอื่นแยก
   try{
-
     sendLineFollowUp(currentId);
-
   }catch(e){
-
-    console.log(
-    "LINE error:",
-    e
-    );
-
+    console.log(e);
   }
 
   try{
-
     loadFollow();
-
   }catch(e){
-
-    console.log(
-    "load error:",
-    e
-    );
-
+    console.log(e);
   }
 
 })
-
 .catch(err=>{
 
-  console.error(
-  "Firebase error:",
-  err
-  );
-
-  alert(
-  "บันทึกไม่สำเร็จ ❌"
-  );
+  console.error(err);
+  alert("บันทึกไม่สำเร็จ ❌");
 
 });
+
 }
 
 
@@ -3111,7 +3174,6 @@ loadMore();
 }
 
 });
-
 
 
 
