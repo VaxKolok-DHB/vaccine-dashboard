@@ -265,30 +265,37 @@ const keyword =
 
 const entries =
 
-  Object.entries(data)
+Object.entries(data)
 
-  .filter(([k,s]) => {
+.filter(([k,s]) => {
 
-    const hn =
-      String(s.hn || "")
-      .toLowerCase();
+  const hn =
+    String(s.hn || "")
+    .toLowerCase();
 
-    const name =
-      String(s.name || "")
-      .toLowerCase();
+  const name =
+    String(s.name || "")
+    .toLowerCase();
 
-    return (
-      hn.includes(keyword) ||
-      name.includes(keyword)
-    );
-
-  })
-
-  .sort(
-    (a,b) =>
-    (a[1].priority || 99) -
-    (b[1].priority || 99)
+  return (
+    hn.includes(keyword) ||
+    name.includes(keyword)
   );
+
+})
+
+.sort((a,b)=>{
+
+  const p1 = a[1].priority || 99;
+  const p2 = b[1].priority || 99;
+
+  if(p1 !== p2){
+    return p1 - p2;
+  }
+
+  return (b[1].time || 0) - (a[1].time || 0);
+
+});
 
 let total = 0;
 let normal = 0;
