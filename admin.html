@@ -77,18 +77,14 @@ border-left-color:#f59e0b;
 </head>
 
 <body>
-
 <div class="container">
-
-<div class="top-card">
-
-
 
 <div class=" d-flex justify-content-between align-items-center
 mb-4
 ">
+
 <h2>
-👑 จัดการผู้ใช้งาน
+ตรวจการเข้าถึงเว็บไซต์
 </h2>
 
 <a
@@ -103,6 +99,8 @@ btn-outline-secondary
 </a>
 
 </div>
+<div class="container">
+<div class="top-card">
 
 <div class="row mt-4">
 
@@ -176,6 +174,8 @@ class="badge bg-warning"
 
 <thead>
 
+
+
 <tr>
 
 <th>CID</th>
@@ -233,8 +233,60 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+function approveUser(id){
 
+if(!confirm("อนุมัติผู้ใช้นี้ ?")) return;
 
+db.ref("users/"+id).update({
+
+status:"approved"
+
+});
+
+saveLog(
+"อนุมัติผู้ใช้",
+id
+);
+
+}
+
+function changeRole(id,role){
+
+db.ref(
+"users/"+id
+).update({
+
+role:role
+
+});
+
+saveLog(
+"เปลี่ยน Role",
+id,
+"",
+role
+);
+
+}
+
+function deleteUser(id){
+
+if(
+!confirm(
+"ลบผู้ใช้นี้ ?"
+)
+) return;
+
+db.ref(
+"users/"+id
+).remove();
+
+saveLog(
+"ลบผู้ใช้",
+id
+);
+
+}
 function loadAdmin(){
 
 db.ref(
@@ -355,7 +407,60 @@ ${u.status||"-"}
 
 <td>
 
--
+<select
+class="form-select form-select-sm"
+onchange="changeRole('${id}',this.value)">
+
+<option
+value="user"
+${u.role==="user"?"selected":""}>
+
+user
+
+</option>
+
+<option
+value="admin"
+${u.role==="admin"?"selected":""}>
+
+admin
+
+</option>
+
+</select>
+
+${
+u.status==="pending"
+
+?
+
+`<button
+class="btn btn-success btn-sm w-100 mb-1"
+onclick="approveUser('${id}')">
+
+✅ อนุมัติ
+
+</button>`
+
+:
+
+`<span
+class="badge bg-success">
+
+อนุมัติแล้ว
+
+</span>`
+}
+
+<br>
+
+<button
+class="btn btn-danger btn-sm mt-1"
+onclick="deleteUser('${id}')">
+
+🗑 ลบ
+
+</button>
 
 </td>
 
@@ -386,14 +491,53 @@ pending;
 }
 
 
+function saveLog(
+action,
+detail="",
+before="",
+after=""
+){
+
+db.ref("loginLogs").push({
+
+user:
+localStorage.getItem("name")
+||
+"Unknown",
+
+role:
+localStorage.getItem("role")
+||
+"user",
+
+action,
+detail,
+before,
+after,
+
+page:
+location.pathname,
+
+date:
+new Date()
+.toLocaleDateString("th-TH"),
+
+time:
+new Date()
+.toLocaleTimeString("th-TH"),
+
+timestamp:
+Date.now()
+
+});
+
+}
 function loadLogs(){
 
-db.ref(
-"logs"
-)
+db.ref("loginLogs")
 
 .limitToLast(
-100
+30
 )
 
 .on(
@@ -407,6 +551,7 @@ snap.val()||{};
 
 let html="";
 
+
 Object.keys(data)
 
 .reverse()
@@ -416,13 +561,30 @@ Object.keys(data)
 const l=
 data[id];
 
+let type=
+"edit";
+
+if(
+l.action==="เข้าสู่ระบบ"
+){
+
+type=
+"login";
+
+}
+
+if(
+l.action==="ออกจากระบบ"
+){
+
+type=
+"logout";
+
+}
+
 html+=`
 
-<div class="timeline-card">
-
-<div class="d-flex justify-content-between">
-
-<div>
+<div class="timeline-card ${type}">
 
 <b>
 
@@ -430,66 +592,26 @@ html+=`
 
 </b>
 
-<span class="badge bg-primary">
-
-${l.role||"user"}
-
-</span>
-
 <br>
 
 📌 ${l.action||"-"}
 
 <br>
 
-📝 ${l.detail||"-"}
+${l.detail||"-"}
 
 <br>
 
-${
-l.before
-?
+🕒 ${l.date||""}
 
-`🔹ก่อน:
-${l.before}
-<br>`
-
-:
-
-""
-}
-
-${
-l.after
-?
-
-`🔸หลัง:
-${l.after}
-<br>`
-
-:
-
-""
-}
-
-</div>
-
-<div>
-
-🕒
-${l.date}
-<br>
-${l.time}
-
-</div>
-
-</div>
+${l.time||""}
 
 </div>
 
 `;
 
 });
+
 
 document
 .getElementById(
@@ -501,102 +623,9 @@ html;
 });
 
 }
-saveLog(
-
-"แก้วัคซีน",
-
-"HN : "+child.hn,
-
-JSON.stringify(
-oldVaccine
-),
-
-JSON.stringify(
-newVaccine
-)
-
-);
-
-saveLog(
-"เข้าสู่ระบบ",
-"Login"
-);
-
-function saveLog(
-action,
-detail="",
-before="",
-after=""
-){
-
-const user=
-localStorage.getItem("name")
-||
-"Unknown";
-
-const role=
-localStorage.getItem("role")
-||
-"user";
-
-db.ref("loginLogs")
-.push({
-
-name:user,
-
-role:role,
-
-action:action,
-
-detail:detail,
-
-before:before,
-
-after:after,
-
-date:
-new Date()
-.toLocaleDateString(
-"th-TH"
-),
-
-time:
-new Date()
-.toLocaleTimeString(
-"th-TH"
-),
-
-timestamp:
-Date.now()
-
-});
-
-}
 
 
-function logout(){
 
-saveLog(
-"ออกจากระบบ",
-"Logout"
-);
-
-localStorage.removeItem(
-"user"
-);
-
-localStorage.removeItem(
-"name"
-);
-
-localStorage.removeItem(
-"role"
-);
-
-window.location=
-"login.html";
-
-}
 document.addEventListener(
 
 "DOMContentLoaded",
@@ -607,12 +636,9 @@ loadAdmin();
 
 loadLogs();
 
-
-
 }
+
 );
-
-
 
 </script>
 
