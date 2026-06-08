@@ -27,22 +27,19 @@ const tambonMap = {
 const vaccineList=[
 
 "BCG",
-
 "HBV1",
 "HBV2",
-"HBV3",
+
 
 "IPV1",
 "IPV2",
 
-"DTP1",
-"DTP2",
-"DTP3",
+"DTPHBHib1",
+"DTPHBHib2",
+"DTPHBHib3",
 "DTP4",
 "DTP5",
 
-"OPV1",
-"OPV2",
 "OPV3",
 "OPV4",
 "OPV5",
@@ -50,8 +47,8 @@ const vaccineList=[
 "MMR1",
 "MMR2",
 
-"JE1",
-"JE2",
+"LAJE1",
+"LAJE2",
 
 "Rota1",
 "Rota2",
@@ -61,36 +58,37 @@ const vaccineList=[
 
 const vaccineData=[
 
+[
 {name:"BCG",quarter:"Q1",percent:95},
 
 {name:"HBV1",quarter:"Q1",percent:90},
 {name:"HBV2",quarter:"Q1",percent:88},
-{name:"HBV3",quarter:"Q1",percent:85},
 
-{name:"IPV1",quarter:"Q1",percent:84},
-{name:"IPV2",quarter:"Q1",percent:82},
+{name:"DTPHBHib1",quarter:"Q1",percent:86},
+{name:"DTPHBHib2",quarter:"Q1",percent:84},
+{name:"DTPHBHib3",quarter:"Q1",percent:82},
 
-{name:"DTP1",quarter:"Q1",percent:80},
-{name:"DTP2",quarter:"Q1",percent:78},
-{name:"DTP3",quarter:"Q1",percent:76},
-{name:"DTP4",quarter:"Q1",percent:74},
-{name:"DTP5",quarter:"Q1",percent:72},
+{name:"IPV1",quarter:"Q1",percent:80},
+{name:"IPV2",quarter:"Q1",percent:78},
 
-{name:"OPV1",quarter:"Q1",percent:70},
-{name:"OPV2",quarter:"Q1",percent:68},
-{name:"OPV3",quarter:"Q1",percent:66},
-{name:"OPV4",quarter:"Q1",percent:64},
-{name:"OPV5",quarter:"Q1",percent:62},
+{name:"OPV3",quarter:"Q1",percent:76},
+{name:"OPV4",quarter:"Q1",percent:74},
+{name:"OPV5",quarter:"Q1",percent:72},
+
+{name:"Rota1",quarter:"Q1",percent:70},
+{name:"Rota2",quarter:"Q1",percent:68},
+{name:"Rota3",quarter:"Q1",percent:66},
 
 {name:"MMR1",quarter:"Q1",percent:60},
-{name:"MMR2",quarter:"Q1",percent:58},
+{name:"MMR2",quarter:"Q1",percent:62},
 
-{name:"JE1",quarter:"Q1",percent:55},
-{name:"JE2",quarter:"Q1",percent:53},
 
-{name:"Rota1",quarter:"Q1",percent:50},
-{name:"Rota2",quarter:"Q1",percent:48},
-{name:"Rota3",quarter:"Q1",percent:46}
+{name:"LAJE1",quarter:"Q1",percent:58},
+{name:"LAJE2",quarter:"Q1",percent:56},
+
+{name:"DTP4",quarter:"Q1",percent:54},
+{name:"DTP5",quarter:"Q1",percent:52}
+]
 
 ];
 // =========================
@@ -1306,8 +1304,11 @@ db.ref("children/"+currentId)
       level:"🟠 รอติดตาม",
       status:"รอติดตาม",
       priority:1,
-      time:Date.now(),
-      followedAt:null
+      followStep:1,
+      normalCount:0,
+      nextFollowUp:
+      Date.now()+60000,
+      time:Date.now()
 
     })
 
@@ -1998,37 +1999,35 @@ new Date()
 
 // 💉 map วัคซีน
 const vaccineFields={
-
 BCG:"bcg_date",
 
 HBV1:"hbv1_date",
 HBV2:"hbv2_date",
-HBV3:"hbv3_date",
+
+DTPHBHib1:"dtphbhib1_date",
+DTPHBHib2:"dtphbhib2_date",
+DTPHBHib3:"dtphbhib3_date",
 
 IPV1:"ipv1_date",
 IPV2:"ipv2_date",
 
-DTP1:"dtp1_date",
-DTP2:"dtp2_date",
-DTP3:"dtp3_date",
-DTP4:"dtp4_date",
-DTP5:"dtp5_date",
-
-OPV1:"opv1_date",
-OPV2:"opv2_date",
 OPV3:"opv3_date",
 OPV4:"opv4_date",
 OPV5:"opv5_date",
 
+Rota1:"rota1_date",
+Rota2:"rota2_date",
+Rota3:"rota3_date",
+
 MMR1:"mmr1_date",
 MMR2:"mmr2_date",
 
-JE1:"je1_date",
-JE2:"je2_date",
 
-Rota1:"rota1_date",
-Rota2:"rota2_date",
-Rota3:"rota3_date"
+LAJE1:"laje1_date",
+LAJE2:"laje2_date",
+
+DTP4:"dtp4_date",
+DTP5:"dtp5_date"
 
 };
 
