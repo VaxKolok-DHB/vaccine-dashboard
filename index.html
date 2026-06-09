@@ -2,1122 +2,902 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>ระบบติดตามวัคซีน</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VaxKolok — ระบบติดตามวัคซีน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="app.js"></script>
+
 <style>
+/* ============================
+   TOKENS
+============================ */
+:root{
+  --ink:       #0d1b2a;
+  --ink-2:     #3d5166;
+  --ink-3:     #7a909f;
+  --canvas:    #f5f7fa;
+  --surface:   #ffffff;
+  --border:    #e3e8ef;
 
-/* 🌙 โทนอ่านง่าย */
+  --green:     #0e9f6e;
+  --green-bg:  #ecfdf5;
+  --red:       #e02424;
+  --red-bg:    #fef2f2;
+  --amber:     #d97706;
+  --amber-bg:  #fffbeb;
+  --blue:      #2563eb;
+  --blue-bg:   #eff6ff;
+
+  --accent:    #0e9f6e;       /* signature — teal-green: เขียวสุขภาพ */
+  --accent-dk: #057a55;
+
+  --radius:    10px;
+  --radius-lg: 16px;
+
+  --font: 'IBM Plex Sans Thai', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
 body{
-  background:#fff;
-  font-family:'Segoe UI',sans-serif;
-  color:#023f70;
-  padding-bottom:80px;
+  font-family: var(--font);
+  background: var(--canvas);
+  color: var(--ink);
+  padding-bottom: 80px;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
-/* Navbar */
-.navbar{
-  display:flex;
-  align-items:center;
-  padding:12px 16px;
-  background:#fff;
-  border-bottom:1px solid #e5e7eb;
+/* ============================
+   TOPBAR
+============================ */
+.topbar{
+  position: sticky; top:0; z-index:1000;
+  display: flex; align-items: center; gap:8px;
+  padding: 0 20px; height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
-.title{
-  font-size:18px;
-  font-weight:600;
+.topbar-brand{
+  font-size: 17px; font-weight:700;
+  color: var(--ink); letter-spacing:-.3px;
+  margin-right: auto; text-decoration:none;
+  display:flex; align-items:center; gap:8px;
 }
 
-/* Hero */
-.hero-box{
-  margin:20px;
-  padding:25px;
-  border-radius:16px;
-  background:linear-gradient(90deg,#415786,#b7ddc5);
-  color:#fff;
+.topbar-brand .dot{
+  width:10px; height:10px; border-radius:50%;
+  background: var(--accent); display:inline-block;
+}
+
+.topbar-link{
+  font-size:13px; font-weight:500;
+  color: var(--ink-2); text-decoration:none;
+  padding: 6px 12px; border-radius: var(--radius);
+  transition: background .15s, color .15s;
+  white-space:nowrap;
+}
+.topbar-link:hover{ background: var(--canvas); color: var(--ink); }
+.topbar-link.active{ background: var(--green-bg); color: var(--green); }
+
+.btn-avatar{
+  width:34px; height:34px; border-radius:50%;
+  border:1px solid var(--border);
+  background: var(--canvas);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; color: var(--ink-2);
+  cursor:pointer;
+}
+
+/* ============================
+   HERO
+============================ */
+.hero{
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 20px 24px;
+}
+
+.hero-inner{ max-width:1280px; margin:0 auto; }
+
+.hero-eyebrow{
+  font-family: var(--mono);
+  font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color: var(--accent); margin-bottom:6px;
 }
 
 .hero-title{
-  font-size:26px;
-  font-weight:700;
-}
-
-.hero-text{
-  font-size:18px;
-}
-
-.hero-sub{
-  font-size:16px;
-  opacity:.9;
-}
-
-/* Card */
-.card{
-  border-radius:12px;
-  border:1px solid #e5e7eb;
-}
-
-.success{background:#dcfce7;}
-.danger{background:#fee2e2;}
-.warning{background:#fef9c3;}
-
-/* Form */
-.form-control,
-.form-select{
-  height:45px;
-  border-radius:10px;
-}
-.table th:nth-child(4),
-.table td:nth-child(4){
-  min-width:160px;
-}
-
-.table th:nth-child(5),
-.table td:nth-child(5){
-  min-width:180px;
-}
-.table th:nth-child(7),
-.table td:nth-child(7){
-  min-width:190px;
-}
-
-/* Table */
-.table td,
-.table th{
-  white-space:nowrap;
-}
-
-.table-container{
-  overflow-x:auto;
-}
-
-/* Mobile Card */
-.mobile-list{
-  display:none;
-}
-
-.child-card{
-  background:#fff;
-  border-radius:16px;
-  padding:14px;
-  margin-bottom:12px;
-  box-shadow:0 2px 8px rgba(0,0,0,.05);
-}
-
-.status-badge.done{
-  background:#dcfce7;
-  color:#059669;
-  padding:4px 8px;
-  border-radius:8px;
-}
-
-.status-badge.notdone{
-  background:#fee2e2;
-  color:#dc2626;
-  padding:4px 8px;
-  border-radius:8px;
-}
-
-/* Vaccine */
-.vaccine-container{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:14px;
-}
-
-.vaccine-card{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  padding:12px;
-}
-
-/* Description */
-.chart-desc{
-  background:#f9fafb;
-  border-radius:12px;
-  padding:12px 16px;
-  font-size:14px;
-}
-
-/* Scroll Top */
-#scrollTopBtn{
-  position:fixed;
-  bottom:90px;
-  right:20px;
-  width:45px;
-  height:45px;
-  border:none;
-  border-radius:50%;
-  background:#16a34a;
-  color:#fff;
-  display:none;
-}
-
-/* Bottom Nav */
-.bottom-nav{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  height:65px;
-  background:#fff;
-  border-top:1px solid #ddd;
-  display:flex;
-  justify-content:space-around;
-  align-items:center;
-  z-index:9999;
-}
-
-.bottom-nav a{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  text-decoration:none;
-  color:#374151;
-  font-size:12px;
-}
-
-.bottom-nav i{
-  font-size:20px;
-}
-
-
-.topbar{
-  display:flex;
-  align-items:center;
-  gap:20px;
-
-  padding:12px 20px;
-  background:#fff;
-  border-bottom:1px solid #e5e7eb;
-}
-
-.title{
-  font-size:24px;
-  font-weight:700;
-  color:#1e3a8a;
-  margin-right:auto;
-}
-
-.topbar a{
-  text-decoration:none;
-  color:#374151;
-  font-weight:500;
-}
-
-.topbar a:hover{
-  color:#2563eb;
-}
-
-.name{
-  font-weight:600;
-  color:#059669;
-}
-.logout-link{
-  color:#110a4c;
-  text-decoration:none;
-  font-weight:500;
-}
-.topbar{
-  display:flex;
-  align-items:center;
-  gap:20px;
-  padding:12px 20px;
-}
-
-.title{
-  margin-right:auto;
-  font-weight:700;
-}
-
-.nav-avatar{
-  width:32px;
-  height:32px;
-  border-radius:50%;
-  object-fit:cover;
-}
-
-
-
-@media(max-width:768px){
-  .table-responsive{
-    display:none;
-  }
-
-  .mobile-list{
-    display:block;
-  }
-}
-
-/* Desktop */
-@media (min-width:1200px){
-  .container{
-    max-width:1400px;
-  }
-}
-
-/* Tablet */
-@media (max-width:992px){
-
-  .topbar{
-    flex-wrap:wrap;
-    gap:10px;
-  }
-
-  .hero-title{
-    font-size:22px;
-  }
-
-  .card{
-    margin-bottom:10px;
-  }
-}
-
-/* Mobile */
-@media (max-width:768px){
-
-  .topbar{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-  .title{
-    font-size:20px;
-  }
-
-  .hero-box{
-    margin:10px;
-    padding:15px;
-  }
-
-  .hero-title{
-    font-size:20px;
-  }
-
-  .hero-text,
-  .hero-sub{
-    font-size:14px;
-  }
-
-  .table-responsive{
-    display:none;
-  }
-
-  .mobile-list{
-    display:block;
-  }
-
-  .vaccine-container{
-    grid-template-columns:1fr;
-  }
-}
-@media (max-width:768px){
-
-  .topbar{
-    flex-wrap:wrap;
-    gap:8px;
-    padding:10px;
-  }
-
-  .title{
-    width:100%;
-    font-size:18px;
-    margin-bottom:10px;
-  }
-
-  .topbar a{
-    font-size:14px;
-  }
-
-
-}
- 
-
-.child-card{
-  background:#fff;
-  border-radius:18px;
-  padding:16px;
-  margin-bottom:15px;
-  box-shadow:0 3px 12px rgba(0,0,0,.08);
-  border:1px solid #eef2f7;
-}
-
-.child-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  margin-bottom:12px;
-}
-
-.child-name{
-  font-size:18px;
-  font-weight:700;
-  color:#111827;
-}
-
-.child-hn{
-  font-size:13px;
-  color:#6b7280;
-  margin-top:3px;
-}
-
-.child-info{
-  font-size:14px;
-  color:#374151;
+  font-size:26px; font-weight:700;
+  color: var(--ink); line-height:1.25;
   margin-bottom:6px;
 }
 
-.child-meta{
-  display:flex;
-  gap:10px;
+.hero-sub{
+  font-size:14px; color: var(--ink-2); margin-bottom:0;
+}
+
+/* ============================
+   KPI ROW — signature element:
+   large mono numerals in tinted
+   tiles with a left-accent bar
+============================ */
+.kpi-row{
+  display:grid;
+  grid-template-columns: repeat(4,1fr);
+  gap:12px; padding:20px;
+  max-width:1280px; margin:0 auto;
+}
+
+.kpi{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px 14px;
+  border-left: 4px solid var(--border);
+  position:relative; overflow:hidden;
+}
+.kpi.k-total { border-left-color: var(--blue); }
+.kpi.k-done  { border-left-color: var(--green); }
+.kpi.k-not   { border-left-color: var(--red); }
+.kpi.k-cover { border-left-color: var(--amber); }
+
+.kpi-label{
+  font-size:12px; font-weight:500; color: var(--ink-3);
+  text-transform:uppercase; letter-spacing:.05em;
+  margin-bottom:6px;
+}
+.kpi-val{
+  font-family: var(--mono);
+  font-size:34px; font-weight:500; line-height:1;
+  color: var(--ink);
+}
+.kpi-val span{ font-size:14px; color: var(--ink-3); margin-left:2px; }
+
+/* ============================
+   MAIN LAYOUT
+============================ */
+.main{ max-width:1280px; margin:0 auto; padding:0 20px; }
+
+/* ============================
+   CARD
+============================ */
+.card{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow:hidden;
+}
+.card-head{
+  display:flex; align-items:center;
+  justify-content:space-between;
+  padding:14px 18px;
+  border-bottom:1px solid var(--border);
+}
+.card-head h6{
+  font-size:14px; font-weight:600;
+  color: var(--ink); margin:0;
+}
+.card-body{ padding:18px; }
+
+/* ============================
+   TOOLBAR / FILTER
+============================ */
+.filters{
+  display:flex; flex-wrap:wrap; gap:8px;
+  padding:14px 18px;
+  border-bottom:1px solid var(--border);
+  background: var(--canvas);
+}
+.form-control,
+.form-select{
+  height:38px; font-size:13px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+.form-control:focus,
+.form-select:focus{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14,159,110,.12);
+  outline:none;
+}
+
+.btn{
+  font-size:13px; font-weight:500;
+  border-radius: var(--radius);
+  padding:7px 14px; border:1px solid transparent;
+  cursor:pointer; transition: all .15s;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.btn-primary{
+  background:var(--blue); color:#fff; border-color:var(--blue);
+}
+.btn-primary:hover{ background:#1d4ed8; }
+
+.btn-success{
+  background:var(--green); color:#fff; border-color:var(--green);
+}
+.btn-success:hover{ background:var(--accent-dk); }
+
+.btn-outline{
+  background:var(--surface); color:var(--ink-2);
+  border-color:var(--border);
+}
+.btn-outline:hover{ background:var(--canvas); color:var(--ink); }
+
+.btn-outline-success{
+  background:var(--green-bg); color:var(--green);
+  border-color:var(--green);
+}
+.btn-outline-success:hover{ background:#d1fae5; }
+
+.btn-icon{
+  width:34px; height:34px; padding:0;
+  display:inline-flex; align-items:center;
+  justify-content:center;
+}
+
+/* ============================
+   ACTION BAR
+============================ */
+.action-bar{
+  display:flex; flex-wrap:wrap; gap:8px;
+  padding:12px 18px;
+  border-bottom:1px solid var(--border);
+}
+
+/* ============================
+   ADD FORM (collapse)
+============================ */
+.add-form-wrap{
+  padding:18px;
+  border-top:1px solid var(--border);
+  background: var(--canvas);
+}
+
+.vaccine-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(175px,1fr));
+  gap:12px; margin-top:14px;
+}
+
+.vaccine-tile{
+  background: var(--surface);
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  padding:12px 14px;
+}
+.vaccine-tile h6{
+  font-size:12px; font-weight:600;
+  color: var(--ink-2); margin-bottom:8px;
+  text-transform:uppercase; letter-spacing:.04em;
+}
+.vaccine-tile label{
+  display:flex; align-items:center; gap:6px;
+  font-size:13px; color:var(--ink);
+  margin-bottom:4px; cursor:pointer;
+}
+.vaccine-tile input[type=checkbox]{
+  accent-color: var(--accent);
+  width:15px; height:15px;
+}
+.vaccine-tile .form-control{ height:32px; margin-top:3px; }
+
+/* ============================
+   CHARTS
+============================ */
+.chart-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px; margin-bottom:20px;
+}
+
+.chart-desc{
+  font-size:13px; color:var(--ink-2);
+  background:var(--canvas);
+  border-radius:var(--radius); padding:10px 14px;
   margin-top:10px;
-  margin-bottom:12px;
 }
 
-.age-badge{
-  color:white;
-  padding:4px 10px;
-  border-radius:999px;
+/* ============================
+   TABLE
+============================ */
+.table-wrap{ overflow-x:auto; }
+
+table.tbl{
+  width:100%; border-collapse:collapse;
   font-size:13px;
 }
+.tbl th{
+  background: var(--canvas);
+  font-size:11px; font-weight:600;
+  color:var(--ink-3); text-transform:uppercase;
+  letter-spacing:.05em; padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+.tbl td{
+  padding:10px 12px; border-bottom:1px solid var(--border);
+  color: var(--ink); white-space:nowrap;
+}
+.tbl tr:last-child td{ border-bottom:none; }
+.tbl tr:hover td{ background:var(--canvas); }
 
-.vaccine-count{
-  background:#ecfdf5;
-  color:#059669;
-  padding:4px 10px;
-  border-radius:999px;
-  font-weight:600;
-  font-size:13px;
+.badge-done{
+  display:inline-flex; align-items:center; gap:4px;
+  background:var(--green-bg); color:var(--green);
+  font-size:11px; font-weight:600;
+  padding:3px 8px; border-radius:20px;
+}
+.badge-notdone{
+  display:inline-flex; align-items:center; gap:4px;
+  background:var(--red-bg); color:var(--red);
+  font-size:11px; font-weight:600;
+  padding:3px 8px; border-radius:20px;
 }
 
-.child-footer{
-  display:flex;
-  justify-content:flex-end;
+/* ============================
+   MOBILE CARD LIST
+============================ */
+.mobile-list{ display:none; }
+
+.child-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:16px; margin-bottom:10px;
+}
+.child-card-top{
+  display:flex; justify-content:space-between;
+  align-items:flex-start; margin-bottom:10px;
+}
+.child-card-name{ font-size:15px; font-weight:600; }
+.child-card-hn{ font-size:12px; color:var(--ink-3); margin-top:2px; }
+.child-card-row{
+  font-size:13px; color:var(--ink-2);
+  margin-bottom:4px;
+}
+.child-meta{
+  display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;
+}
+.tag{
+  font-size:12px; font-weight:500;
+  padding:3px 10px; border-radius:20px;
+  background:var(--blue-bg); color:var(--blue);
+}
+.tag-green{ background:var(--green-bg); color:var(--green); }
+
+/* ============================
+   PAGINATION
+============================ */
+#pagination{
+  display:flex; justify-content:center;
+  gap:4px; padding:16px 0;
+}
+#pagination button{
+  width:34px; height:34px; padding:0;
+  font-size:13px; border-radius:var(--radius);
+  border:1px solid var(--border);
+  background:var(--surface); color:var(--ink-2);
+  cursor:pointer;
+}
+#pagination button.active{
+  background:var(--ink); color:#fff; border-color:var(--ink);
+}
+#pagination button:hover:not(.active){
+  background:var(--canvas);
 }
 
-.status-badge{
-  font-size:13px;
-  font-weight:600;
-  padding:6px 10px;
-  border-radius:999px;
+/* ============================
+   MODAL
+============================ */
+.modal-content{
+  border:none;
+  border-radius:var(--radius-lg);
+  box-shadow:0 8px 40px rgba(0,0,0,.14);
+}
+.modal-header{
+  border-bottom:1px solid var(--border);
+  padding:16px 20px;
+}
+.modal-footer{
+  border-top:1px solid var(--border);
+  padding:12px 20px;
+}
+.modal-title{
+  font-size:16px; font-weight:600;
 }
 
-.status-badge.done{
-  background:#dcfce7;
-  color:#15803d;
+/* ============================
+   SCROLL-TOP
+============================ */
+#scrollTopBtn{
+  position:fixed; bottom:90px; right:20px;
+  width:42px; height:42px; border:none;
+  border-radius:50%;
+  background:var(--ink); color:#fff;
+  display:none; align-items:center; justify-content:center;
+  font-size:16px; cursor:pointer; z-index:800;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
 }
 
-.status-badge.notdone{
-  background:#fee2e2;
-  color:#dc2626;
+/* ============================
+   BOTTOM NAV
+============================ */
+.bottom-nav{
+  position:fixed; bottom:0; left:0; width:100%;
+  height:60px; background:var(--surface);
+  border-top:1px solid var(--border);
+  display:flex; justify-content:space-around; align-items:center;
+  z-index:999;
 }
+.bottom-nav a{
+  display:flex; flex-direction:column; align-items:center;
+  text-decoration:none; color:var(--ink-2); font-size:11px; gap:3px;
+}
+.bottom-nav a i{ font-size:19px; }
+.bottom-nav a.active{ color:var(--accent); }
 
-
+/* ============================
+   RESPONSIVE
+============================ */
+@media(max-width:900px){
+  .kpi-row{ grid-template-columns:repeat(2,1fr); }
+  .chart-grid{ grid-template-columns:1fr; }
+}
+@media(max-width:768px){
+  .topbar-link.hide-sm{ display:none; }
+  .table-responsive{ display:none; }
+  .mobile-list{ display:block; }
+  .kpi-row{ padding:14px; }
+  .main{ padding:0 12px; }
+}
+@media(max-width:480px){
+  .kpi-row{ grid-template-columns:repeat(2,1fr); gap:8px; padding:10px; }
+  .kpi-val{ font-size:26px; }
+}
 </style>
 </head>
 <body>
 
+<!-- ============================
+     TOPBAR
+============================ -->
 <nav class="topbar">
-
-  <span class="title">
-  ระบบติดตามวัคซีน (VaxKolok-DHB)
-  </span>
-
-  <a href="index.html">
-    <i class="fa fa-home"></i> หน้าแรก
+  <a href="index.html" class="topbar-brand">
+    <span class="dot"></span> VaxKolok
   </a>
 
-  <a href="symptoms.html">
-    <i class="fa fa-heartbeat"></i> ติดตามอาการ
+  <a href="index.html" class="topbar-link active hide-sm">
+    <i class="fa fa-house fa-sm"></i> หน้าแรก
+  </a>
+  <a href="symptoms.html" class="topbar-link hide-sm">
+    <i class="fa fa-heartbeat fa-sm"></i> ติดตามอาการ
+  </a>
+  <a href="admin.html" id="adminMenu" class="topbar-link hide-sm">
+    <i class="fa fa-gear fa-sm"></i> Admin
   </a>
 
-  <a href="admin.html" id="adminMenu">
-    <i class="fa fa-cog"></i> Admin
-  </a>
-
-  <div class="dropdown">
-
-    <button class="btn btn-light dropdown-toggle"
-            data-bs-toggle="dropdown">
-
-      <img id="profileImg"
-           class="nav-avatar"
-           src="https://cdn-icons-png.flaticon.com/512/847/847969.png">
-
-      <span class="userInfo"></span>
-
+  <div class="dropdown ms-1">
+    <button class="btn-avatar dropdown-toggle border-0 bg-transparent"
+            data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="fa fa-circle-user" style="font-size:24px;color:var(--ink-2)"></i>
     </button>
-
-    <ul class="dropdown-menu dropdown-menu-end">
-      <li><hr class="dropdown-divider"></li>
-
+    <ul class="dropdown-menu dropdown-menu-end" style="font-size:13px;min-width:160px;border-radius:var(--radius-lg);border-color:var(--border)">
+      <li><div class="px-3 py-2" style="font-weight:600;font-size:13px" id="userNameDrop">—</div></li>
+      <li><hr class="dropdown-divider m-0"></li>
       <li>
-        <a class="dropdown-item text-danger"
-           href="#"
-           onclick="logout()">
-
-          <i class="fa fa-right-from-bracket"></i>
-          ออกจากระบบ
-
+        <a class="dropdown-item text-danger" href="#" onclick="logout()">
+          <i class="fa fa-right-from-bracket fa-sm me-1"></i> ออกจากระบบ
         </a>
       </li>
-
     </ul>
-
   </div>
-
 </nav>
 
-
-<!-- 🔥 BACKDROP -->
-<div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
-
-
-<!-- HERO -->
-<div class="hero-box align-items-stretch">
-<div class="container mt-3">
-<div class="row g-3 align-items-stretch">
-
-  <h1 class="hero-title">
-    👋 สวัสดี <span class="userInfo"></span>
-  </h1>
-
-  <p class="hero-text">
-    ยินดีตอนรับเข้าสู่ระบบติดตามเด็กตกค้าง และ วัคซีน
-  </p>
-
-  <p class="hero-sub">
-    ตรวจสอบสถานะการฉีดวัคซีน และ ติดตามเด็กที่ยังไม่ครบ
-  </p>
-</div>
-</div>
-</div>
-
-<!-- KPI -->
-<div class="container">
-<div class="row g-3">
-
-<div class="col-md-3">
-<div class="card p-3 text-center">
-<small>เด็กทั้งหมด</small>
-<h4 id="total"></h4>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="card p-3 text-center success">
-<small>ฉีดแล้ว</small>
-<h4 id="done"></h4>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="card p-3 text-center danger">
-<small>ยังไม่ครบ</small>
-<h4 id="notdone"></h4>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="card p-3 text-center warning">
-<small>Coverage</small>
-<h4 id="percent"></h4>
-</div>
-</div>
-
-</div>
-</div>
-
-<!-- FILTER -->
-<div class="container mt-3">
-<div class="card p-3">
-
-<div class="row g-2">
-
-<div class="col-md-3">
-<select id="tambonFilter" onchange="updateHospitalFilter(); loadFollow()" class="form-select">
-<option value="all">📍 ทุกตำบล</option>
-<option value="kolok">สุไหงโก-ลก</option>
-<option value="munoh">มูโนะ</option>
-<option value="pasemas">ปาเสมัส</option>
-<option value="puyoh">ปูโยะ</option>
-</select>
-</div>
-
-<div class="col-md-3">
-<select id="hospitalFilter" onchange="loadFollow()" class="form-select">
-<option value="all">🏥 ทุกหน่วยบริการ</option>
-</select>
-</div>
-
-
-
-
-  <!-- IMPORT -->
-  <!-- <div class="container mt-3">
-  <div class="mb-3">
-
-  <input
-  type="file"
-  id="excelFile"
-  accept=".xlsx,.xls">
-
-  <button
-  onclick="importExcel()">
-
-  นำเข้าข้อมูล
-
-  </button>
-
+<!-- ============================
+     HERO
+============================ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">VaxKolok · DHB Tracking System</div>
+    <h1 class="hero-title">สวัสดี <span id="heroName" style="color:var(--accent)">—</span></h1>
+    <p class="hero-sub">ยินดีต้อนรับสู่ระบบติดตามการฉีดวัคซีนเด็ก — ตรวจสอบ ติดตาม และบันทึกข้อมูลได้ในหน้าเดียว</p>
   </div>
-  </div> -->
-
-
-
-
-
-
-
-
-
-
-<div class="col-md-3">
-  <select id="ageFilter" onchange="getAgeMonths();loadFollow()" class="form-select">
-    <option value="all">👶 ทุกอายุ</option>
-    <option value="0">0 เดือน</option>
-    <option value="1">1 เดือน</option>
-    <option value="2">2 เดือน</option>
-    <option value="3">3 เดือน</option>
-    <option value="4">4 เดือน</option>
-    <option value="5">5 เดือน</option>
-    <option value="6">6 เดือน</option>
-    <option value="9">9 เดือน</option>
-    <option value="12">12 เดือน (1 ปี)</option>
-    <option value="18">18 เดือน</option>
-    <option value="24">24 เดือน (2 ปี)</option>
-    <option value="36">36 เดือน (3 ปี)</option>
-  </select>
 </div>
 
-<div class="col-md-3">
-<input id="searchInput" class="form-control" placeholder="🔍 ค้นหา..." onkeyup="loadFollow()">
+<!-- ============================
+     KPI
+============================ -->
+<div class="kpi-row">
+  <div class="kpi k-total">
+    <div class="kpi-label">เด็กทั้งหมด</div>
+    <div class="kpi-val" id="total">—</div>
+  </div>
+  <div class="kpi k-done">
+    <div class="kpi-label">ได้รับวัคซีนแล้ว</div>
+    <div class="kpi-val" id="done">—</div>
+  </div>
+  <div class="kpi k-not">
+    <div class="kpi-label">ยังไม่ครบ</div>
+    <div class="kpi-val" id="notdone">—</div>
+  </div>
+  <div class="kpi k-cover">
+    <div class="kpi-label">Coverage</div>
+    <div class="kpi-val" id="percent">—<span>%</span></div>
+  </div>
 </div>
 
-<div style="text-align:left; margin-bottom:10px;">
- <button onclick="setMode('percent')" class="btn btn-outline-warning"> 🍩 ภาพรวม</button>
-  <button onclick="setMode('village')" class="btn btn-outline-primary"> 📊 รายหมู่</button>
-  <button onclick="openCareByTambon()" class="btn btn-outline-secondary"> 👥 ผู้รับผิดชอบ </button>
-  <button id="addBtn"class="btn btn-outline-success"data-bs-toggle="collapse"
-    data-bs-target="#addForm">
-    ➕ เพิ่มข้อมูล
-  </button>
-</div>
+<!-- ============================
+     MAIN
+============================ -->
+<div class="main">
 
+  <!-- ===== FILTER + ACTION CARD ===== -->
+  <div class="card mb-4">
 
- </div>
-    <div id="addForm" class="collapse">
+    <div class="filters">
+      <select id="tambonFilter" onchange="updateHospitalFilter();loadFollow()" style="min-width:160px">
+        <option value="all">📍 ทุกตำบล</option>
+        <option value="kolok">สุไหงโก-ลก</option>
+        <option value="munoh">มูโนะ</option>
+        <option value="pasemas">ปาเสมัส</option>
+        <option value="puyoh">ปูโยะ</option>
+      </select>
 
-    <div class="card p-3">
-      <h6>เพิ่มข้อมูล</h6>
+      <select id="hospitalFilter" onchange="loadFollow()" style="min-width:180px">
+        <option value="all">🏥 ทุกหน่วยบริการ</option>
+      </select>
 
-      <div class="row g-2">
+      <select id="ageFilter" onchange="getAgeMonths();loadFollow()" style="min-width:150px">
+        <option value="all">👶 ทุกอายุ</option>
+        <option value="0">0 เดือน</option>
+        <option value="1">1 เดือน</option>
+        <option value="2">2 เดือน</option>
+        <option value="3">3 เดือน</option>
+        <option value="4">4 เดือน</option>
+        <option value="5">5 เดือน</option>
+        <option value="6">6 เดือน</option>
+        <option value="9">9 เดือน</option>
+        <option value="12">12 เดือน</option>
+        <option value="18">18 เดือน</option>
+        <option value="24">24 เดือน</option>
+        <option value="36">36 เดือน</option>
+      </select>
 
-        <div class="col-md-3">
-          <input id="hn" class="form-control" placeholder="HN">
-        </div>
+      <input id="searchInput" class="form-control" placeholder="🔍 ค้นหา HN, ชื่อ..." onkeyup="loadFollow()" style="min-width:200px;flex:1">
+    </div>
 
-        <div class="col-md-3">
-          <input id="cid" class="form-control" placeholder="เลขบัตร">
-        </div>
+    <div class="action-bar">
+      <button onclick="setMode('percent')" class="btn btn-outline">
+        <i class="fa fa-chart-pie fa-sm"></i> ภาพรวม
+      </button>
+      <button onclick="setMode('village')" class="btn btn-outline">
+        <i class="fa fa-chart-bar fa-sm"></i> รายหมู่
+      </button>
+      <button onclick="openCareByTambon()" class="btn btn-outline">
+        <i class="fa fa-users fa-sm"></i> ผู้รับผิดชอบ
+      </button>
+      <button class="btn btn-outline-success"
+              data-bs-toggle="collapse" data-bs-target="#addForm">
+        <i class="fa fa-plus fa-sm"></i> เพิ่มข้อมูล
+      </button>
+    </div>
 
-        <div class="col-md-5">
-          <input id="name" class="form-control" placeholder="ชื่อ">
-        </div>
+    <!-- ADD FORM -->
+    <div class="collapse" id="addForm">
+      <div class="add-form-wrap">
+        <div class="row g-2">
+          <div class="col-md-2"><input id="hn"    class="form-control" placeholder="HN"></div>
+          <div class="col-md-3"><input id="cid"   class="form-control" placeholder="เลขบัตรประชาชน"></div>
+          <div class="col-md-4"><input id="name"  class="form-control" placeholder="ชื่อ-นามสกุล"></div>
+          <div class="col-md-3"><input id="house" class="form-control" placeholder="บ้านเลขที่"></div>
 
-        <div class="col-md-3">
-          <input id="house" class="form-control" placeholder="บ้าน">
-        </div>
-        <div class="col-md-3">
-          <select id="tambon" class="form-select">
-            <option value="">-- เลือกตำบล --</option>
-            <option value="kolok">สุไหงโก-ลก</option>
-            <option value="munoh">มูโนะ</option>
-            <option value="pasemas">ปาเสมัส</option>
-            <option value="puyoh">ปูโยะ</option>
-          </select>
-        </div>
           <div class="col-md-3">
-                <div id="soiBox" style="display:none;">
-                  <input id="soi" class="form-control" placeholder="ซอย">
-                </div>
-          </div>
-
-
-        <div class="col-md-4">
-          <div id="villageBox">
-            <select id="village" class="form-select">
-              <option value="">-- เลือกหมู่/ชุมชน --</option>
+            <select id="tambon" class="form-select">
+              <option value="">— ตำบล —</option>
+              <option value="kolok">สุไหงโก-ลก</option>
+              <option value="munoh">มูโนะ</option>
+              <option value="pasemas">ปาเสมัส</option>
+              <option value="puyoh">ปูโยะ</option>
             </select>
           </div>
+          <div class="col-md-3" id="soiBox" style="display:none">
+            <input id="soi" class="form-control" placeholder="ซอย">
+          </div>
+          <div class="col-md-3" id="villageBox">
+            <select id="village" class="form-select">
+              <option value="">— หมู่ / ชุมชน —</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select id="hospital" class="form-select">
+              <option value="">— รพ.สต. —</option>
+              <option value="10170">รพ.สต.ปูโยะ</option>
+              <option value="10169">รพ.สต.มูโนะ</option>
+              <option value="10168">รพ.สต.ปาเสมัส</option>
+              <option value="77729">ศูนย์แพทย์ใกล้ใจ 1</option>
+              <option value="77728">ศูนย์แพทย์ใกล้ใจ 2</option>
+              <option value="10658">รพ.สต.บ้านกวาลอซีรา</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <input id="birth" type="date" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <input id="phone" class="form-control" placeholder="เบอร์โทรศัพท์">
+          </div>
         </div>
 
-
-              <div class="col-md-5">
-                <select id="hospital" class="form-select">
-                  <option value="">-- เลือกรพ.สต --</option>
-                  <option value="10170">รพ.สต.ปูโยะ</option>
-                  <option value="10169">รพ.สต.มูโนะ</option>
-                  <option value="10168">รพ.สต.ปาเสมัส</option>
-                  <option value="77729">ศูนย์แพทย์ใกล้ใจ1</option>
-                  <option value="77728">ศูนย์แพทย์ใกล้ใจ2</option>
-                  <option value="10658">รพ.สต.บ้านกวาลอซีรา</option>
-                </select>
-              </div>
-              
-
-                <div class="col-md-3">
-                  <input id="birth" type="date" class="form-control"placeholder="วันเกิด">
-                </div>
-
-              <div class="col-md-3">
-                <input id="phone" class="form-control" placeholder="เบอร์โทร">
-              </div>
-
-
+        <!-- VACCINE GRID -->
+        <div class="vaccine-grid">
+          <!-- แรกเกิด -->
+          <div class="vaccine-tile">
+            <h6>👶 แรกเกิด</h6>
+            <label><input type="checkbox" value="BCG"  onchange="toggleDateInline(this,'BCG')"> BCG</label>
+            <input type="date" id="date-BCG"  class="form-control" style="display:none">
+            <label><input type="checkbox" value="HBV1" onchange="toggleDateInline(this,'HBV1')"> HBV1</label>
+            <input type="date" id="date-HBV1" class="form-control" style="display:none">
+          </div>
+          <!-- 1 เดือน -->
+          <div class="vaccine-tile">
+            <h6>🍼 1 เดือน</h6>
+            <label><input type="checkbox" value="HBV2" onchange="toggleDateInline(this,'HBV2')"> HBV2</label>
+            <input type="date" id="date-HBV2" class="form-control" style="display:none">
+          </div>
+          <!-- 2 เดือน -->
+          <div class="vaccine-tile">
+            <h6>🍼 2 เดือน</h6>
+            <label><input type="checkbox" value="DTP1"  onchange="toggleDateInline(this,'DTP1')"> DTP1</label>
+            <input type="date" id="date-DTP1" class="form-control" style="display:none">
+            <label><input type="checkbox" value="IPV1"  onchange="toggleDateInline(this,'IPV1')"> IPV1</label>
+            <input type="date" id="date-IPV1" class="form-control" style="display:none">
+            <label><input type="checkbox" value="Rota1" onchange="toggleDateInline(this,'Rota1')"> Rota1</label>
+            <input type="date" id="date-Rota1" class="form-control" style="display:none">
+          </div>
+          <!-- 4 เดือน -->
+          <div class="vaccine-tile">
+            <h6>🍼 4 เดือน</h6>
+            <label><input type="checkbox" value="DTP2"  onchange="toggleDateInline(this,'DTP2')"> DTP2</label>
+            <input type="date" id="date-DTP2" class="form-control" style="display:none">
+            <label><input type="checkbox" value="IPV2"  onchange="toggleDateInline(this,'IPV2')"> IPV2</label>
+            <input type="date" id="date-IPV2" class="form-control" style="display:none">
+            <label><input type="checkbox" value="Rota2" onchange="toggleDateInline(this,'Rota2')"> Rota2</label>
+            <input type="date" id="date-Rota2" class="form-control" style="display:none">
+          </div>
+          <!-- 6 เดือน -->
+          <div class="vaccine-tile">
+            <h6>🍼 6 เดือน</h6>
+            <label><input type="checkbox" value="DTP3"  onchange="toggleDateInline(this,'DTP3')"> DTP3</label>
+            <input type="date" id="date-DTP3" class="form-control" style="display:none">
+            <label><input type="checkbox" value="OPV3"  onchange="toggleDateInline(this,'OPV3')"> OPV3</label>
+            <input type="date" id="date-OPV3" class="form-control" style="display:none">
+            <label><input type="checkbox" value="Rota3" onchange="toggleDateInline(this,'Rota3')"> Rota3</label>
+            <input type="date" id="date-Rota3" class="form-control" style="display:none">
+          </div>
+          <!-- 9 เดือน -->
+          <div class="vaccine-tile">
+            <h6>👶 9 เดือน</h6>
+            <label><input type="checkbox" value="MMR1" onchange="toggleDateInline(this,'MMR1')"> MMR1</label>
+            <input type="date" id="date-MMR1" class="form-control" style="display:none">
+          </div>
+          <!-- 1 ปี -->
+          <div class="vaccine-tile">
+            <h6>👶 1 ปี</h6>
+            <label><input type="checkbox" value="JF1" onchange="toggleDateInline(this,'JF1')"> JF1</label>
+            <input type="date" id="date-JF1" class="form-control" style="display:none">
+          </div>
+          <!-- 18 เดือน -->
+          <div class="vaccine-tile">
+            <h6>👶 18 เดือน</h6>
+            <label><input type="checkbox" value="DTP4" onchange="toggleDateInline(this,'DTP4')"> DTP4</label>
+            <input type="date" id="date-DTP4" class="form-control" style="display:none">
+            <label><input type="checkbox" value="OPV4" onchange="toggleDateInline(this,'OPV4')"> OPV4</label>
+            <input type="date" id="date-OPV4" class="form-control" style="display:none">
+            <label><input type="checkbox" value="MMR2" onchange="toggleDateInline(this,'MMR2')"> MMR2</label>
+            <input type="date" id="date-MMR2" class="form-control" style="display:none">
+          </div>
+          <!-- 2.5 ปี -->
+          <div class="vaccine-tile">
+            <h6>🧒 2 ปีครึ่ง</h6>
+            <label><input type="checkbox" value="JF2" onchange="toggleDateInline(this,'JF2')"> JF2</label>
+            <input type="date" id="date-JF2" class="form-control" style="display:none">
+          </div>
+          <!-- 4 ปี -->
+          <div class="vaccine-tile">
+            <h6>🧒 4 ปี</h6>
+            <label><input type="checkbox" value="DTP5" onchange="toggleDateInline(this,'DTP5')"> DTP5</label>
+            <input type="date" id="date-DTP5" class="form-control" style="display:none">
+            <label><input type="checkbox" value="OPV5" onchange="toggleDateInline(this,'OPV5')"> OPV5</label>
+            <input type="date" id="date-OPV5" class="form-control" style="display:none">
+          </div>
         </div>
 
-       
-        <div class="mt-3">
-          <div class="vaccine-container">
-
-<!-- 👶 แรกเกิด -->
-<div class="vaccine-card">
-
-<h6>👶 แรกเกิด</h6>
-
-<label>
-<input type="checkbox"
-value="BCG"
-onchange="toggleDateInline(this,'BCG')">
-
-BCG
-</label>
-
-<input type="date"
-id="date-BCG"
-class="form-control mb-2"
-style="display:none;">
-
-<label>
-<input type="checkbox"
-value="HBV1"
-onchange="toggleDateInline(this,'HBV1')">
-
-HBV1
-</label>
-
-<input type="date"
-id="date-HBV1"
-class="form-control mb-2"
-style="display:none;">
-
-</div>
-
-
-<!-- 🍼 2 เดือน -->
-<div class="vaccine-card">
-
-<h6>🍼 2 เดือน</h6>
-
-<label>
-<input type="checkbox"
-value="DTP1"
-onchange="toggleDateInline(this,'DTP1')">
-
-DTP1
-</label>
-
-<input type="date"
-id="date-DTP1"
-class="form-control mb-2"
-style="display:none;">
-
-<label>
-<input type="checkbox"
-value="OPV1"
-onchange="toggleDateInline(this,'OPV1')">
-
-OPV1
-</label>
-
-<input type="date"
-id="date-OPV1"
-class="form-control mb-2"
-style="display:none;">
-
-<label>
-<input type="checkbox"
-value="Rota1"
-onchange="toggleDateInline(this,'Rota1')">
-Rota1
-</label>
-
-<input type="date"
-id="date-Rota1"
-class="form-control mb-2"
-style="display:none;">
-
-</div>
-
-
-<!-- 🍼 4 เดือน -->
-<div class="vaccine-card">
-
-<h6>🍼 4 เดือน</h6>
-
-<label>
-<input type="checkbox"
-value="DTP2"
-onchange="toggleDateInline(this,'DTP2')">
-
-DTP2
-</label>
-
-<input type="date"
-id="date-DTP2"
-class="form-control mb-2"
-style="display:none;">
-
-<label>
-<input type="checkbox"
-value="OPV2"
-onchange="toggleDateInline(this,'OPV2')">
-
-OPV2
-</label>
-
-<input type="date"
-id="date-OPV2"
-class="form-control mb-2"
-style="display:none;">
-
-<label>
-<input type="checkbox"
-value="HBV2"
-onchange="toggleDateInline(this,'HBV2')">
-
-HBV2
-</label>
-
-<input type="date"
-id="date-HBV2"
-class="form-control mb-2"
-style="display:none;">
-
-
-<label>
-<input type="checkbox"
-value="Rota2"
-onchange="toggleDateInline(this,'Rota2')">
-Rota2
-</label>
-
-<input type="date"
-id="date-Rota2"
-class="form-control mb-2"
-style="display:none;">
-
-</div>
-
-
-
-
-<!-- 🍼 6 เดือน -->
-<div class="vaccine-card">
-
-<h6>🍼 6 เดือน</h6>
-
-<label><input type="checkbox" value="DTP3" onchange="toggleDateInline(this,'DTP3')"> DTP3</label>
-<input type="date" id="date-DTP3" class="form-control mb-2" style="display:none;">
-
-<label><input type="checkbox" value="OPV3" onchange="toggleDateInline(this,'OPV3')"> OPV3</label>
-<input type="date" id="date-OPV3" class="form-control mb-2" style="display:none;">
-
-<label><input type="checkbox" value="HBV3" onchange="toggleDateInline(this,'HBV3')"> HBV3</label>
-<input type="date" id="date-HBV3" class="form-control mb-2" style="display:none;">
-
-<label>
-<input type="checkbox"
-value="IPV1"
-onchange="toggleDateInline(this,'IPV1')">
-IPV1
-</label>
-
-<input type="date"
-id="date-IPV1"
-class="form-control mb-2"
-style="display:none;">
-
-<label>
-<input type="checkbox"
-value="Rota3"
-onchange="toggleDateInline(this,'Rota3')">
-Rota3
-</label>
-
-<input type="date"
-id="date-Rota3"
-class="form-control mb-2"
-style="display:none;">
-
-</div>
-
-
-<!-- 👶 9-12 เดือน -->
-<div class="vaccine-card">
-
-<h6>👶 9-12 เดือน</h6>
-
-<label><input type="checkbox" value="MMR1" onchange="toggleDateInline(this,'MMR1')"> MMR1</label>
-<input type="date" id="date-MMR1" class="form-control mb-2" style="display:none;">
-
-<label><input type="checkbox" value="JE1" onchange="toggleDateInline(this,'JE1')"> JE1</label>
-<input type="date" id="date-JE1" class="form-control mb-2" style="display:none;">
-
-</div>
-
-
-<!-- 👶 18 เดือน -->
-<div class="vaccine-card">
-
-<h6>👶 18 เดือน</h6>
-
-<label><input type="checkbox" value="DTP4" onchange="toggleDateInline(this,'DTP4')"> DTP4</label>
-<input type="date" id="date-DTP4" class="form-control mb-2" style="display:none;">
-
-<label><input type="checkbox" value="OPV4" onchange="toggleDateInline(this,'OPV4')"> OPV4</label>
-<input type="date" id="date-OPV4" class="form-control mb-2" style="display:none;">
-
-<label><input type="checkbox" value="MMR2" onchange="toggleDateInline(this,'MMR2')"> MMR2</label>
-<input type="date" id="date-MMR2" class="form-control mb-2" style="display:none;">
-
-<label><input type="checkbox"value="IPV2"onchange="toggleDateInline(this,'IPV2')">IPV2</label>
-<input type="date"id="date-IPV2"class="form-control mb-2"style="display:none;">
-</div>
-
-
-<!-- 🧒 2.5-3 ปี -->
-<div class="vaccine-card">
-
-<h6>🧒 2.5 - 3 ปี</h6>
-
-<label><input type="checkbox" value="JE2" onchange="toggleDateInline(this,'JE2')"> JE2</label>
-<input type="date" id="date-JE2" class="form-control mb-2" style="display:none;">
-
-</div>
-
-
-<div class="vaccine-card">
-
-<h6>🧒 4 - 5 ปี</h6>
-
-<label>
-<input type="checkbox"
-value="DTP5"
-onchange="toggleDateInline(this,'DTP5')">
-DTP5
-</label>
-
-<input type="date"
-id="date-DTP5"
-class="form-control mb-2"
-style="display:none;">
-
-<label>
-<input type="checkbox"
-value="OPV5"
-onchange="toggleDateInline(this,'OPV5')">
-OPV5
-</label>
-
-<input type="date"
-id="date-OPV5"
-class="form-control mb-2"
-style="display:none;">
-
-</div>
-
-
-</div>
-
-         
-          
-
-</div>
-        <div class="col-md-5 mt-3 d-flex ">
-          <input id="note" class="form-control" placeholder="หมายเหตุ">
+        <div class="row g-2 mt-2">
+          <div class="col"><input id="note" class="form-control" placeholder="หมายเหตุ"></div>
+          <div class="col-auto">
+            <button onclick="addChildFull()" class="btn btn-success">
+              <i class="fa fa-floppy-disk fa-sm"></i> บันทึก
+            </button>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <div class="mt-3 d-flex justify-content-end">
-          <button onclick="addChildFull()" class="btn btn-success px-4">
-            💾 บันทึก
-          </button>
+  <!-- ===== CHARTS ===== -->
+  <div class="chart-grid mb-4">
+
+    <div class="card">
+      <div class="card-head">
+        <h6><i class="fa fa-chart-pie fa-sm me-2" style="color:var(--accent)"></i>ภาพรวมการติดตาม</h6>
+      </div>
+      <div class="card-body">
+        <div style="height:320px"><canvas id="followChart"></canvas></div>
+        <div id="chartDescription" class="chart-desc"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h6><i class="fa fa-syringe fa-sm me-2" style="color:var(--blue)"></i>ความครอบคลุมวัคซีน</h6>
+        <div style="display:flex;gap:6px">
+          <select id="vaccineFilter"  onchange="loadvaccineChart()" style="height:32px;font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)">
+            <option value="all">ทุกวัคซีน</option>
+          </select>
+          <select id="quarterFilter" onchange="loadvaccineChart()" style="height:32px;font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)">
+            <option value="all">ทุกไตรมาส</option>
+            <option value="Q1">Q1</option>
+            <option value="Q2">Q2</option>
+            <option value="Q3">Q3</option>
+            <option value="Q4">Q4</option>
+          </select>
         </div>
-
+      </div>
+      <div class="card-body">
+        <div style="height:320px"><canvas id="vaccineChart"></canvas></div>
+        <div id="vaccineDescription" class="chart-desc"></div>
       </div>
     </div>
 
   </div>
-</div>
 
-
-
-</div>
-</div>
-</div>
-
-<!-- CHART -->
-<div class="container mt-3">
-<div class="row g-3 align-items-stretch">
-
-<div class="col-md-6 d-flex">
-  <div class="card p-3 w-100">
-
-    <div style="height:400px;">
-      <canvas id="followChart"></canvas>
+  <!-- ===== TABLE ===== -->
+  <div class="card mb-4">
+    <div class="card-head">
+      <h6><i class="fa fa-table fa-sm me-2" style="color:var(--ink-2)"></i>รายชื่อเด็ก</h6>
     </div>
 
-    <div id="chartDescription" class="chart-desc mt-2"></div>
+    <!-- Desktop Table -->
+    <div class="table-wrap table-responsive">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>HN</th>
+            <th>เลขบัตร</th>
+            <th>ชื่อ</th>
+            <th>ตำบล</th>
+            <th>รพ.สต.</th>
+            <th>บ้าน</th>
+            <th>หมู่</th>
+            <th>วันเกิด</th>
+            <th>อายุ</th>
+            <th>วัคซีน</th>
+            <th>ผู้ดูแล</th>
+            <th>หมายเหตุ</th>
+            <th>เวลา</th>
+            <th>ลบ</th>
+            <th>สถานะ</th>
+          </tr>
+        </thead>
+        <tbody id="followTable"></tbody>
+      </table>
+    </div>
 
+    <!-- Mobile Cards -->
+    <div id="mobileList" class="mobile-list" style="padding:12px"></div>
+
+    <div id="pagination"></div>
   </div>
-</div>
 
-<div class="col-md-6 d-flex">
-<div class="card p-3 w-100">
+</div><!-- /main -->
 
-    <!-- 🔥 TITLE -->
-    <h6 class="mb-2">📊 ความครอบคลุมวัคซีน</h6>
-
-    <!-- 🔽 FILTER -->
-    <div class="row g-2 mb-3">
-
-      <!-- 💉 วัคซีน -->
-      <div class="col-6 col-md-6">
-        <select id="vaccineFilter" onchange="loadvaccineChart()" class="form-select">
-          <option value="all">💉 ทุกวัคซีน</option>
-        </select>
-      </div>
-      
-
-      <!-- 📅 ไตรมาส -->
-      <div class="col-6 col-md-6">
-        <select id="quarterFilter" onchange="loadvaccineChart()" class="form-select">
-          <option value="all">📅 ทุกไตรมาส</option>
-          <option value="Q1">Q1 (ม.ค. - มี.ค.)</option>
-          <option value="Q2">Q2 (เม.ย. - มิ.ย.)</option>
-          <option value="Q3">Q3 (ก.ค. - ก.ย.)</option>
-          <option value="Q4">Q4 (ต.ค. - ธ.ค.)</option>
-        </select>
-      </div>
-       <!-- 📊 CHART -->
-        <div style="position:relative; height:300px;">
-          <canvas id="vaccineChart"></canvas>
-        </div>
-        </div>
-        <div id="vaccineDescription" class="chart-desc mt-2"></div>
-  </div>
-</div>
-</div>
-</div>
-
-<!-- TABLE -->
-<div class="container mt-3">
-<div class="card p-3">
-<div class="table-responsive">
-  <table class="table table-bordered align-middle">
-    <thead>
-      <tr>
-        <th>HN</th>
-        <th>เลขบัตร</th>
-        <th>ชื่อ</th>
-        <th>ตำบล</th>
-        <th>รพ.สต</th>
-        <th>บ้าน</th>
-        <th>หมู่</th>
-        <th>วันเกิด</th>
-        <th>อายุ</th>
-        <th>วัคซีน</th>
-        <th>ผู้ดูแล</th>
-        <th>หมายเหตุ</th>
-        <th>เวลา</th>
-        <th>ลบ</th>
-        <th>สถานะ</th>
-      </tr>
-    </thead>
-
-    <tbody id="followTable"></tbody>
-  </table>
- 
-</div>
- <div id="mobileList" class="mobile-list"></div>
-</div>
-<div id="pagination" class="text-center mt-3"></div>
-</div>
-
-
-
-
-
-<!-- 🔥 ต้องอยู่ก่อน </body> -->
+<!-- ============================
+     MODALS
+============================ -->
+<!-- Vaccine Editor -->
 <div class="modal fade" id="vaccineModal">
   <div class="modal-dialog">
     <div class="modal-content">
-
       <div class="modal-header">
-        <h5 class="modal-title">วัคซีน</h5>
+        <h5 class="modal-title">แก้ไขวัคซีน</h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-
       <div class="modal-body" id="vaccineEditor"></div>
-
       <div class="modal-footer">
-        <button class="btn btn-success" onclick="saveVaccines()">💾 บันทึก</button>
+        <button class="btn btn-success" onclick="saveVaccines()">
+          <i class="fa fa-floppy-disk fa-sm"></i> บันทึก
+        </button>
       </div>
-
     </div>
   </div>
 </div>
-</div>
-    <div class="modal fade" id="careModal">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
 
-          <div class="modal-header">
-            <h5 id="careTitle">ผู้ดูแลหมู่บ้าน</h5>
-            <button class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-
-          <div class="modal-body" id="careBody"></div>
-
-        </div>
+<!-- Care Modal -->
+<div class="modal fade" id="careModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="careTitle">ผู้ดูแลหมู่บ้าน</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
+      <div class="modal-body" id="careBody"></div>
     </div>
+  </div>
+</div>
+
+<!-- ============================
+     SCROLL TOP
+============================ -->
 <button id="scrollTopBtn" onclick="scrollToTop()">
-  <i class="fa-solid fa-angle-up"></i>
+  <i class="fa fa-angle-up"></i>
 </button>
+
+<!-- ============================
+     BOTTOM NAV (mobile)
+============================ -->
+<nav class="bottom-nav d-md-none">
+  <a href="index.html" class="active">
+    <i class="fa fa-house"></i>
+    <span>หน้าแรก</span>
+  </a>
+  <a href="symptoms.html">
+    <i class="fa fa-heartbeat"></i>
+    <span>อาการ</span>
+  </a>
+  <a href="admin.html">
+    <i class="fa fa-gear"></i>
+    <span>Admin</span>
+  </a>
+</nav>
+
 <script>
+/* auth */
+if (!localStorage.getItem("user")) window.location.href = "login.html";
+
+document.addEventListener("DOMContentLoaded", () => {
+  const name = localStorage.getItem("name") || "ผู้ใช้งาน";
+  document.getElementById("heroName").textContent  = name;
+  document.getElementById("userNameDrop").textContent = name;
+
+  const adminMenu = document.getElementById("adminMenu");
+  if (adminMenu && localStorage.getItem("role") !== "admin")
+    adminMenu.style.display = "none";
+});
+
+loadFollow();
+loadvaccineChart();
+
+/* scroll top */
+window.addEventListener("scroll", () => {
+  const btn = document.getElementById("scrollTopBtn");
+  btn.style.display = window.scrollY > 300 ? "flex" : "none";
+});
+function scrollToTop(){ window.scrollTo({top:0, behavior:"smooth"}); }
+
+
 function closeSidebar(){
   document.getElementById("sidebar").classList.remove("show");
   document.getElementById("backdrop").classList.remove("show");
