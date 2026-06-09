@@ -1,553 +1,463 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
-
-<title>
-ติดตามอาการหลังฉีดวัคซีน
-</title>
-
-<link
-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-rel="stylesheet">
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ติดตามอาการหลังฉีดวัคซีน</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
 <style>
+  body { background: #f4f6fb; padding: 20px; font-family: 'Sarabun', sans-serif; }
 
-body{
-background:#f4f6fb;
-padding:20px;
-}
+  /* ===== Summary Cards ===== */
+  .stat-card { border: none; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.05); padding: 16px 20px; }
+  .stat-label { font-size: 13px; color: #6c757d; margin-bottom: 4px; }
+  .stat-val { font-size: 32px; font-weight: 700; }
 
-.card{
-border:none;
-border-radius:20px;
+  /* ===== Case Cards ===== */
+  .case-card { border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.05); padding: 16px; margin-bottom: 12px; background: #fff; border: 1.5px solid #e9ecef; transition: box-shadow .2s; }
+  .case-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.09); }
+  .case-card.urgent { border-color: #ef4444; }
+  .case-card.warning { border-color: #f59e0b; }
+  .case-card.closed { opacity: .65; }
 
-box-shadow:
-0 2px 10px rgba(0,0,0,.05);
-}
+  /* ===== Badge ===== */
+  .level-badge { display: inline-block; font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+  .level-green  { background: #dcfce7; color: #166534; }
+  .level-amber  { background: #fef9c3; color: #854d0e; }
+  .level-red    { background: #fee2e2; color: #991b1b; }
+  .level-blue   { background: #dbeafe; color: #1e40af; }
+  .level-gray   { background: #f1f5f9; color: #475569; }
 
-.summary{
-font-size:30px;
-font-weight:bold;
-}
+  /* ===== Progress Bar ===== */
+  .prog-wrap { margin: 8px 0 4px; }
+  .prog-label { display: flex; justify-content: space-between; font-size: 12px; color: #6c757d; margin-bottom: 4px; }
+  .prog-bg { height: 7px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; transition: width .4s; }
 
+  /* ===== Info Grid ===== */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 13px; }
+  .info-key { color: #6c757d; font-size: 12px; }
+  .info-val { color: #212529; }
+
+  /* ===== Toolbar ===== */
+  .toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toolbar input, .toolbar select { border-radius: 10px; border: 1px solid #dee2e6; padding: 7px 12px; font-size: 14px; }
+  .toolbar input { flex: 1; min-width: 180px; }
+
+  /* ===== Topbar ===== */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .topbar h1 { font-size: 20px; font-weight: 700; margin: 0; color: #1e293b; }
+
+  /* ===== Buttons ===== */
+  .btn-accept { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+  .btn-accept:hover { background: #bbf7d0; }
+  .btn-close-case { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .btn-close-case:hover { background: #fecaca; }
+  .btn-reopen { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+  .btn-reopen:hover { background: #e2e8f0; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; font-size: 15px; }
 </style>
-
 </head>
-
 <body>
+<div class="container-fluid" style="max-width:960px">
 
-<div class="container">
+  <!-- ===== Top Bar ===== -->
+  <div class="topbar">
+    <h1><i class="ti ti-shield-check" style="font-size:22px;vertical-align:-3px;margin-right:6px;color:#3b82f6"></i>ติดตามอาการหลังฉีดวัคซีน</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="lastUpdate" style="font-size:12px;color:#94a3b8"></span>
+      <button class="btn btn-outline-secondary btn-sm" onclick="manualRefresh()">
+        <i class="ti ti-refresh"></i> รีเฟรช
+      </button>
+      <a href="index.html" class="btn btn-outline-secondary btn-sm">
+        <i class="ti ti-arrow-left"></i> กลับหน้าแรก
+      </a>
+    </div>
+  </div>
 
-<div class=" d-flex justify-content-between align-items-center
-mb-4
-">
+  <!-- ===== Summary Stats ===== -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md">
+      <div class="stat-card bg-white">
+        <div class="stat-label"><i class="ti ti-users"></i> ทั้งหมด</div>
+        <div class="stat-val text-dark" id="sTotal">—</div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="stat-card bg-white">
+        <div class="stat-label" style="color:#166534"><i class="ti ti-circle-check"></i> ปกติ</div>
+        <div class="stat-val" style="color:#166534" id="sNormal">—</div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="stat-card bg-white">
+        <div class="stat-label" style="color:#854d0e"><i class="ti ti-alert-triangle"></i> เฝ้าระวัง</div>
+        <div class="stat-val" style="color:#854d0e" id="sWarn">—</div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="stat-card bg-white">
+        <div class="stat-label" style="color:#991b1b"><i class="ti ti-urgent"></i> ด่วน</div>
+        <div class="stat-val" style="color:#991b1b" id="sCrit">—</div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="stat-card bg-white">
+        <div class="stat-label" style="color:#1e40af"><i class="ti ti-circle-x"></i> ปิดเคสแล้ว</div>
+        <div class="stat-val" style="color:#1e40af" id="sClosed">—</div>
+      </div>
+    </div>
+  </div>
 
-<h2>
-📊 ติดตามอาการหลังฉีดวัคซีน
-</h2>
+  <!-- ===== Toolbar ===== -->
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="🔍 ค้นหา HN หรือชื่อเด็ก..." oninput="render()">
+    <select id="filterLevel" onchange="render()">
+      <option value="">ทุกระดับ</option>
+      <option value="ปกติ">🟢 ปกติ</option>
+      <option value="เฝ้าระวัง">🟠 เฝ้าระวัง</option>
+      <option value="ด่วน">🔴 ด่วน / รุนแรง</option>
+      <option value="ปิดเคส">✅ ปิดเคสแล้ว</option>
+    </select>
+    <select id="sortBy" onchange="render()">
+      <option value="priority">เรียงตามความเร่งด่วน</option>
+      <option value="time">เรียงตามเวลาล่าสุด</option>
+      <option value="nextFollowUp">เรียงตาม follow-up ถัดไป</option>
+    </select>
+  </div>
 
-<a
-href="index.html"
-class="
-btn
-btn-outline-secondary
-">
-
-⬅ กลับหน้าแรก
-
-</a>
-
-</div>
-
-
-<div class="row mb-4">
-
-<div class="col-md-3">
-
-<div class="card p-3">
-
-<div>
-👶 ทั้งหมด
-</div>
-
-<div
-id="totalCount"
-class="summary">
-
-0
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="col-md-3">
-
-<div class="card p-3">
-
-<div>
-🟢 ปกติ
-</div>
-
-<div
-id="normalCount"
-class="summary">
-
-0
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="col-md-3">
-
-<div class="card p-3">
-
-<div>
-🟠 ต้องติดตาม
-</div>
-
-<div
-id="warningCount"
-class="summary">
-
-0
+  <!-- ===== Card List ===== -->
+  <div id="cardList">
+    <div class="empty-state">
+      <i class="ti ti-loader-2" style="font-size:36px;display:block;margin-bottom:8px"></i>
+      กำลังโหลดข้อมูล...
+    </div>
+  </div>
 
 </div>
 
+<!-- ===== Staff Name Modal ===== -->
+<div class="modal fade" id="staffModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title" id="staffModalTitle">รับเคส</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label" style="font-size:14px">ชื่อเจ้าหน้าที่</label>
+        <input type="text" class="form-control" id="staffName" placeholder="กรอกชื่อเจ้าหน้าที่...">
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" id="staffConfirm">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-</div>
-
-
-<div class="col-md-3">
-
-<div class="card p-3">
-
-<div>
-🔴 ต้องติดตามใกล้ชิด
-</div>
-
-<div
-id="criticalCount"
-class="summary">
-
-0
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="mb-3">
-
-<input
-type="text"
-id="searchHN"
-class="form-control"
-placeholder="🔍 ค้นหา HN หรือชื่อเด็ก..."
-onkeyup="loadSymptoms()"
->
-
-</div>
-
-<div id="symptomList"></div>
-
-</div>
-
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-
-const firebaseConfig={
-
-apiKey:"HnOSpjSHma268VX3glsVJ9idzj9Uc1jjcqkJ7P11",
-
-authDomain:
-"vaccine-dashboard-bc687.firebaseapp.com",
-
-databaseURL:
-"https://vaccine-dashboard-bc687-default-rtdb.firebaseio.com/",
-
-projectId:
-"vaccine-dashboard-bc687"
-
+// =====================
+// Firebase Init
+// =====================
+const firebaseConfig = {
+  apiKey:       "HnOSpjSHma268VX3glsVJ9idzj9Uc1jjcqkJ7P11",
+  authDomain:   "vaccine-dashboard-bc687.firebaseapp.com",
+  databaseURL:  "https://vaccine-dashboard-bc687-default-rtdb.firebaseio.com/",
+  projectId:    "vaccine-dashboard-bc687"
 };
-
-
-if(!firebase.apps.length){
-
-firebase.initializeApp(
-firebaseConfig
-);
-
-}
-
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-function markDone(id){
+// =====================
+// State
+// =====================
+let allData   = {};
+let pendingKey = null;
+let pendingAction = null; // "accept" | "close" | "reopen"
+const staffModal = new bootstrap.Modal(document.getElementById("staffModal"));
 
-const staff =
-localStorage.getItem("username") ||
-localStorage.getItem("name") ||
-"เจ้าหน้าที่";
-
-db.ref("symptoms/" + id)
-.once("value")
-.then(snap => {
-
-  const s = snap.val() || {};
-
-  if(!s.assignedTo){
-
-    db.ref("symptoms/" + id).update({
-
-      status: "กำลังติดตาม",
-      assignedTo: staff,
-      followedAt: Date.now()
-
-    });
-
-  }else{
-
-    db.ref("symptoms/" + id).update({
-
-      status: "ติดตามเสร็จ",
-      level: "🟢 ปกติ",
-      assignedTo: staff,
-      priority: 99,
-      closedAt: Date.now()
-
-    });
-
-  }
-
-});
-
+// =====================
+// Helpers
+// =====================
+function thaiDateTime(ms) {
+  if (!ms) return "-";
+  return new Date(ms).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", hour12: false });
 }
 
+function vaccineText(vac) {
+  if (!vac) return "ไม่มีข้อมูล";
+  const vals = Object.values(vac);
+  if (!vals.length) return "ไม่มีข้อมูล";
+  const latest = [...vals].sort().pop();
+  return Object.entries(vac)
+    .filter(([, v]) => v === latest)
+    .map(([k, v]) => `${k} (${v})`)
+    .join(", ");
+}
 
+function levelBadge(level) {
+  if (!level) return '<span class="level-badge level-gray">ไม่ระบุ</span>';
+  if (level.includes("🔴")) return `<span class="level-badge level-red">${level}</span>`;
+  if (level.includes("🟠")) return `<span class="level-badge level-amber">${level}</span>`;
+  if (level.includes("🟢")) return `<span class="level-badge level-green">${level}</span>`;
+  return `<span class="level-badge level-gray">${level}</span>`;
+}
 
-function loadSymptoms(){
+function statusBadge(status) {
+  if (!status) return "";
+  if (status === "ปิดเคส")        return '<span class="level-badge level-blue">ปิดเคสแล้ว</span>';
+  if (status === "กำลังติดตาม")   return '<span class="level-badge level-blue">กำลังติดตาม</span>';
+  if (status === "ด่วน")          return '<span class="level-badge level-red">ด่วน</span>';
+  if (status === "เฝ้าติดตาม")    return '<span class="level-badge level-amber">เฝ้าติดตาม</span>';
+  if (status === "รอติดตาม")      return '<span class="level-badge level-gray">รอติดตาม</span>';
+  return `<span class="level-badge level-gray">${status}</span>`;
+}
 
-const container =
-document.getElementById("symptomList");
+function progressColor(n) {
+  if (n >= 3) return "#22c55e";
+  if (n >= 2) return "#f59e0b";
+  return "#ef4444";
+}
 
-if(!container) return;
+function cardClass(s) {
+  if (s.status === "ปิดเคส") return "case-card closed";
+  if ((s.level || "").includes("🔴") || s.status === "ด่วน") return "case-card urgent";
+  if ((s.level || "").includes("🟠")) return "case-card warning";
+  return "case-card";
+}
 
-db.ref("symptoms").off();
+// =====================
+// Render
+// =====================
+function render() {
+  const kw = (document.getElementById("search")?.value || "").toLowerCase();
+  const fl  = document.getElementById("filterLevel")?.value || "";
+  const so  = document.getElementById("sortBy")?.value || "priority";
 
-db.ref("symptoms").on("value", snap => {
+  // --- Filter ---
+  let entries = Object.entries(allData).filter(([, s]) => {
+    const hn   = String(s.hn   || "").toLowerCase();
+    const name = String(s.name || "").toLowerCase();
+    if (kw && !hn.includes(kw) && !name.includes(kw)) return false;
+    if (fl === "ปกติ"     && !(s.level || "").includes("🟢")) return false;
+    if (fl === "เฝ้าระวัง" && !(s.level || "").includes("🟠")) return false;
+    if (fl === "ด่วน"     && !(s.level || "").includes("🔴") && s.status !== "ด่วน") return false;
+    if (fl === "ปิดเคส"   && s.status !== "ปิดเคส") return false;
+    return true;
+  });
 
-const data = snap.val() || {};
+  // --- Sort ---
+  entries.sort((a, b) => {
+    if (so === "time")        return (b[1].time || 0) - (a[1].time || 0);
+    if (so === "nextFollowUp") {
+      const na = a[1].nextFollowUp || Infinity;
+      const nb = b[1].nextFollowUp || Infinity;
+      return na - nb;
+    }
+    const p1 = a[1].priority || 99;
+    const p2 = b[1].priority || 99;
+    return p1 !== p2 ? p1 - p2 : (b[1].time || 0) - (a[1].time || 0);
+  });
 
-container.innerHTML = "";
+  // --- Stats ---
+  let total = 0, normal = 0, warn = 0, crit = 0, closed = 0;
+  Object.values(allData).forEach(s => {
+    total++;
+    if (s.status === "ปิดเคส")                                          closed++;
+    else if ((s.level || "").includes("🔴") || s.status === "ด่วน")     crit++;
+    else if ((s.level || "").includes("🟠"))                            warn++;
+    else                                                                 normal++;
+  });
+  document.getElementById("sTotal").textContent  = total;
+  document.getElementById("sNormal").textContent = normal;
+  document.getElementById("sWarn").textContent   = warn;
+  document.getElementById("sCrit").textContent   = crit;
+  document.getElementById("sClosed").textContent = closed;
 
-const keyword =
-  document.getElementById("searchHN")
-  ?.value
-  .toLowerCase() || "";
-
-const entries =
-
-Object.entries(data)
-
-.filter(([k,s]) => {
-
-  const hn =
-    String(s.hn || "")
-    .toLowerCase();
-
-  const name =
-    String(s.name || "")
-    .toLowerCase();
-
-  return (
-    hn.includes(keyword) ||
-    name.includes(keyword)
-  );
-
-})
-
-.sort((a,b)=>{
-
-  const p1 = a[1].priority || 99;
-  const p2 = b[1].priority || 99;
-
-  if(p1 !== p2){
-    return p1 - p2;
+  // --- Empty ---
+  const list = document.getElementById("cardList");
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state">
+      <i class="ti ti-mood-empty" style="font-size:40px;display:block;margin-bottom:10px"></i>
+      ไม่พบข้อมูลที่ตรงกัน
+    </div>`;
+    return;
   }
 
-  return (b[1].time || 0) - (a[1].time || 0);
+  // --- Cards ---
+  list.innerHTML = entries.map(([key, s]) => {
+    const nc       = s.normalCount || 0;
+    const step     = s.followStep  || 1;
+    const isClosed = s.status === "ปิดเคส";
+    const hasAssigned = !!s.assignedTo;
 
-});
-
-let total = 0;
-let normal = 0;
-let warning = 0;
-let critical = 0;
-
-entries.forEach(([key,s]) => {
-
-  total++;
-
-  if((s.level || "").includes("🟢")){
-    normal++;
-  }
-  else if((s.level || "").includes("🔴")){
-    critical++;
-  }
-  else{
-    warning++;
-  }
-
-  let color = "#22c55e";
-
-  if((s.level || "").includes("🟠")){
-    color = "#f59e0b";
-  }
-
-  if((s.level || "").includes("🔴")){
-    color = "#ef4444";
-  }
-
-  if(s.status === "กำลังติดตาม"){
-    color = "#3b82f6";
-  }
-
-  let vaccineText = "ไม่มีข้อมูล";
-
-  if(s.vaccines){
-
-    const vaccineValues =
-      Object.values(s.vaccines);
-
-    if(vaccineValues.length){
-
-      const latestDate =
-        vaccineValues
-        .sort()
-        .pop();
-
-      const latestVaccines =
-        Object.entries(s.vaccines)
-        .filter(([k,v]) =>
-          v === latestDate
-        );
-
-      vaccineText =
-        latestVaccines
-        .map(([k,v]) =>
-          `${k} (${v})`
-        )
-        .join("<br>");
-
+    // Action button
+    let btnHtml = "";
+    if (isClosed) {
+      btnHtml = `<button class="btn btn-reopen btn-sm" onclick="openAction('${key}','reopen')">
+        <i class="ti ti-rotate"></i> เปิดเคสใหม่
+      </button>`;
+    } else if (hasAssigned) {
+      btnHtml = `<button class="btn btn-close-case btn-sm" onclick="openAction('${key}','close')">
+        <i class="ti ti-circle-check"></i> จบเคส / ปิด
+      </button>`;
+    } else {
+      btnHtml = `<button class="btn btn-accept btn-sm" onclick="openAction('${key}','accept')">
+        <i class="ti ti-hand-stop"></i> รับเคส
+      </button>`;
     }
 
-  }
+    return `
+    <div class="${cardClass(s)}">
 
-  const card =
-    document.createElement("div");
-
-  card.className =
-    "card p-3 mb-3";
-
-  if(
-    (s.level || "")
-    .includes("🔴")
-  ){
-    card.style.border =
-      "2px solid red";
-  }
-
-  card.innerHTML = `
-  📍 รอบติดตาม :
-${(s.followStep || 0) + 1}
-
-✅ ปกติ :
-${s.normalCount || 0}/4 ครั้ง
-
-⏭ ติดตามครั้งถัดไป :
-${
-s.nextFollowUp
-? new Date(s.nextFollowUp).toLocaleString("th-TH")
-: "-"
-}
-
-  <div class="d-flex justify-content-between">
-
-    <div>
-
-      <h5>
-      👶 ${s.name || "-"}
-      </h5>
-
-      <div>
-      🆔 HN:
-      ${s.hn || "-"}
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#1e293b">
+            <i class="ti ti-user-circle" style="font-size:16px;vertical-align:-2px;margin-right:4px"></i>
+            ${s.name || "-"}
+          </div>
+          <div style="font-size:13px;color:#64748b;margin-top:2px">
+            <i class="ti ti-id"></i> HN: ${s.hn || "-"}
+            &nbsp;|&nbsp;
+            <i class="ti ti-phone"></i> ${s.phone || "-"}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          ${levelBadge(s.level)}
+          ${statusBadge(s.status)}
+        </div>
       </div>
 
-      <div>
-      📞
-      ${s.phone || "-"}
+      <!-- Progress -->
+      <div class="prog-wrap">
+        <div class="prog-label">
+          <span>ปกติติดต่อกัน</span>
+          <span>${nc} / 4 ครั้ง</span>
+        </div>
+        <div class="prog-bg">
+          <div class="prog-fill" style="width:${Math.min(nc / 4 * 100, 100)}%;background:${progressColor(nc)}"></div>
+        </div>
       </div>
 
-    </div>
+      <hr style="margin:10px 0;border-color:#f1f5f9">
 
-    <div>
+      <!-- Info Grid -->
+      <div class="info-grid mb-3">
+        <div>
+          <div class="info-key"><i class="ti ti-vaccine"></i> วัคซีนล่าสุด</div>
+          <div class="info-val">${vaccineText(s.vaccines)}</div>
+        </div>
+        <div>
+          <div class="info-key"><i class="ti ti-stethoscope"></i> อาการล่าสุด</div>
+          <div class="info-val">${s.symptom || "-"}</div>
+        </div>
+        <div>
+          <div class="info-key"><i class="ti ti-list-numbers"></i> รอบติดตาม</div>
+          <div class="info-val">รอบที่ ${step} / 4</div>
+        </div>
+        <div>
+          <div class="info-key"><i class="ti ti-clock"></i> follow-up ถัดไป</div>
+          <div class="info-val">${thaiDateTime(s.nextFollowUp)}</div>
+        </div>
+        <div>
+          <div class="info-key"><i class="ti ti-user-check"></i> เจ้าหน้าที่</div>
+          <div class="info-val">${s.assignedTo || "ยังไม่มีผู้รับเคส"}</div>
+        </div>
+        <div>
+          <div class="info-key"><i class="ti ti-calendar"></i> อัปเดตล่าสุด</div>
+          <div class="info-val">${thaiDateTime(s.updatedAt || s.time)}</div>
+        </div>
+      </div>
 
-      <span
-      class="badge"
-      style="
-      background:${color};
-      padding:10px">
+      <!-- Buttons -->
+      <div class="d-flex gap-2">
+        ${btnHtml}
+      </div>
 
-      ${s.level || "-"}
-
-      </span>
-
-    </div>
-
-  </div>
-
-  <hr>
-
-  <div>
-
-  💉 <b>วัคซีนล่าสุด:</b>
-
-  <br>
-
-  ${vaccineText}
-
-  </div>
-
-  <br>
-
-  <div>
-
-  🩺 <b>อาการ:</b>
-
-  ${s.symptom || "-"}
-
-  </div>
-
-  <div class="mt-2">
-
-  📌 ${s.status || "-"}
-
-  </div>
-
-  <div class="mt-2">
-
-  📍 รอบติดตาม :
-  ${(s.followStep || 0) + 1}
-
-  </div>
-
-  <div class="mt-2">
-
-  ✅ ปกติ :
-  ${s.normalCount || 0}/4 ครั้ง
-
-  </div>
-
-  <div class="mt-2">
-
-  ⏭ ติดตามครั้งถัดไป :
-
-  ${
-    s.nextFollowUp
-    ? new Date(
-        s.nextFollowUp
-      ).toLocaleString("th-TH")
-    : "-"
-  }
-
-  </div>
-
-  <div class="mt-2">
-
-  👩‍⚕️
-
-  ${
-    s.assignedTo
-    ? `เจ้าหน้าที่: ${s.assignedTo}`
-    : "ยังไม่มีผู้รับเคส"
-  }
-
-  </div>
-
-  <div class="mt-2 text-muted">
-
-  ⏰
-
-  ${
-    s.time
-    ? new Date(
-        s.time
-      ).toLocaleString("th-TH")
-    : "-"
-  }
-
-  </div>
-
-  <button
-  onclick="markDone('${key}')"
-  class="btn ${
-    s.assignedTo
-    ? "btn-success"
-    : "btn-warning"
-  } w-100 mt-3">
-
-  ${
-    s.assignedTo
-    ? "✅ จบเคส"
-    : "👩‍⚕️ รับเคส"
-  }
-
-  </button>
-
-  `;
-
-  container.appendChild(card);
-
-});
-
-document.getElementById("totalCount").innerText = total;
-document.getElementById("normalCount").innerText = normal;
-document.getElementById("warningCount").innerText = warning;
-document.getElementById("criticalCount").innerText = critical;
-
-});
-
+    </div>`;
+  }).join("");
 }
 
-document.addEventListener(
-"DOMContentLoaded",
-() => {
-loadSymptoms();
+// =====================
+// Action Handlers
+// =====================
+function openAction(key, action) {
+  pendingKey    = key;
+  pendingAction = action;
+
+  const titles = { accept: "รับเคส", close: "จบเคส / ปิด", reopen: "เปิดเคสใหม่" };
+  document.getElementById("staffModalTitle").textContent = titles[action] || "ดำเนินการ";
+  document.getElementById("staffName").value = localStorage.getItem("staffName") || "";
+
+  staffModal.show();
+  setTimeout(() => document.getElementById("staffName").focus(), 300);
 }
-);
 
+document.getElementById("staffConfirm").addEventListener("click", () => {
+  const staff = document.getElementById("staffName").value.trim() || "เจ้าหน้าที่";
+  localStorage.setItem("staffName", staff);
+  staffModal.hide();
 
+  if (!pendingKey) return;
+  const key    = pendingKey;
+  const action = pendingAction;
+  pendingKey = pendingAction = null;
 
+  const now = Date.now();
+  if (action === "accept") {
+    db.ref("symptoms/" + key).update({
+      status:     "กำลังติดตาม",
+      assignedTo: staff,
+      followedAt: now,
+    });
+  } else if (action === "close") {
+    db.ref("symptoms/" + key).update({
+      status:     "ปิดเคส",
+      level:      "🟢 ปกติ",
+      assignedTo: staff,
+      priority:   99,
+      closedAt:   now,
+    });
+  } else if (action === "reopen") {
+    db.ref("symptoms/" + key).update({
+      status:     "รอติดตาม",
+      closedAt:   null,
+      assignedTo: "",
+      priority:   3,
+    });
+  }
+});
+
+// Enter key in staff input
+document.getElementById("staffName").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("staffConfirm").click();
+});
+
+// =====================
+// Firebase Listener
+// =====================
+db.ref("symptoms").on("value", snap => {
+  allData = snap.val() || {};
+  render();
+  document.getElementById("lastUpdate").textContent =
+    "อัปเดตเมื่อ " + new Date().toLocaleTimeString("th-TH");
+});
+
+function manualRefresh() {
+  db.ref("symptoms").once("value", snap => {
+    allData = snap.val() || {};
+    render();
+    document.getElementById("lastUpdate").textContent =
+      "อัปเดตเมื่อ " + new Date().toLocaleTimeString("th-TH");
+  });
+}
 </script>
-
 </body>
 </html>
