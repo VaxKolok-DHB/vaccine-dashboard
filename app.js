@@ -34,9 +34,9 @@ const vaccineList=[
 "IPV1",
 "IPV2",
 
-"DTPHBHib1",
-"DTPHBHib2",
-"DTPHBHib3",
+"DTP1",
+"DTP2",
+"DTP3",
 "DTP4",
 "DTP5",
 
@@ -47,8 +47,8 @@ const vaccineList=[
 "MMR1",
 "MMR2",
 
-"LAJE1",
-"LAJE2",
+"JE1",
+"JE2",
 
 "Rota1",
 "Rota2",
@@ -64,9 +64,9 @@ const vaccineData=[
 {name:"HBV1",quarter:"Q1",percent:90},
 {name:"HBV2",quarter:"Q1",percent:88},
 
-{name:"DTPHBHib1",quarter:"Q1",percent:86},
-{name:"DTPHBHib2",quarter:"Q1",percent:84},
-{name:"DTPHBHib3",quarter:"Q1",percent:82},
+{name:"DTP1",quarter:"Q1",percent:86},
+{name:"DTP2",quarter:"Q1",percent:84},
+{name:"DTP3",quarter:"Q1",percent:82},
 
 {name:"IPV1",quarter:"Q1",percent:80},
 {name:"IPV2",quarter:"Q1",percent:78},
@@ -83,8 +83,8 @@ const vaccineData=[
 {name:"MMR2",quarter:"Q1",percent:62},
 
 
-{name:"LAJE1",quarter:"Q1",percent:58},
-{name:"LAJE2",quarter:"Q1",percent:56},
+{name:"JE1",quarter:"Q1",percent:58},
+{name:"JE2",quarter:"Q1",percent:56},
 
 {name:"DTP4",quarter:"Q1",percent:54},
 {name:"DTP5",quarter:"Q1",percent:52}
@@ -760,7 +760,7 @@ pageData.forEach(row=>{
 <td><input value="${c.name || ''}"onchange="autoSave('${id}','name',this.value)"></td>
 
 <td>
-<select class="form-select" onchange="changeTambon(this)">
+<select class="form-select" style="min-width:130px" onchange="changeTambon(this)">
 <option value="">-- เลือกตำบล --</option>
 <option value="kolok" ${c.tambon==="kolok"?"selected":""}>สุไหงโก-ลก</option>
 <option value="munoh" ${c.tambon==="munoh"?"selected":""}>มูโนะ</option>
@@ -770,7 +770,7 @@ pageData.forEach(row=>{
 </td>
 
 <td>
-<select class="form-select"
+<select class="form-select" style="min-width:160px"
 onchange="autoSave('${id}','hospital',this.value)">
 <option value="">-- เลือกรพ.สต --</option>
 <option value="10170" ${c.hospital==="10170"?"selected":""}>รพ.สต.ปูโยะ</option>
@@ -1625,8 +1625,8 @@ function buildVillageDropdown(tambon, selected, id){
     : (villageData[tambon] || {});
 
   return `
-    <select id="village" class="form-select"
-      onchange="autoSave('${id}','village',this.value)">
+  <select id="village" class="form-select" style="min-width:130px"
+    onchange="autoSave('${id}','village',this.value)">
 
       <option value="">-- เลือกหมู่ --</option>
 
@@ -2004,9 +2004,9 @@ BCG:"bcg_date",
 HBV1:"hbv1_date",
 HBV2:"hbv2_date",
 
-DTPHBHib1:"dtphbhib1_date",
-DTPHBHib2:"dtphbhib2_date",
-DTPHBHib3:"dtphbhib3_date",
+DTP1:"dtp1_date",
+DTP2:"dtp2_date",
+DTP3:"dtp3_date",
 
 IPV1:"ipv1_date",
 IPV2:"ipv2_date",
@@ -2023,8 +2023,8 @@ MMR1:"mmr1_date",
 MMR2:"mmr2_date",
 
 
-LAJE1:"laje1_date",
-LAJE2:"laje2_date",
+JE1:"je1_date",
+JE2:"je2_date",
 
 DTP4:"dtp4_date",
 DTP5:"dtp5_date"
