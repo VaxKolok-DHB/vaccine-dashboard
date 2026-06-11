@@ -334,7 +334,7 @@ let VISIBLE_ROWS = 40;
 const PAGE_SIZE  = 6000;
 let lastKey   = null;
 let isLoading = false;
-
+let statusFilter = "all";
 function loadFollow() {
   const keyword        = (document.getElementById("searchInput")?.value  || "").toLowerCase();
   const tambonFilter   = document.getElementById("tambonFilter")?.value  || "all";
@@ -382,6 +382,10 @@ function loadFollow() {
       if (keyword && !name.includes(keyword) && !cid.includes(keyword) && !hn.includes(keyword)) continue;
 
       const count = c.vaccines ? Object.keys(c.vaccines).length : 0;
+
+      const isDone = count >= 10;
+      if (statusFilter === "done"    && !isDone) continue;
+      if (statusFilter === "notdone" &&  isDone) continue;
 
       if (count >= 10) { done++; } else { notdone++; }
 
@@ -1406,4 +1410,17 @@ function filterData() {
     (quarter === "all" || item.quarter === quarter)
   );
   updateChart(filtered);
+}
+
+
+function setStatusFilter(mode) {
+  statusFilter = mode;
+
+  document.querySelectorAll('#btn-status-all,#btn-status-notdone,#btn-status-done')
+    .forEach(b => b.classList.remove('btn-primary'));
+
+  const activeBtn = document.getElementById('btn-status-' + mode);
+  if (activeBtn) activeBtn.classList.add('btn-primary');
+
+  loadFollow();
 }
