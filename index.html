@@ -555,7 +555,7 @@ table.tbl{
     <div class="filters">
     
        <select id="vaccineFilter"  onchange="loadvaccineChart()" 
-              id="tambonFilter" onchange="updateHospitalFilter();loadFollow()" style="min-width:160px">
+              id="tambonFilter" onchange="updateHospitalFilter();loadFollow()" style="min-width:100px">
                 <option value="all">ทุกวัคซีน</option>
         </select>
       <select id="tambonFilter" onchange="updateHospitalFilter();loadFollow()" style="min-width:160px">
@@ -570,7 +570,7 @@ table.tbl{
         <option value="all">🏥 ทุกหน่วยบริการ</option>
       </select>
 
-      <select id="ageFilter" onchange="getAgeMonths();loadFollow()" style="min-width:150px">
+      <select id="ageFilter" onchange="getAgeMonths();loadFollow()" style="min-width:100px">
 <option value="all">👶 ทุกอายุ</option>
         <option value="0">แรกเกิด</option>
         <option value="1">1 เดือน</option>
@@ -586,7 +586,15 @@ table.tbl{
         <option value="36">3 ปี</option>
         <option value="48">4 ปี</option>
         <option value="60">5 ปี</option>
+ </select>
+      <select id="typeAreaFilter" onchange="loadFollow()" style="min-width:100px">
+        <option value="all">👥 ทุกประเภท</option>
+        <option value="1">Type 1: อยู่จริงตามทะเบียน</option>
+        <option value="2">Type 2: มีชื่อ ไม่อยู่จริง</option>
+        <option value="3">Type 3: ไม่มีชื่อ แต่อยู่จริง</option>
+        <option value="4">Type 4: นอกเขต มารับบริการ</option>
       </select>
+     
           <select id="quarterFilter" onchange="loadvaccineChart()"style="min-width:150px">
             <option value="all">ทุกไตรมาส</option>
             <option value="Q1">Q1</option>
@@ -763,6 +771,8 @@ table.tbl{
           </div>
         </div>
       </div>
+
+
     </div>
   </div>
 
@@ -817,7 +827,8 @@ table.tbl{
             <th>หมายเหตุ</th>
             <th>เวลา</th>
             <th>ลบ</th>
-            <th>สถานะ</th>
+            <th>สถานะการฉีด</th>
+            <th>สถานะประชากร</th>
           </tr>
         </thead>
         <tbody id="followTable"></tbody>
