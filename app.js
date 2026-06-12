@@ -339,6 +339,7 @@ function loadFollow() {
   const keyword        = (document.getElementById("searchInput")?.value  || "").toLowerCase();
   const tambonFilter   = document.getElementById("tambonFilter")?.value  || "all";
   const hospitalFilter = document.getElementById("hospitalFilter")?.value || "all";
+  const typeAreaFilter = document.getElementById("typeAreaFilter")?.value || "all";
   const ageFilter      = document.getElementById("ageFilter")?.value     || "all";
   const mobileList     = document.getElementById("mobileList");
   const isMobile       = window.innerWidth < 768;
@@ -374,6 +375,13 @@ function loadFollow() {
 
       if (tambonFilter   !== "all" && c.tambon   !== tambonFilter)   continue;
       if (hospitalFilter !== "all" && c.hospital !== hospitalFilter) continue;
+      
+      
+
+      if (typeAreaFilter !== "all") {
+        const cType = c.typeArea || "1"; // default = Type 1 ถ้าไม่มีค่า
+        if (cType !== typeAreaFilter) continue;
+      }
 
       const hn   = (c.hn   || "").toLowerCase();
       const name = (c.name || "").toLowerCase();
@@ -470,15 +478,24 @@ function loadFollow() {
 <td>${c.updatedAt || "-"}</td><td><button onclick="deleteChild('${id}')" title="ลบ" style="border:none;background:none;cursor:pointer;font-size:18px;color:#e24b4a;">
   <i class="ti ti-trash"></i>
 </button></td>
-
 <td>
   <select onchange="updateStatus('${id}',this.value)">
     <option value="pending" ${count < 10 ? 'selected' : ''}>ยังไม่ครบ</option>
     <option value="done"    ${count >= 10 ? 'selected' : ''}>ฉีดครบ</option>
   </select>
 </td>
-</tr>`);
-    });
+<td>
+  <select class="form-select" style="min-width:100px" onchange="autoSave('${id}','typeArea',this.value)">
+    <option value="1" ${(!c.typeArea || c.typeArea === "1") ? "selected" : ""}>Type 1: อยู่จริงตามทะเบียน</option>
+    <option value="2" ${c.typeArea === "2" ? "selected" : ""}>Type 2: มีชื่อ ไม่อยู่จริง</option>
+    <option value="3" ${c.typeArea === "3" ? "selected" : ""}>Type 3: ไม่มีชื่อ แต่อยู่จริง</option>
+    <option value="4" ${c.typeArea === "4" ? "selected" : ""}>Type 4: นอกเขต มารับบริการ</option>
+  </select>
+</td>
+</tr>
+`
+);
+});
 
     const followTable = document.getElementById("followTable");
     if (mobileList)   mobileList.innerHTML  = mobileHtml.join("");
@@ -829,7 +846,8 @@ function getFormData() {
     note:     document.getElementById("note").value,
     village:  document.getElementById("village")?.value || "",
     soi:      document.getElementById("soi")?.value    || "",
-    phone:    document.getElementById("phone").value.trim()
+    phone:    document.getElementById("phone").value.trim(),
+    typeArea: document.getElementById("typeArea")?.value || "1"
   };
 }
 
