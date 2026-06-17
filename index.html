@@ -553,11 +553,10 @@ table.tbl{
   <div class="card mb-4">
 
     <div class="filters">
-    
-       <select id="vaccineFilter"  onchange="loadvaccineChart()" 
-              id="tambonFilter" onchange="updateHospitalFilter();loadFollow()" style="min-width:100px">
-                <option value="all">ทุกวัคซีน</option>
-        </select>
+        
+    <select id="vaccineFilter" onchange="loadvaccineChart(); loadFollow()" style="min-width:100px">
+      <option value="all">ทุกวัคซีน</option>
+    </select>
       <select id="tambonFilter" onchange="updateHospitalFilter();loadFollow()" style="min-width:160px">
         <option value="all">📍 ทุกตำบล</option>
         <option value="kolok">สุไหงโก-ลก</option>
@@ -570,7 +569,7 @@ table.tbl{
         <option value="all">🏥 ทุกหน่วยบริการ</option>
       </select>
 
-      <select id="ageFilter" onchange="getAgeMonths();loadFollow()" style="min-width:100px">
+      <!-- <select id="ageFilter" onchange="getAgeMonths();loadFollow()" style="min-width:100px">
 <option value="all">👶 ทุกอายุ</option>
         <option value="0">แรกเกิด</option>
         <option value="1">1 เดือน</option>
@@ -586,7 +585,7 @@ table.tbl{
         <option value="36">3 ปี</option>
         <option value="48">4 ปี</option>
         <option value="60">5 ปี</option>
- </select>
+ </select> -->
       <select id="typeAreaFilter" onchange="loadFollow()" style="min-width:100px">
         <option value="all">👥 ทุกประเภท</option>
         <option value="1">Type 1: อยู่จริงตามทะเบียน</option>
@@ -615,11 +614,6 @@ table.tbl{
       <button onclick="openCareByTambon()" class="btn btn-outline">
         <i class="fa fa-users fa-sm"></i> ผู้รับผิดชอบ
       </button>
-      <button class="btn btn-outline-success"
-              data-bs-toggle="collapse" data-bs-target="#addForm">
-        <i class="fa fa-plus fa-sm"></i> เพิ่มข้อมูล
-      </button>
-
       <button onclick="setStatusFilter('all')" class="btn btn-outline" id="btn-status-all">
         ทั้งหมด
       </button>
@@ -629,153 +623,12 @@ table.tbl{
       <button onclick="setStatusFilter('done')" class="btn btn-outline" id="btn-status-done">
         🟢 ฉีดแล้ว
       </button>
-
+      <a href="add.html" class="btn btn-outline-success" style="text-decoration:none">
+        <i class="fa fa-plus fa-sm"></i> เพิ่มข้อมูล
+      </a>
     </div>
 
-    <!-- ADD FORM -->
-    <div class="collapse" id="addForm">
-      <div class="add-form-wrap">
-        <div class="row g-2">
-          <div class="col-md-2"><input id="hn"    class="form-control" placeholder="HN"></div>
-          <div class="col-md-3"><input id="cid"   class="form-control" placeholder="เลขบัตรประชาชน"></div>
-          <div class="col-md-4"><input id="name"  class="form-control" placeholder="ชื่อ-นามสกุล"></div>
-          <div class="col-md-3"><input id="house" class="form-control" placeholder="บ้านเลขที่"></div>
-
-          <div class="col-md-3">
-            <select id="tambon" class="form-select">
-              <option value="">— ตำบล —</option>
-              <option value="kolok">สุไหงโก-ลก</option>
-              <option value="munoh">มูโนะ</option>
-              <option value="pasemas">ปาเสมัส</option>
-              <option value="puyoh">ปูโยะ</option>
-            </select>
-          </div>
-         
-          <div class="col-md-3" id="soiBox" style="display:none">
-            <input id="soi" class="form-control" placeholder="ซอย">
-          </div>
-          <div class="col-md-3" id="villageBox">
-            <select id="village" class="form-select">
-              <option value="">— หมู่ / ชุมชน —</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <select id="hospital" class="form-select">
-              <option value="">— รพ.สต. —</option>
-              <option value="10170">รพ.สต.ปูโยะ</option>
-              <option value="10169">รพ.สต.มูโนะ</option>
-              <option value="10168">รพ.สต.ปาเสมัส</option>
-              <option value="77729">ศูนย์แพทย์ใกล้ใจ 1</option>
-              <option value="77728">ศูนย์แพทย์ใกล้ใจ 2</option>
-              <option value="10658">รพ.สต.บ้านกวาลอซีรา</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <input id="birth" type="date" class="form-control">
-          </div>
-          <div class="col-md-3">
-            <input id="phone" class="form-control" placeholder="เบอร์โทรศัพท์">
-          </div>
-        </div>
-
-        <!-- VACCINE GRID -->
-        <div class="vaccine-grid">
-          <!-- แรกเกิด -->
-          <div class="vaccine-tile">
-            <h6>👶 แรกเกิด</h6>
-            <label><input type="checkbox" value="BCG"  onchange="toggleDateInline(this,'BCG')"> BCG</label>
-            <input type="date" id="date-BCG"  class="form-control" style="display:none">
-            <label><input type="checkbox" value="HBV1" onchange="toggleDateInline(this,'HBV1')"> HBV1</label>
-            <input type="date" id="date-HBV1" class="form-control" style="display:none">
-          </div>
-          <!-- 1 เดือน -->
-          <div class="vaccine-tile">
-            <h6>🍼 1 เดือน</h6>
-            <label><input type="checkbox" value="HBV2" onchange="toggleDateInline(this,'HBV2')"> HBV2</label>
-            <input type="date" id="date-HBV2" class="form-control" style="display:none">
-          </div>
-          <!-- 2 เดือน -->
-          <div class="vaccine-tile">
-            <h6>🍼 2 เดือน</h6>
-            <label><input type="checkbox" value="DTP1"  onchange="toggleDateInline(this,'DTP1')"> DTP1</label>
-            <input type="date" id="date-DTP1" class="form-control" style="display:none">
-            <label><input type="checkbox" value="IPV1"  onchange="toggleDateInline(this,'IPV1')"> IPV1</label>
-            <input type="date" id="date-IPV1" class="form-control" style="display:none">
-            <label><input type="checkbox" value="Rota1" onchange="toggleDateInline(this,'Rota1')"> Rota1</label>
-            <input type="date" id="date-Rota1" class="form-control" style="display:none">
-          </div>
-          <!-- 4 เดือน -->
-          <div class="vaccine-tile">
-            <h6>🍼 4 เดือน</h6>
-            <label><input type="checkbox" value="DTP2"  onchange="toggleDateInline(this,'DTP2')"> DTP2</label>
-            <input type="date" id="date-DTP2" class="form-control" style="display:none">
-            <label><input type="checkbox" value="IPV2"  onchange="toggleDateInline(this,'IPV2')"> IPV2</label>
-            <input type="date" id="date-IPV2" class="form-control" style="display:none">
-            <label><input type="checkbox" value="Rota2" onchange="toggleDateInline(this,'Rota2')"> Rota2</label>
-            <input type="date" id="date-Rota2" class="form-control" style="display:none">
-          </div>
-          <!-- 6 เดือน -->
-          <div class="vaccine-tile">
-            <h6>🍼 6 เดือน</h6>
-            <label><input type="checkbox" value="DTP3"  onchange="toggleDateInline(this,'DTP3')"> DTP3</label>
-            <input type="date" id="date-DTP3" class="form-control" style="display:none">
-            <label><input type="checkbox" value="OPV3"  onchange="toggleDateInline(this,'OPV3')"> OPV3</label>
-            <input type="date" id="date-OPV3" class="form-control" style="display:none">
-            <label><input type="checkbox" value="Rota3" onchange="toggleDateInline(this,'Rota3')"> Rota3</label>
-            <input type="date" id="date-Rota3" class="form-control" style="display:none">
-          </div>
-          <!-- 9 เดือน -->
-          <div class="vaccine-tile">
-            <h6>👶 9 เดือน</h6>
-            <label><input type="checkbox" value="MMR1" onchange="toggleDateInline(this,'MMR1')"> MMR1</label>
-            <input type="date" id="date-MMR1" class="form-control" style="display:none">
-          </div>
-          <!-- 1 ปี -->
-          <div class="vaccine-tile">
-            <h6>👶 1 ปี</h6>
-            <label><input type="checkbox" value="JF1" onchange="toggleDateInline(this,'JF1')"> JF1</label>
-            <input type="date" id="date-JF1" class="form-control" style="display:none">
-          </div>
-          <!-- 18 เดือน -->
-          <div class="vaccine-tile">
-            <h6>👶 18 เดือน</h6>
-            <label><input type="checkbox" value="DTP4" onchange="toggleDateInline(this,'DTP4')"> DTP4</label>
-            <input type="date" id="date-DTP4" class="form-control" style="display:none">
-            <label><input type="checkbox" value="OPV4" onchange="toggleDateInline(this,'OPV4')"> OPV4</label>
-            <input type="date" id="date-OPV4" class="form-control" style="display:none">
-            <label><input type="checkbox" value="MMR2" onchange="toggleDateInline(this,'MMR2')"> MMR2</label>
-            <input type="date" id="date-MMR2" class="form-control" style="display:none">
-          </div>
-          <!-- 2.5 ปี -->
-          <div class="vaccine-tile">
-            <h6>🧒 2 ปีครึ่ง</h6>
-            <label><input type="checkbox" value="JF2" onchange="toggleDateInline(this,'JF2')"> JF2</label>
-            <input type="date" id="date-JF2" class="form-control" style="display:none">
-          </div>
-          <!-- 4 ปี -->
-          <div class="vaccine-tile">
-            <h6>🧒 4 ปี</h6>
-            <label><input type="checkbox" value="DTP5" onchange="toggleDateInline(this,'DTP5')"> DTP5</label>
-            <input type="date" id="date-DTP5" class="form-control" style="display:none">
-            <label><input type="checkbox" value="OPV5" onchange="toggleDateInline(this,'OPV5')"> OPV5</label>
-            <input type="date" id="date-OPV5" class="form-control" style="display:none">
-          </div>
-        </div>
-
-        <div class="row g-2 mt-2">
-          <div class="col"><input id="note" class="form-control" placeholder="หมายเหตุ"></div>
-          <div class="col-auto">
-            <button onclick="addChildFull()" class="btn btn-success">
-              <i class="fa fa-floppy-disk fa-sm"></i> บันทึก
-            </button>
-          </div>
-        </div>
-      </div>
-
-
-    </div>
-  </div>
-
+</div>
   <!-- ===== CHARTS ===== -->
   <div class="chart-grid mb-4">
 
@@ -841,7 +694,11 @@ table.tbl{
     <div id="pagination"></div>
   </div>
 
-</div><!-- /main -->
+</div>
+ </div>
+  
+
+<!-- /main -->
 
 <!-- ============================
      MODALS
