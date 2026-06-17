@@ -16,10 +16,12 @@ body { background:#f4f6fb; padding:20px; font-family:'Sarabun',sans-serif; }
 .stat-val   { font-size:32px; font-weight:700; }
 
 .case-card { border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); padding:16px; margin-bottom:12px; background:#fff; border:1.5px solid #e9ecef; transition:box-shadow .2s; }
-.case-card:hover  { box-shadow:0 4px 18px rgba(0,0,0,.09); }
-.case-card.urgent { border-color:#ef4444; }
-.case-card.warning{ border-color:#f59e0b; }
-.case-card.closed { opacity:.65; }
+.case-card:hover   { box-shadow:0 4px 18px rgba(0,0,0,.09); }
+.case-card.urgent  { border-color:#ef4444; }
+.case-card.warning { border-color:#f59e0b; }
+.case-card.closed  { opacity:.65; }
+/* ✅ เพิ่ม: กรอบสีชมพูเมื่อไม่ตอบกลับครบแล้ว */
+.case-card.no-response { border-color:#ec4899; background:#fff7fb; }
 
 .level-badge { display:inline-block; font-size:13px; font-weight:600; padding:4px 12px; border-radius:20px; }
 .level-green { background:#dcfce7; color:#166534; }
@@ -43,10 +45,13 @@ body { background:#f4f6fb; padding:20px; font-family:'Sarabun',sans-serif; }
   font-size:12px; font-weight:600; padding:3px 10px;
   border-radius:20px;
 }
-.fu-waiting  { background:#fef9c3; color:#854d0e; }
-.fu-overdue  { background:#fee2e2; color:#991b1b; }
-.fu-pending  { background:#e0f2fe; color:#0369a1; }
-.fu-done     { background:#f1f5f9; color:#475569; }
+.fu-waiting    { background:#fef9c3; color:#854d0e; }
+.fu-overdue    { background:#fee2e2; color:#991b1b; }
+.fu-pending    { background:#e0f2fe; color:#0369a1; }
+.fu-done       { background:#f1f5f9; color:#475569; }
+/* ✅ เพิ่ม: chip สีสำหรับ remind และ no-response */
+.fu-remind     { background:#fce7f3; color:#9d174d; }
+.fu-noresponse { background:#fdf2f8; color:#86198f; font-weight:700; }
 
 .btn-resend { background:#fef9c3; color:#854d0e; border:1px solid #fde68a; }
 .btn-resend:hover { background:#fde68a; }
@@ -73,21 +78,32 @@ body { background:#f4f6fb; padding:20px; font-family:'Sarabun',sans-serif; }
 .topbar   { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
 .topbar h1{ font-size:20px; font-weight:700; margin:0; color:#1e293b; }
 
-.btn-accept     { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+.btn-accept      { background:#dcfce7; color:#166534; border:1px solid #86efac; }
 .btn-accept:hover{ background:#bbf7d0; }
-.btn-close-case { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+.btn-close-case  { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
 .btn-close-case:hover{ background:#fecaca; }
-.btn-reopen     { background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; }
+.btn-reopen      { background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; }
 .btn-reopen:hover{ background:#e2e8f0; }
 
 .empty-state { text-align:center; padding:60px 20px; color:#94a3b8; font-size:15px; }
+
+/* ✅ เพิ่ม: แถบแจ้งเตือนไม่ตอบกลับ */
+.no-response-banner {
+  background:#fdf4ff; border:1px solid #e879f9;
+  border-radius:10px; padding:8px 12px; margin-bottom:10px;
+  font-size:12px; color:#86198f; font-weight:600;
+  display:flex; align-items:center; gap:6px;
+}
 </style>
 </head>
 <body>
 <div class="container-fluid" style="max-width:960px">
 
   <div class="topbar">
-    <h1><i class="ti ti-shield-check" style="font-size:22px;vertical-align:-3px;margin-right:6px;color:#3b82f6"></i>ติดตามอาการหลังฉีดวัคซีน</h1>
+    <h1>
+      <i class="ti ti-shield-check" style="font-size:22px;vertical-align:-3px;margin-right:6px;color:#3b82f6"></i>
+      ติดตามอาการหลังฉีดวัคซีน
+    </h1>
     <div style="display:flex;gap:8px;align-items:center">
       <span id="lastUpdate" style="font-size:12px;color:#94a3b8"></span>
       <button class="btn btn-outline-secondary btn-sm" onclick="manualRefresh()">
@@ -99,6 +115,7 @@ body { background:#f4f6fb; padding:20px; font-family:'Sarabun',sans-serif; }
     </div>
   </div>
 
+  <!-- Stat Cards -->
   <div class="row g-3 mb-4">
     <div class="col-6 col-md">
       <div class="stat-card bg-white">
@@ -130,6 +147,13 @@ body { background:#f4f6fb; padding:20px; font-family:'Sarabun',sans-serif; }
         <div class="stat-val" style="color:#1e40af" id="sClosed">—</div>
       </div>
     </div>
+    <!-- ✅ เพิ่ม: stat ไม่ตอบกลับ -->
+    <div class="col-6 col-md">
+      <div class="stat-card bg-white">
+        <div class="stat-label" style="color:#86198f"><i class="ti ti-bell-exclamation"></i> ไม่ตอบกลับ</div>
+        <div class="stat-val" style="color:#86198f" id="sNoResp">—</div>
+      </div>
+    </div>
   </div>
 
   <div class="toolbar">
@@ -140,6 +164,8 @@ body { background:#f4f6fb; padding:20px; font-family:'Sarabun',sans-serif; }
       <option value="เฝ้าระวัง">🟠 เฝ้าระวัง</option>
       <option value="ด่วน">🔴 ด่วน / รุนแรง</option>
       <option value="ปิดเคส">✅ ปิดเคสแล้ว</option>
+      <!-- ✅ เพิ่ม filter ใหม่ -->
+      <option value="ไม่ตอบกลับ">🔕 ไม่ตอบกลับ</option>
     </select>
     <select id="sortBy" onchange="render()">
       <option value="priority">เรียงตามความเร่งด่วน</option>
@@ -197,59 +223,97 @@ let allData = {};
 let pendingKey = null, pendingAction = null;
 const staffModal = new bootstrap.Modal(document.getElementById("staffModal"));
 
-// ── Delay schedule (ต้องตรงกับ server.js) ────
+// ── Config (ต้องตรงกับ server.js) ─────────────
 const FOLLOW_DELAYS = {
-  1: 30 * 60 * 1000,           // 30 นาที
-  2: 6  * 60 * 60 * 1000,      // 6 ชั่วโมง
-  3: 24 * 60 * 60 * 1000,      // 1 วัน
-  4: 3  * 24 * 60 * 60 * 1000, // 3 วัน
-  5: 7  * 24 * 60 * 60 * 1000, // 1 สัปดาห์
+  1: 30 * 60 * 1000,
+  2:  6 * 60 * 60 * 1000,
+  3: 24 * 60 * 60 * 1000,
+  4:  3 * 24 * 60 * 60 * 1000,
+  5:  7 * 24 * 60 * 60 * 1000,
 };
+const REMINDER_DELAY   = 30 * 60 * 1000; // ✅ ต้องตรงกับ server.js
+const MAX_REMIND_COUNT = 2;               // ✅ ต้องตรงกับ server.js
+const MAX_NORMAL       = 5;
+const MAX_STEP         = 5;
 
 // ── Helpers ───────────────────────────────────
-
 function thaiDateTime(ms) {
   if (!ms || ms <= 0) return null;
   return new Date(ms).toLocaleString("th-TH", { timeZone:"Asia/Bangkok", hour12:false });
 }
 
-// แสดง follow-up ถัดไปอย่างถูกต้อง โดยพิจารณา state จาก Firebase
+function formatDuration(ms) {
+  if (ms < 0) ms = 0;
+  const m = Math.floor(ms / 60000);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return `${d} วัน ${h % 24} ชม.`;
+  if (h > 0) return `${h} ชม. ${m % 60} นาที`;
+  return `${m} นาที`;
+}
+
+// ✅ followUpChip — อัปเดตรองรับ remindCount และ noResponseAlert
 function followUpChip(s) {
   const now = Date.now();
 
-  // ปิดเคสแล้ว
+  // 1. ปิดเคสแล้ว
   if (s.status === "ปิดเคส") {
-    return `<span class="fu-chip fu-done"><i class="ti ti-circle-check"></i> ปิดเคสแล้ว</span>`;
+    return `<span class="fu-chip fu-done">
+      <i class="ti ti-circle-check"></i> ปิดเคสแล้ว
+    </span>`;
   }
 
-  // nextFollowUp มีค่า (server ยังไม่ได้ส่งข้อความ หรือ user ตอบแล้ว server set ใหม่)
+  // 2. ✅ ไม่ตอบกลับครบแล้ว — รอเจ้าหน้าที่
+  if (s.noResponseAlert) {
+    const sinceMs = s.lastRemindAt ? now - s.lastRemindAt : (s.lastAskedAt ? now - s.lastAskedAt : 0);
+    return `<span class="fu-chip fu-noresponse">
+      <i class="ti ti-bell-exclamation"></i>
+      ไม่ตอบกลับ ${s.remindCount || 0} ครั้ง — รอเจ้าหน้าที่ติดตาม
+      <small style="opacity:.8">(นาน ${formatDuration(sinceMs)})</small>
+    </span>`;
+  }
+
+  // 3. nextFollowUp มีค่า → รอส่งตาม schedule
   if (s.nextFollowUp && s.nextFollowUp > 0) {
     const diff = s.nextFollowUp - now;
-
     if (diff <= 0) {
-      // เกิน schedule แล้ว (server ยังไม่ได้ส่ง)
-      const overMin = Math.round(Math.abs(diff) / 60000);
       return `<span class="fu-chip fu-overdue">
         <i class="ti ti-clock-exclamation"></i> เกินกำหนด ${formatDuration(Math.abs(diff))}
       </span>`;
     }
-
-    // ยังไม่ถึงเวลา → countdown
-    const dt = thaiDateTime(s.nextFollowUp);
     return `<span class="fu-chip fu-pending">
-      <i class="ti ti-clock"></i> ${dt} <small style="opacity:.75">(อีก ${formatDuration(diff)})</small>
+      <i class="ti ti-clock"></i> ${thaiDateTime(s.nextFollowUp)}
+      <small style="opacity:.75">(อีก ${formatDuration(diff)})</small>
     </span>`;
   }
 
-  // nextFollowUp = null หมายความว่า server ส่งข้อความออกไปแล้ว รอ user ตอบกลับ
-  // แสดงเวลาโดยประมาณจาก lastAskedAt + delay ของ step ถัดไป
+  // 4. nextFollowUp = null → ส่งไปแล้ว รอตอบ / กำลังเตือนซ้ำ
   if (s.lastAskedAt) {
-    const step      = s.sentFollowStep || s.followStep || 1;
-    const delay     = FOLLOW_DELAYS[step] || FOLLOW_DELAYS[1];
-    const estimated = s.lastAskedAt + delay;
-    const diff      = estimated - now;
-    const dt        = thaiDateTime(estimated);
+    const remindCount  = s.remindCount  || 0;
+    const lastRemindAt = s.lastRemindAt || s.lastAskedAt;
+    const nextRemindAt = lastRemindAt + REMINDER_DELAY;
+    const diffToRemind = nextRemindAt - now;
 
+    // ✅ เคยเตือนซ้ำแล้ว
+    if (remindCount > 0) {
+      if (diffToRemind > 0) {
+        return `<span class="fu-chip fu-remind">
+          <i class="ti ti-bell"></i>
+          เตือนซ้ำแล้ว ${remindCount}/${MAX_REMIND_COUNT} ครั้ง
+          <small style="opacity:.75">· เตือนต่อไปอีก ${formatDuration(diffToRemind)}</small>
+        </span>`;
+      } else {
+        return `<span class="fu-chip fu-overdue">
+          <i class="ti ti-bell-exclamation"></i>
+          เตือนซ้ำ ${remindCount}/${MAX_REMIND_COUNT} — ยังไม่ตอบ ${formatDuration(now - lastRemindAt)}
+        </span>`;
+      }
+    }
+
+    // ยังไม่เคยเตือนซ้ำ → รอผู้ปกครองตอบ
+    const step  = s.sentFollowStep || s.followStep || 1;
+    const delay = FOLLOW_DELAYS[step] || FOLLOW_DELAYS[1];
+    const diff  = (s.lastAskedAt + delay) - now;
     if (diff > 0) {
       return `<span class="fu-chip fu-waiting">
         <i class="ti ti-message-dots"></i> รอผู้ปกครองตอบกลับ
@@ -262,32 +326,21 @@ function followUpChip(s) {
     }
   }
 
-  // ไม่มีข้อมูลเลย (เพิ่งลงทะเบียน รอรอบแรก)
+  // 5. เพิ่งลงทะเบียน รอรอบแรก
   const step  = s.followStep || 1;
-  const delay = FOLLOW_DELAYS[step] || FOLLOW_DELAYS[1];
   const regAt = s.registeredAt || s.time || 0;
   if (regAt) {
-    const estimated = regAt + delay;
+    const estimated = regAt + (FOLLOW_DELAYS[step] || FOLLOW_DELAYS[1]);
     const diff      = estimated - now;
-    const dt        = thaiDateTime(estimated);
     if (diff > 0) {
       return `<span class="fu-chip fu-pending">
-        <i class="ti ti-clock"></i> ${dt} <small style="opacity:.75">(อีก ${formatDuration(diff)})</small>
+        <i class="ti ti-clock"></i> ${thaiDateTime(estimated)}
+        <small style="opacity:.75">(อีก ${formatDuration(diff)})</small>
       </span>`;
     }
   }
 
   return `<span class="fu-chip fu-done"><i class="ti ti-minus"></i> ไม่มีข้อมูล</span>`;
-}
-
-function formatDuration(ms) {
-  if (ms < 0) ms = 0;
-  const m = Math.floor(ms / 60000);
-  const h = Math.floor(m / 60);
-  const d = Math.floor(h / 24);
-  if (d > 0)  return `${d} วัน ${h % 24} ชม.`;
-  if (h > 0)  return `${h} ชม. ${m % 60} นาที`;
-  return `${m} นาที`;
 }
 
 function vaccineText(vac) {
@@ -311,11 +364,11 @@ function levelBadge(level) {
 
 function statusBadge(status) {
   if (!status) return "";
-  if (status === "ปิดเคส")       return '<span class="level-badge level-blue">ปิดเคสแล้ว</span>';
-  if (status === "กำลังติดตาม")  return '<span class="level-badge level-blue">กำลังติดตาม</span>';
-  if (status === "ด่วน")         return '<span class="level-badge level-red">ด่วน</span>';
-  if (status === "เฝ้าติดตาม")   return '<span class="level-badge level-amber">เฝ้าติดตาม</span>';
-  if (status === "รอติดตาม")     return '<span class="level-badge level-gray">รอติดตาม</span>';
+  if (status === "ปิดเคส")      return '<span class="level-badge level-blue">ปิดเคสแล้ว</span>';
+  if (status === "กำลังติดตาม") return '<span class="level-badge level-blue">กำลังติดตาม</span>';
+  if (status === "ด่วน")        return '<span class="level-badge level-red">ด่วน</span>';
+  if (status === "เฝ้าติดตาม")  return '<span class="level-badge level-amber">เฝ้าติดตาม</span>';
+  if (status === "รอติดตาม")    return '<span class="level-badge level-gray">รอติดตาม</span>';
   return `<span class="level-badge level-gray">${status}</span>`;
 }
 
@@ -325,10 +378,12 @@ function progressColor(n) {
   return "#ef4444";
 }
 
+// ✅ cardClass — เพิ่ม case noResponseAlert
 function cardClass(s) {
-  if (s.status === "ปิดเคส") return "case-card closed";
-  if ((s.level||"").includes("🔴") || s.status === "ด่วน") return "case-card urgent";
-  if ((s.level||"").includes("🟠")) return "case-card warning";
+  if (s.status === "ปิดเคส")                                        return "case-card closed";
+  if (s.noResponseAlert)                                             return "case-card no-response";
+  if ((s.level||"").includes("🔴") || s.status === "ด่วน")          return "case-card urgent";
+  if ((s.level||"").includes("🟠"))                                  return "case-card warning";
   return "case-card";
 }
 
@@ -338,41 +393,48 @@ function render() {
   const fl = document.getElementById("filterLevel")?.value||"";
   const so = document.getElementById("sortBy")?.value||"priority";
 
-  let entries = Object.entries(allData).filter(([,s]) => {
+  let entries = Object.entries(allData).filter(([, s]) => {
     const hn   = String(s.hn  ||"").toLowerCase();
     const name = String(s.name||"").toLowerCase();
     if (kw && !hn.includes(kw) && !name.includes(kw)) return false;
-    if (fl === "ปกติ"     && !(s.level||"").includes("🟢"))                        return false;
-    if (fl === "เฝ้าระวัง" && !(s.level||"").includes("🟠"))                        return false;
-    if (fl === "ด่วน"     && !(s.level||"").includes("🔴") && s.status!=="ด่วน")    return false;
-    if (fl === "ปิดเคส"   && s.status!=="ปิดเคส")                                  return false;
+    if (fl === "ปกติ"       && !(s.level||"").includes("🟢"))                     return false;
+    if (fl === "เฝ้าระวัง"  && !(s.level||"").includes("🟠"))                     return false;
+    if (fl === "ด่วน"       && !(s.level||"").includes("🔴") && s.status!=="ด่วน") return false;
+    if (fl === "ปิดเคส"     && s.status!=="ปิดเคส")                               return false;
+    if (fl === "ไม่ตอบกลับ" && !s.noResponseAlert)                                return false;
     return true;
   });
 
-  entries.sort((a,b) => {
-    if (so === "time") return (b[1].time||0)-(a[1].time||0);
+  entries.sort((a, b) => {
+    if (so === "time") return (b[1].time||0) - (a[1].time||0);
     if (so === "nextFollowUp") {
-      // เรียงตาม nextFollowUp จริง ถ้า null ให้ใช้ lastAskedAt แทน
       const getEff = s => s.nextFollowUp || (s.lastAskedAt ? s.lastAskedAt + 1 : Infinity);
       return getEff(a[1]) - getEff(b[1]);
     }
+    // priority: noResponseAlert ขึ้นก่อนเสมอ
+    const aNo = a[1].noResponseAlert ? 0 : 1;
+    const bNo = b[1].noResponseAlert ? 0 : 1;
+    if (aNo !== bNo) return aNo - bNo;
     const p1 = a[1].priority||99, p2 = b[1].priority||99;
-    return p1!==p2 ? p1-p2 : (b[1].time||0)-(a[1].time||0);
+    return p1 !== p2 ? p1 - p2 : (b[1].time||0) - (a[1].time||0);
   });
 
-  let total=0, normal=0, warn=0, crit=0, closed=0;
+  // ── Stats ──
+  let total=0, normal=0, warn=0, crit=0, closed=0, noResp=0;
   Object.values(allData).forEach(s => {
     total++;
-    if (s.status==="ปิดเคส")                                       closed++;
-    else if ((s.level||"").includes("🔴")||s.status==="ด่วน")       crit++;
-    else if ((s.level||"").includes("🟠"))                          warn++;
-    else                                                             normal++;
+    if (s.status === "ปิดเคส")                                    closed++;
+    else if (s.noResponseAlert)                                    noResp++;
+    else if ((s.level||"").includes("🔴") || s.status === "ด่วน") crit++;
+    else if ((s.level||"").includes("🟠"))                         warn++;
+    else                                                            normal++;
   });
   document.getElementById("sTotal").textContent  = total;
   document.getElementById("sNormal").textContent = normal;
   document.getElementById("sWarn").textContent   = warn;
   document.getElementById("sCrit").textContent   = crit;
   document.getElementById("sClosed").textContent = closed;
+  document.getElementById("sNoResp").textContent = noResp; // ✅
 
   const list = document.getElementById("cardList");
   if (!entries.length) {
@@ -383,29 +445,25 @@ function render() {
     return;
   }
 
-  const MAX_NORMAL = 5; // ต้องตรงกับ server.js
-
-  list.innerHTML = entries.map(([key,s]) => {
-    const nc       = s.normalCount||0;
-    const step     = s.followStep ||1;
-    const isClosed = s.status==="ปิดเคส";
+  list.innerHTML = entries.map(([key, s]) => {
+    const nc          = s.normalCount  || 0;
+    const step        = s.followStep   || 1;
+    const isClosed    = s.status === "ปิดเคส";
     const hasAssigned = !!s.assignedTo;
 
-    // ── ตรวจว่าเกินกำหนดหรือยัง (ทั้ง 2 กรณี) ──
-    const now2       = Date.now();
-    const isOverdue  =
-      // กรณี 1: nextFollowUp มีค่าแต่เกินเวลาแล้ว
+    // ── ตรวจ isOverdue ──
+    const now2      = Date.now();
+    const isOverdue =
       (s.nextFollowUp && s.nextFollowUp > 0 && s.nextFollowUp < now2) ||
-      // กรณี 2: nextFollowUp = null (ส่งไปแล้ว) แต่ไม่ตอบนานเกิน deadline
       (!s.nextFollowUp && s.lastAskedAt && (() => {
-        const step  = s.sentFollowStep || s.followStep || 1;
-        const delay = FOLLOW_DELAYS[step] || FOLLOW_DELAYS[1];
+        const st    = s.sentFollowStep || s.followStep || 1;
+        const delay = FOLLOW_DELAYS[st] || FOLLOW_DELAYS[1];
         return (s.lastAskedAt + delay) < now2;
       })());
 
     const resendBtn = (!isClosed && s.userId && isOverdue)
       ? `<button class="btn btn-resend btn-sm" id="resend-${key}"
-           onclick="resendFollowUp('${key}','${s.userId||""}')">
+             onclick="resendFollowUp('${key}','${s.userId||""}')">
            <i class="ti ti-send"></i> ส่งอีกครั้ง
          </button>`
       : "";
@@ -422,12 +480,20 @@ function render() {
         <i class="ti ti-hand-stop"></i> รับเคส</button>`;
     }
 
-    // แสดงเวลาอัปเดตล่าสุด
     const updatedMs = s.updatedAt || s.time || 0;
     const updatedDt = thaiDateTime(updatedMs) || "-";
 
+    // ✅ แถบแจ้งเตือนไม่ตอบกลับ (แสดงเฉพาะเมื่อ noResponseAlert = true)
+    const noRespBanner = s.noResponseAlert
+      ? `<div class="no-response-banner">
+           <i class="ti ti-bell-exclamation"></i>
+           ผู้ปกครองไม่ตอบกลับหลังเตือนซ้ำ ${s.remindCount || 0} ครั้ง — กรุณาติดต่อโดยตรง
+         </div>`
+      : "";
+
     return `
     <div class="${cardClass(s)}">
+      ${noRespBanner}
       <div class="d-flex justify-content-between align-items-start mb-2">
         <div>
           <div style="font-size:16px;font-weight:700;color:#1e293b">
@@ -452,7 +518,9 @@ function render() {
           <span>${nc} / ${MAX_NORMAL} ครั้ง</span>
         </div>
         <div class="prog-bg">
-          <div class="prog-fill" style="width:${Math.min(nc/MAX_NORMAL*100,100)}%;background:${progressColor(nc)}"></div>
+          <div class="prog-fill"
+               style="width:${Math.min(nc/MAX_NORMAL*100,100)}%;background:${progressColor(nc)}">
+          </div>
         </div>
       </div>
 
@@ -469,7 +537,7 @@ function render() {
         </div>
         <div>
           <div class="info-key"><i class="ti ti-list-numbers"></i> รอบติดตาม</div>
-          <div class="info-val">รอบที่ ${step} / ${MAX_NORMAL}</div>
+          <div class="info-val">รอบที่ ${step} / ${MAX_STEP}</div>
         </div>
         <div>
           <div class="info-key"><i class="ti ti-user-check"></i> เจ้าหน้าที่</div>
@@ -479,9 +547,16 @@ function render() {
           <div class="info-key"><i class="ti ti-calendar"></i> อัปเดตล่าสุด</div>
           <div class="info-val">${updatedDt}</div>
         </div>
+        <!-- ✅ เพิ่ม: แสดงจำนวนครั้งที่เตือนซ้ำ -->
+        ${(s.remindCount > 0) ? `
+        <div>
+          <div class="info-key"><i class="ti ti-bell"></i> เตือนซ้ำแล้ว</div>
+          <div class="info-val" style="color:#9d174d;font-weight:600">
+            ${s.remindCount} / ${MAX_REMIND_COUNT} ครั้ง
+          </div>
+        </div>` : ""}
       </div>
 
-      <!-- follow-up ถัดไป (แถวเต็ม) -->
       <div style="margin-bottom:12px">
         <div class="info-key mb-1"><i class="ti ti-clock"></i> follow-up ถัดไป</div>
         ${followUpChip(s)}
@@ -492,92 +567,115 @@ function render() {
   }).join("");
 }
 
-// ── Resend follow-up ─────────────────────────
-// วิธีการ: set nextFollowUp = Date.now() - 1 ใน Firebase
-// → server cron (ทุก 1 นาที) จะเจอและส่ง LINE ทันที
-// ไม่ต้องเรียก server API แยก — ใช้ Firebase เป็น trigger
+// ── Resend follow-up ──────────────────────────
 async function resendFollowUp(key, userId) {
   const btn = document.getElementById("resend-" + key);
-  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> กำลังส่ง...`; }
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> กำลังส่ง...`;
+  }
 
   try {
     const snap = await db.ref("symptoms/" + key).once("value");
     const s    = snap.val();
-    if (!s) throw new Error("ไม่พบข้อมูล");
+    if (!s)        throw new Error("ไม่พบข้อมูล");
     if (!s.userId) throw new Error("ไม่พบ LINE User ID — ผู้ปกครองยังไม่ลงทะเบียน LINE");
 
-    const now  = Date.now();
     const step = s.followStep || 1;
+    const now  = Date.now();
 
-    await db.ref("symptoms/" + key).update({
-      nextFollowUp: now - 1,      // ทำให้ cron เจอทันที
-      lastAskedAt:  null,         // clear ของเก่า
-      updatedAt:    now,
+    const res = await fetch("/api/resend-followup", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        key,
+        userId:   s.userId,
+        name:     s.name    || "ผู้ปกครอง",
+        step,
+        symptoms: s.symptom || "",
+        hn:       s.hn      || "",
+      }),
     });
 
-    showToast(`ส่งแบบสอบถามให้ ${s.name||"ผู้ปกครอง"} อีกครั้งแล้ว ✅\nระบบจะส่ง LINE ภายใน 1 นาที`, "success");
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.message || `Server ตอบกลับ ${res.status}`);
+    }
+
+    // server.js จะ reset remindCount, noResponseAlert ให้แล้ว
+    showToast(`✅ ส่งแบบสอบถามให้ ${s.name || "ผู้ปกครอง"} ทาง LINE แล้ว!`, "success");
 
   } catch (err) {
-    showToast("ส่งไม่สำเร็จ: " + err.message, "error");
-    if (btn) { btn.disabled = false; btn.innerHTML = `<i class="ti ti-send"></i> ส่งอีกครั้ง`; }
+    showToast("❌ ส่งไม่สำเร็จ: " + err.message, "error");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="ti ti-send"></i> ส่งอีกครั้ง`;
+    }
   }
 }
 
 // ── Toast ─────────────────────────────────────
-function showToast(msg, type="") {
+function showToast(msg, type = "") {
   const wrap = document.getElementById("toast-wrap");
   const el   = document.createElement("div");
-  el.className = "toast-msg " + type;
+  el.className  = "toast-msg " + type;
   el.textContent = msg;
   wrap.appendChild(el);
   setTimeout(() => el.remove(), 3500);
 }
 
-// ── Action ────────────────────────────────────
+// ── Action Modal ──────────────────────────────
 function openAction(key, action) {
   pendingKey = key; pendingAction = action;
   const titles = { accept:"รับเคส", close:"จบเคส / ปิด", reopen:"เปิดเคสใหม่" };
-  document.getElementById("staffModalTitle").textContent = titles[action]||"ดำเนินการ";
-  document.getElementById("staffName").value = localStorage.getItem("staffName")||"";
+  document.getElementById("staffModalTitle").textContent = titles[action] || "ดำเนินการ";
+  document.getElementById("staffName").value = localStorage.getItem("staffName") || "";
   staffModal.show();
-  setTimeout(()=>document.getElementById("staffName").focus(), 300);
+  setTimeout(() => document.getElementById("staffName").focus(), 300);
 }
 
 document.getElementById("staffConfirm").addEventListener("click", () => {
-  const staff = document.getElementById("staffName").value.trim()||"เจ้าหน้าที่";
+  const staff = document.getElementById("staffName").value.trim() || "เจ้าหน้าที่";
   localStorage.setItem("staffName", staff);
   staffModal.hide();
   if (!pendingKey) return;
-  const key=pendingKey, action=pendingAction;
-  pendingKey=pendingAction=null;
-  const now=Date.now();
-  if (action==="accept") {
-    db.ref("symptoms/"+key).update({ status:"กำลังติดตาม", assignedTo:staff, followedAt:now });
-  } else if (action==="close") {
-    db.ref("symptoms/"+key).update({ status:"ปิดเคส", level:"🟢 ปกติ", assignedTo:staff, priority:99, closedAt:now });
-  } else if (action==="reopen") {
-    db.ref("symptoms/"+key).update({ status:"รอติดตาม", closedAt:null, assignedTo:"", priority:3 });
+  const key = pendingKey, action = pendingAction;
+  pendingKey = pendingAction = null;
+  const now = Date.now();
+  if (action === "accept") {
+    db.ref("symptoms/" + key).update({ status:"กำลังติดตาม", assignedTo:staff, followedAt:now });
+  } else if (action === "close") {
+    db.ref("symptoms/" + key).update({
+      status:"ปิดเคส", level:"🟢 ปกติ", assignedTo:staff,
+      priority:99, closedAt:now,
+      noResponseAlert:false, remindCount:0  // ✅ reset เมื่อปิดเคส
+    });
+  } else if (action === "reopen") {
+    db.ref("symptoms/" + key).update({
+      status:"รอติดตาม", closedAt:null, assignedTo:"", priority:3,
+      noResponseAlert:false, remindCount:0  // ✅ reset เมื่อเปิดเคสใหม่
+    });
   }
 });
 
 document.getElementById("staffName").addEventListener("keydown", e => {
-  if (e.key==="Enter") document.getElementById("staffConfirm").click();
+  if (e.key === "Enter") document.getElementById("staffConfirm").click();
 });
 
-// ── Firebase ──────────────────────────────────
+// ── Firebase listener ─────────────────────────
 db.ref("symptoms").on("value", snap => {
-  allData = snap.val()||{};
+  allData = snap.val() || {};
   render();
   document.getElementById("lastUpdate").textContent =
-    "อัปเดตเมื่อ "+new Date().toLocaleTimeString("th-TH");
+    "อัปเดตเมื่อ " + new Date().toLocaleTimeString("th-TH");
 });
 
 function manualRefresh() {
   db.ref("symptoms").once("value", snap => {
-    allData = snap.val()||{};
+    allData = snap.val() || {};
     render();
     document.getElementById("lastUpdate").textContent =
-      "อัปเดตเมื่อ "+new Date().toLocaleTimeString("th-TH");
+      "อัปเดตเมื่อ " + new Date().toLocaleTimeString("th-TH");
   });
 }
 
