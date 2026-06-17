@@ -35,6 +35,8 @@ const vaccineList = [
   "DTP3",
   "DTP4",
   "DTP5",
+  "OPV1",
+  "OPV2",
   "OPV3",
   "OPV4",
   "OPV5",
@@ -44,41 +46,66 @@ const vaccineList = [
   "JE2",
   "Rota1",
   "Rota2",
-  "Rota3"
+  "Rota3",
+  "HPV1",
+  "HPV2",
+  "dT"
 ];
 
-const vaccineData = [
-  [
-    { name: "BCG",   quarter: "Q1", percent: 95 },
-    { name: "HBV1",  quarter: "Q1", percent: 90 },
-    { name: "HBV2",  quarter: "Q1", percent: 88 },
-    { name: "DTP1",  quarter: "Q1", percent: 86 },
-    { name: "DTP2",  quarter: "Q1", percent: 84 },
-    { name: "DTP3",  quarter: "Q1", percent: 82 },
-    { name: "IPV1",  quarter: "Q1", percent: 80 },
-    { name: "IPV2",  quarter: "Q1", percent: 78 },
-    { name: "OPV3",  quarter: "Q1", percent: 76 },
-    { name: "OPV4",  quarter: "Q1", percent: 74 },
-    { name: "OPV5",  quarter: "Q1", percent: 72 },
-    { name: "Rota1", quarter: "Q1", percent: 70 },
-    { name: "Rota2", quarter: "Q1", percent: 68 },
-    { name: "Rota3", quarter: "Q1", percent: 66 },
-    { name: "MMR1",  quarter: "Q1", percent: 60 },
-    { name: "MMR2",  quarter: "Q1", percent: 62 },
-    { name: "JE1",   quarter: "Q1", percent: 58 },
-    { name: "JE2",   quarter: "Q1", percent: 56 },
-    { name: "DTP4",  quarter: "Q1", percent: 54 },
-    { name: "DTP5",  quarter: "Q1", percent: 52 }
-  ]
-];
+const vaccineLabel = {
+  "BCG":   "BCG",
+  "HBV1":  "HBV1",
+  "HBV2":  "HBV2",
+  "IPV1":  "IPV1",
+  "IPV2":  "IPV2",
+  "DTP1":  "DTP-HB-Hib1",
+  "DTP2":  "DTP-HB-Hib2",
+  "DTP3":  "DTP-HB-Hib3",
+  "DTP4":  "DTP4",
+  "DTP5":  "DTP5",
+  "OPV1":  "OPV1",
+  "OPV2":  "OPV2",
+  "OPV3":  "OPV3",
+  "OPV4":  "OPV4",
+  "OPV5":  "OPV5",
+  "MMR1":  "MMR1",
+  "MMR2":  "MMR2",
+  "JE1":   "JE1",
+  "JE2":   "JE2",
+  "Rota1": "Rota1",
+  "Rota2": "Rota2",
+  "Rota3": "Rota3",
+  "HPV1": "HPV เข็มที่ 1",
+  "HPV2": "HPV เข็มที่ 2",
+  "dT":   "dT (ป.6)",
+};
 
 // =========================
-// 💉 หน่วยบริการ
+// 📅 เกณฑ์อายุเริ่มฉีดของวัคซีนแต่ละตัว (หน่วย: เดือน)
+// ใช้เป็น "ฐานเทียบ" สำหรับคำนวณ ฉีดแล้ว/ตกหล่น ใน loadvaccineChart()
+// เด็กที่อายุยังไม่ถึงเกณฑ์จะไม่ถูกนับเป็นฐาน (ไม่ใช่ "ตกหล่น")
 // =========================
-const hospitalMap = {
+const vaccineAgeSchedule = {
+  BCG: 0, HBV1: 0,
+  DTP1: 2, IPV1: 2, OPV1: 2, Rota1: 2,
+  DTP2: 4, IPV2: 4, OPV2: 4, Rota2: 4,
+  DTP3: 6, OPV3: 6, Rota3: 6,
+  MMR1: 9, JE1: 9,
+  DTP4: 18, OPV4: 18,
+  MMR2: 30, JE2: 30,
+  DTP5: 72, OPV5: 72,
+  HPV1: 132, HPV2: 132,
+  dT: 132
+};
+
+// =========================
+// 🏥 หน่วยบริการ — แหล่งข้อมูลเดียว (single source of truth)
+// ใช้แทน hospitalMap เดิม + object ซ้ำใน updateHospitalFilter() + getHospitalName()
+// =========================
+const hospitalData = {
   kolok: [
-    { id: "77729", name: "ศูนย์แพทย์ใกล้ใจ1" },
-    { id: "77728", name: "ศูนย์แพทย์ใกล้ใจ2" }
+    { id: "77729", name: "ศูนย์แพทย์ใกล้ใจ1 (เทศบาล)" },
+    { id: "77728", name: "ศูนย์แพทย์ใกล้ใจ2 (เจริญเขต)" }
   ],
   munoh: [
     { id: "10169", name: "รพ.สต.มูโนะ" }
@@ -91,6 +118,14 @@ const hospitalMap = {
     { id: "10658", name: "รพ.สต.บ้านกวาลอซีรา" }
   ]
 };
+
+function getHospitalName(id) {
+  for (const list of Object.values(hospitalData)) {
+    const h = list.find(x => x.id === id);
+    if (h) return h.name;
+  }
+  return "-";
+}
 
 // =========================
 // รายชื่อหมู่/ชุมชน
@@ -158,47 +193,19 @@ const kolokCommunity = {
 };
 
 // =========================
-// 🏥 Hospital filter
+// 🏥 Hospital filter (dropdown) — ใช้ hospitalData ตัวเดียว
 // =========================
 function updateHospitalFilter() {
   const tambon = document.getElementById("tambonFilter").value;
   const hospitalSelect = document.getElementById("hospitalFilter");
 
   hospitalSelect.innerHTML = `<option value="all"> ทุกหน่วยบริการ</option>`;
+  hospitalSelect.value = "all"; // reset ทุกครั้งที่เปลี่ยนตำบล ป้องกัน hospital เก่าค้าง
 
-  const map = {
-    pasemas: [
-      { id: "10168", name: "รพ.สต.ปาเสมัส" },
-      { id: "10658", name: "รพ.สต.บ้านกวาลอซีรา" }
-    ],
-    munoh: [
-      { id: "10169", name: "รพ.สต.มูโนะ" }
-    ],
-    puyoh: [
-      { id: "10170", name: "รพ.สต.ปูโยะ" }
-    ],
-    kolok: [
-      { id: "77729", name: "ศูนย์แพทย์ใกล้ใจ1 (เทศบาล)" },
-      { id: "77728", name: "ศูนย์แพทย์ใกล้ใจ2 (เจริญเขต)" }
-    ]
-  };
-
-  if (!map[tambon]) return;
-  map[tambon].forEach(h => {
+  if (!hospitalData[tambon]) return;
+  hospitalData[tambon].forEach(h => {
     hospitalSelect.innerHTML += `<option value="${h.id}">${h.name}</option>`;
   });
-}
-
-function getHospitalName(id) {
-  const map = {
-    "10170": "รพ.สต.ปูโยะ",
-    "10168": "รพ.สต.ปาเสมัส",
-    "10169": "รพ.สต.มูโนะ",
-    "77729": "ศูนย์แพทย์ใกล้ใจ1",
-    "77728": "ศูนย์แพทย์ใกล้ใจ2",
-    "10658": "รพ.สต.บ้านกวาลอซีรา"
-  };
-  return map[id] || "-";
 }
 
 // =========================
@@ -335,6 +342,8 @@ const PAGE_SIZE  = 6000;
 let lastKey   = null;
 let isLoading = false;
 let statusFilter = "all";
+let selectedVaccine = "all"; // ประกาศไว้ที่นี่ ใช้ร่วมกันทั้ง loadFollow และ loadvaccineChart
+
 function loadFollow() {
   const keyword        = (document.getElementById("searchInput")?.value  || "").toLowerCase();
   const tambonFilter   = document.getElementById("tambonFilter")?.value  || "all";
@@ -356,10 +365,14 @@ function loadFollow() {
     const filteredData = [];
     let done = 0, notdone = 0;
     let villageMap = {};
+    let vaccineFilterActive = (selectedVaccine !== "all"); // ใช้บอกผู้ใช้ว่ากำลังกรองอยู่
 
     for (let id in data) {
       let c = data[id] || {};
 
+      // หมายเหตุ: การกรองด้วย selectedVaccine ในตารางติดตาม (loadFollow)
+      // มีความหมายต่างจากกราฟวัคซีน (loadvaccineChart) — ที่นี่คือ
+      // "แสดงเฉพาะเด็กที่ได้รับวัคซีนนี้แล้ว" ไม่ใช่ฐานเทียบฉีด/ตกหล่น
       if (selectedVaccine !== "all") {
         if (!c.vaccines || !c.vaccines[selectedVaccine]) continue;
       }
@@ -375,8 +388,6 @@ function loadFollow() {
 
       if (tambonFilter   !== "all" && c.tambon   !== tambonFilter)   continue;
       if (hospitalFilter !== "all" && c.hospital !== hospitalFilter) continue;
-      
-      
 
       if (typeAreaFilter !== "all") {
         const cType = c.typeArea || "1"; // default = Type 1 ถ้าไม่มีค่า
@@ -395,11 +406,11 @@ function loadFollow() {
       if (statusFilter === "done"    && !isDone) continue;
       if (statusFilter === "notdone" &&  isDone) continue;
 
-      if (count >= 10) { done++; } else { notdone++; }
+      if (isDone) { done++; } else { notdone++; }
 
       let v = c.village || "ไม่ระบุ";
       if (!villageMap[v]) villageMap[v] = { done: 0, notdone: 0 };
-      if (count >= 10) { villageMap[v].done++; } else { villageMap[v].notdone++; }
+      if (isDone) { villageMap[v].done++; } else { villageMap[v].notdone++; }
 
       if (isMobile) {
         mobileHtml.push(`
@@ -409,8 +420,8 @@ function loadFollow() {
       <div class="child-name">👶 ${c.name || '-'}</div>
       <div class="child-hn">HN : ${c.hn || '-'}</div>
     </div>
-    <span class="status-badge ${count >= 10 ? 'done' : 'notdone'}">
-      ${count >= 10 ? '✔︎ ฉีดครบ' : '✘ ยังไม่ครบ'}
+    <span class="status-badge ${isDone ? 'done' : 'notdone'}">
+      ${isDone ? '✔︎ ฉีดครบ' : '✘ ยังไม่ครบ'}
     </span>
   </div>
   <div class="child-info">📍 ${getTambonName(c.tambon)}</div>
@@ -425,14 +436,14 @@ function loadFollow() {
 </div>`);
       }
 
-      filteredData.push({ id, c, count });
+      filteredData.push({ id, c, count, isDone });
     }
 
     const start    = (currentPage - 1) * rowsPerPage;
     const pageData = filteredData.slice(start, start + rowsPerPage);
 
     pageData.forEach(row => {
-      const { id, c, count } = row;
+      const { id, c, count, isDone } = row;
       html.push(`
 <tr data-id="${id}">
 <td><input value="${c.hn   || ''}" onchange="autoSave('${id}','hn',this.value)"></td>
@@ -480,12 +491,12 @@ function loadFollow() {
 </button></td>
 <td>
   <select onchange="updateStatus('${id}',this.value)">
-    <option value="pending" ${count < 10 ? 'selected' : ''}>ยังไม่ครบ</option>
-    <option value="done"    ${count >= 10 ? 'selected' : ''}>ฉีดครบ</option>
+    <option value="pending" ${!isDone ? 'selected' : ''}>ยังไม่ครบ</option>
+    <option value="done"    ${isDone ? 'selected' : ''}>ฉีดครบ</option>
   </select>
 </td>
 <td>
-  <select class="form-select" style="min-width:100px" onchange="autoSave('${id}','typeArea',this.value)">
+  <select class="form-select" style="min-width:130px" onchange="autoSave('${id}','typeArea',this.value)">
     <option value="1" ${(!c.typeArea || c.typeArea === "1") ? "selected" : ""}>Type 1: อยู่จริงตามทะเบียน</option>
     <option value="2" ${c.typeArea === "2" ? "selected" : ""}>Type 2: มีชื่อ ไม่อยู่จริง</option>
     <option value="3" ${c.typeArea === "3" ? "selected" : ""}>Type 3: ไม่มีชื่อ แต่อยู่จริง</option>
@@ -494,8 +505,8 @@ function loadFollow() {
 </td>
 </tr>
 `
-);
-});
+      );
+    });
 
     const followTable = document.getElementById("followTable");
     if (mobileList)   mobileList.innerHTML  = mobileHtml.join("");
@@ -515,7 +526,11 @@ function loadFollow() {
 
     const chartDesc = document.getElementById("chartDescription");
     if (chartDesc) {
-      chartDesc.innerHTML = `<b>${title}</b><br>🟢 ฉีดแล้ว: ${done} คน (${percent}%)<br>🔴 ยังไม่ฉีด: ${notdone} คน`;
+      let descHtml = `<b>${title}</b><br>🟢 ฉีดแล้ว (ครบ 10 เข็มขึ้นไป): ${done} คน (${percent}%)<br>🔴 ยังไม่ครบ: ${notdone} คน`;
+      if (vaccineFilterActive) {
+        descHtml += `<br><small style="color:gray">* กำลังแสดงเฉพาะเด็กที่ได้รับ ${vaccineLabel[selectedVaccine] || selectedVaccine} แล้ว</small>`;
+      }
+      chartDesc.innerHTML = descHtml;
     }
 
     if (followChart && typeof followChart.destroy === "function") followChart.destroy();
@@ -524,10 +539,10 @@ function loadFollow() {
 
     if (chartMode === "percent") {
       type = "doughnut";
-      const total         = done + notdone || 1;
-      const donePercent   = ((done    / total) * 100).toFixed(1);
+      const total          = done + notdone || 1;
+      const donePercent    = ((done    / total) * 100).toFixed(1);
       const notdonePercent = ((notdone / total) * 100).toFixed(1);
-      labels   = ['ฉีดแล้ว', 'ยังไม่ฉีด'];
+      labels   = ['ฉีดครบ', 'ยังไม่ครบ'];
       datasets = [{ data: [donePercent, notdonePercent], backgroundColor: ["rgba(0,255,153,0.6)", "rgba(253,0,0,0.64)"], borderWidth: 3 }];
 
       followChart = new Chart(document.getElementById("followChart"), {
@@ -576,8 +591,8 @@ function loadFollow() {
       const totalData   = vLabels.map(v => villageMap[v].done + villageMap[v].notdone);
 
       datasets = [
-        { label: 'ฉีดแล้ว',    data: doneData,    backgroundColor: '#5ee991', borderRadius: 12, barThickness: 16 },
-        { label: 'ยังไม่ฉีด', data: notdoneData, backgroundColor: '#ff5757', borderRadius: 12, barThickness: 16 }
+        { label: 'ฉีดครบ',    data: doneData,    backgroundColor: '#5ee991', borderRadius: 12, barThickness: 16 },
+        { label: 'ยังไม่ครบ', data: notdoneData, backgroundColor: '#ff5757', borderRadius: 12, barThickness: 16 }
       ];
 
       if (followChart) followChart.destroy();
@@ -684,7 +699,7 @@ function openVaccineModal(id) {
             value="${v}"
             ${checked}
             onchange="toggleDateInline(this,'${v}')">
-          <label style="width:80px; margin:0;">${v}</label>
+          <label style="width:120px; margin:0;">${vaccineLabel[v] || v}</label>
           <input type="date"
             id="modal-date-${v}"
             value="${dateVal}"
@@ -778,6 +793,7 @@ function saveVaccines() {
     alert("บันทึกแล้ว ✅");
     try { sendLineFollowUp(currentId); } catch (e) { console.log(e); }
     try { loadFollow(); }               catch (e) { console.log(e); }
+    try { loadvaccineChart(); }         catch (e) { console.log(e); }
   }).catch(err => {
     console.error(err);
     alert("บันทึกไม่สำเร็จ ❌");
@@ -788,8 +804,13 @@ function saveVaccines() {
 // 🔄 เปลี่ยนสถานะ
 // =========================
 function updateStatus(id, status) {
-  if (status === "pending") { db.ref("children/" + id + "/vaccines").remove(); loadFollow(); }
-  else openVaccineModal(id);
+  if (status === "pending") {
+    db.ref("children/" + id + "/vaccines").remove();
+    loadFollow();
+    loadvaccineChart();
+  } else {
+    openVaccineModal(id);
+  }
 }
 
 // =========================
@@ -904,6 +925,7 @@ function addChildFull() {
     alert("✅ บันทึกแล้ว");
     resetForm();
     loadFollow();
+    loadvaccineChart();
     if (confirm("ไปหน้าติดตามอาการไหม?")) window.location.href = "symptoms.html";
   }).catch(err => {
     console.error("ERROR:", err);
@@ -923,23 +945,16 @@ function buildVillageDropdown(tambon, selected, id) {
   </select>`;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const tambonEl = document.getElementById("tambon");
-  if (tambonEl) {
-    tambonEl.addEventListener("change", function () {
-      document.getElementById("villageBox").innerHTML = buildVillageDropdown(this.value, "", "");
-      document.getElementById("soiBox").style.display = this.value === "kolok" ? "block" : "none";
-    });
-  }
-  loadFollow();
-  if (document.getElementById("symptomList")) loadSymptoms();
-});
-
 // =========================
 // 🗑 ลบ
 // =========================
 function deleteChild(id) {
-  if (confirm("ลบข้อมูลนี้?")) db.ref("children/" + id).remove();
+  if (confirm("ลบข้อมูลนี้?")) {
+    db.ref("children/" + id).remove().then(() => {
+      loadFollow();
+      loadvaccineChart();
+    });
+  }
 }
 
 // =========================
@@ -1040,7 +1055,10 @@ async function importExcel() {
         Rota1: "rota1_date", Rota2: "rota2_date", Rota3: "rota3_date",
         MMR1: "mmr1_date", MMR2: "mmr2_date",
         JE1: "je1_date",   JE2: "je2_date",
-        DTP4: "dtp4_date", DTP5: "dtp5_date"
+        DTP4: "dtp4_date", DTP5: "dtp5_date",
+        HPV1: "hpv1_date",
+        HPV2: "hpv2_date",
+        dT:   "dt_date",
       };
 
       Object.entries(vaccineFields).forEach(([name, field]) => {
@@ -1048,7 +1066,8 @@ async function importExcel() {
         if (value) child.vaccines[name] = value;
       });
 
-      if (hnMap[hn]) {
+      // ✅ แก้ไข bug: เดิมเช็ค hnMap[hn] (ผิด คีย์ไม่มีจริง) — ตอนนี้เช็ค hnMap[uniqueKey] ให้ตรงกับที่ build ไว้ด้านบน
+      if (hnMap[uniqueKey]) {
         const oldChild = oldData[id] || {};
         child.name     = oldChild.name     || child.name;
         child.birth    = oldChild.birth    || child.birth;
@@ -1065,6 +1084,7 @@ async function importExcel() {
     db.ref("children").update(updates).then(() => {
       alert(`✅ เพิ่มใหม่ ${addCount} รายการ\n🔄 อัปเดต ${updateCount} รายการ`);
       loadFollow();
+      loadvaccineChart();
     }).catch(err => { console.log(err); alert("❌ นำเข้าไม่สำเร็จ"); });
   };
 
@@ -1120,90 +1140,213 @@ function autoSaveVillage(id, value) {
 }
 
 // =========================
-// 📊 กราฟวัคซีนรายตำบล
+// 📊 กราฟวัคซีนรายตำบล (นับฉีดแล้ว / ตกหล่น ตามเกณฑ์อายุของวัคซีนแต่ละตัว)
 // =========================
-let selectedVaccine = "all";
-
 function loadvaccineChart() {
   const vaccineFilter = document.getElementById("vaccineFilter")?.value || "all";
+  const tambonFilter  = document.getElementById("tambonFilter")?.value  || "all";
   selectedVaccine = vaccineFilter;
 
   db.ref("children").once("value").then(snapshot => {
     const data = snapshot.val() || {};
-    if (Object.keys(data).length === 0) { console.log("ไม่มีข้อมูล"); return; }
+    if (Object.keys(data).length === 0) return;
 
-    const tambons    = ["munoh", "puyoh", "pasemas", "kolok"];
+    const allTambons = ["munoh", "puyoh", "pasemas", "kolok"];
     const tambonName = { munoh: "มูโนะ", puyoh: "ปูโยะ", pasemas: "ปาเสมัส", kolok: "สุไหงโก-ลก" };
-    const labels     = tambons.map(t => tambonName[t]);
-    let datasets     = [];
+    const tambons    = tambonFilter === "all" ? allTambons : [tambonFilter];
+
+    const chartEl = document.getElementById("vaccineChart");
+    if (!chartEl) return;
+    if (window.vaccineChart && typeof window.vaccineChart.destroy === "function") window.vaccineChart.destroy();
+
+    const chartCtx   = chartEl.getContext("2d");
+    const gradGreen  = chartCtx.createLinearGradient(0, 0, 0, 400);
+    gradGreen.addColorStop(0, "rgba(16,185,129,0.95)");
+    gradGreen.addColorStop(1, "rgba(6,182,212,0.75)");
+    const gradRed    = chartCtx.createLinearGradient(0, 0, 0, 400);
+    gradRed.addColorStop(0, "rgba(239,68,68,0.95)");
+    gradRed.addColorStop(1, "rgba(251,146,60,0.75)");
+
+    let labels, doneData = [], notdoneData = [], eligibleData = [];
 
     if (vaccineFilter !== "all") {
-      let values = [];
+      // วัคซีนตัวเดียว แยกตำบล — ฐานเทียบ = เฉพาะเด็กที่อายุถึงเกณฑ์ของวัคซีนนี้
+      const minAge = vaccineAgeSchedule[vaccineFilter] ?? 0;
+      labels = tambons.map(t => tambonName[t] || t);
       tambons.forEach(t => {
-        let count = 0;
+        let done = 0, eligible = 0;
         for (let id in data) {
-          if (data[id].tambon === t && data[id].vaccines?.[vaccineFilter]) count++;
+          if (data[id].tambon !== t) continue;
+          const age = getAgeMonths(data[id].birth);
+          if (age < minAge) continue; // ยังไม่ถึงวัย ไม่นับเป็นฐาน
+          eligible++;
+          if (data[id].vaccines?.[vaccineFilter]) done++;
         }
-        values.push(count);
+        doneData.push(done);
+        eligibleData.push(eligible);
+        notdoneData.push(eligible - done); // ตกหล่น = ถึงวัยแล้วแต่ไม่ฉีด
       });
-      datasets = [{ label: vaccineFilter, data: values, borderWidth: 1 }];
     } else {
+      // ทุกวัคซีน แยกตามชื่อวัคซีน — แต่ละแท่งใช้ฐานอายุของวัคซีนตัวนั้น
+      labels = vaccineList.map(v => vaccineLabel[v] || v);
       vaccineList.forEach(v => {
-        let values = [];
-        tambons.forEach(t => {
-          let count = 0;
-          for (let id in data) {
-            if (data[id].tambon === t && data[id].vaccines?.[v]) count++;
-          }
-          values.push(count);
-        });
-        datasets.push({ label: v, data: values, borderWidth: 1 });
+        const minAge = vaccineAgeSchedule[v] ?? 0;
+        let done = 0, eligible = 0;
+        for (let id in data) {
+          if (tambonFilter !== "all" && data[id].tambon !== tambonFilter) continue;
+          const age = getAgeMonths(data[id].birth);
+          if (age < minAge) continue;
+          eligible++;
+          if (data[id].vaccines?.[v]) done++;
+        }
+        doneData.push(done);
+        eligibleData.push(eligible);
+        notdoneData.push(eligible - done);
       });
     }
 
-    const ctx = document.getElementById("vaccineChart");
-    if (!ctx) return;
+    const barThick = vaccineFilter !== "all" ? 32 : 14;
 
-    if (window.vaccineChart && typeof window.vaccineChart.destroy === "function") window.vaccineChart.destroy();
+    const topLabelPlugin = {
+      id: "topLabel",
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((dataset, i) => {
+          chart.getDatasetMeta(i).data.forEach((bar, j) => {
+            const val = dataset.data[j];
+            if (!val) return;
+            const tot = eligibleData[j] || 1;
+            const pct = tot > 0 ? ((val / tot) * 100).toFixed(0) : 0;
+            const text = vaccineFilter !== "all" ? `${val} (${pct}%)` : `${val}`;
 
-    window.vaccineChart = new Chart(ctx, {
-      type: "bar",
-      data: { labels, datasets },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: "bottom" } },
-        interaction: { mode: "index", intersect: false },
-        scales: { y: { beginAtZero: true, title: { display: true, text: "จำนวนคน" } } }
+            ctx.save();
+            ctx.font         = `bold ${vaccineFilter !== "all" ? 11 : 10}px 'IBM Plex Sans Thai', sans-serif`;
+            ctx.shadowColor  = "rgba(0,0,0,0.12)";
+            ctx.shadowBlur   = 3;
+            ctx.shadowOffsetY = 1;
+
+            const tw = ctx.measureText(text).width;
+            const ph = 17, pw = tw + 12;
+            const px = bar.x - pw / 2;
+            const py = bar.y - ph - 5;
+
+            ctx.fillStyle = i === 0 ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)";
+            ctx.beginPath();
+            const r = 6;
+            ctx.moveTo(px + r, py);
+            ctx.lineTo(px + pw - r, py);
+            ctx.quadraticCurveTo(px + pw, py, px + pw, py + r);
+            ctx.lineTo(px + pw, py + ph - r);
+            ctx.quadraticCurveTo(px + pw, py + ph, px + pw - r, py + ph);
+            ctx.lineTo(px + r, py + ph);
+            ctx.quadraticCurveTo(px, py + ph, px, py + ph - r);
+            ctx.lineTo(px, py + r);
+            ctx.quadraticCurveTo(px, py, px + r, py);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.shadowColor  = "transparent";
+            ctx.fillStyle    = i === 0 ? "#065f46" : "#7f1d1d";
+            ctx.textAlign    = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, bar.x, py + ph / 2);
+            ctx.restore();
+          });
+        });
       }
+    };
+
+    window.vaccineChart = new Chart(chartEl, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "✔︎ฉีดแล้ว",
+            data: doneData,
+            backgroundColor: gradGreen,
+            borderWidth: 1.5,
+            borderRadius: 0,
+            borderSkipped: false,
+            barThickness: barThick,
+          },
+          {
+            label: "✘ตกหล่น",
+            data: notdoneData,
+            backgroundColor: gradRed,
+            borderWidth: 1.5,
+            borderRadius: 0,
+            borderSkipped: false,
+            barThickness: barThick,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 700, easing: "easeOutQuart" },
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { boxWidth: 14, padding: 20, font: { size: 13 }, color: "#374151" }
+          },
+          tooltip: {
+            backgroundColor: "rgba(17,24,39,0.92)",
+            titleFont: { size: 13, weight: "bold" },
+            bodyFont: { size: 12 },
+            padding: 12,
+            cornerRadius: 10,
+            callbacks: {
+              label: (ctx) => {
+                const tot = eligibleData[ctx.dataIndex] || 1;
+                const pct = tot > 0 ? ((ctx.raw / tot) * 100).toFixed(1) : 0;
+                return ` ${ctx.dataset.label}: ${ctx.raw} คน (${pct}% ของผู้มีสิทธิ์)`;
+              },
+              afterLabel: (ctx) => `ผู้มีสิทธิ์ (ถึงเกณฑ์อายุ): ${eligibleData[ctx.dataIndex]} คน`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: {
+              font: { size: vaccineFilter !== "all" ? 13 : 11 },
+              color: "#6b7280",
+              maxRotation: vaccineFilter !== "all" ? 0 : 45
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: "rgba(0,0,0,0.05)", lineWidth: 1 },
+            border: { display: false },
+            ticks: { precision: 0, font: { size: 11 }, color: "#9ca3af" },
+            title: { display: true, text: "จำนวนคน", color: "#6b7280", font: { size: 12 } }
+          }
+        }
+      },
+      plugins: [topLabelPlugin]
     });
 
     const el = document.getElementById("vaccineDescription");
     if (!el) return;
+    const totalDone     = doneData.reduce((a, b) => a + b, 0);
+    const totalNotdone  = notdoneData.reduce((a, b) => a + b, 0);
+    const totalEligible = eligibleData.reduce((a, b) => a + b, 0) || 1;
+    const tambonText    = tambonFilter !== "all" ? tambonName[tambonFilter] : "ทุกตำบล";
 
     if (vaccineFilter !== "all") {
-      const values   = datasets[0].data;
-      const max      = Math.max(...values);
-      const min      = Math.min(...values);
-      const maxIndex = values.indexOf(max);
-      const minIndex = values.indexOf(min);
-      el.innerHTML = `<b>💉 ${vaccineFilter}</b><br>🟢 สูงสุด: ${labels[maxIndex]} (${max} คน)<br>🔴 ต่ำสุด: ${labels[minIndex]} (${min} คน)`;
+      el.innerHTML = `<b>💉 ${vaccineLabel[vaccineFilter] || vaccineFilter}</b> | ${tambonText}<br>
+        🟢 ฉีดแล้ว: ${totalDone} คน (${((totalDone/totalEligible)*100).toFixed(1)}%) &nbsp;
+        🔴 ตกหล่น (ถึงวัยแล้วแต่ยังไม่ฉีด): ${totalNotdone} คน (${((totalNotdone/totalEligible)*100).toFixed(1)}%)<br>
+        <small style="color:gray">ฐานคำนวณ: เด็กที่อายุถึงเกณฑ์ฉีด ${vaccineLabel[vaccineFilter]} แล้วเท่านั้น (${totalEligible} คน) ไม่รวมเด็กที่ยังไม่ถึงวัย</small>`;
     } else {
-      el.innerHTML = `<b>📊 เปรียบเทียบวัคซีนทั้งหมด</b><br>แสดงจำนวนคนฉีดแยกตามตำบล`;
+      el.innerHTML = `<b>📊 เปรียบเทียบวัคซีนทั้งหมด</b> | ${tambonText}<br>
+        🟢 รวมฉีดแล้ว: ${totalDone} ครั้ง &nbsp; 🔴 รวมตกหล่น: ${totalNotdone} ครั้ง<br>
+        <small style="color:gray">แต่ละวัคซีนใช้ฐานเทียบเฉพาะเด็กที่ถึงเกณฑ์อายุของวัคซีนนั้น ๆ</small>`;
     }
   });
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("vaccineFilter");
-  if (!select) return;
-  select.innerHTML = `<option value="all">ทุกวัคซีน</option>`;
-  vaccineList.forEach(v => {
-    const op = document.createElement("option");
-    op.value = v; op.textContent = v;
-    select.appendChild(op);
-  });
-  select.addEventListener("change", () => { loadvaccineChart(); loadFollow(); });
-});
 
 // =========================
 // 🔲 Sidebar
@@ -1313,59 +1456,68 @@ function openCareByTambon() {
   });
 }
 
-db.ref("villageCare").set({
-  puyoh: {
-    1: { care: [{ name: "นายเฉลิมพล อำพันธ์",    tel: "0807047038", role: "ผู้ใหญ่บ้าน" }] },
-    2: { care: [{ name: "นายอาหามะ อูเซ็ง",       tel: "0892947402", role: "กำนัน / ผู้ใหญ่บ้าน" }] },
-    3: { care: [{ name: "นายไซมี มะ",             tel: "0810842978", role: "ผู้ใหญ่บ้าน" }] },
-    4: { care: [{ name: "นายนรวีร์ เจ๊ะเมาะ",     tel: "0808466067", role: "ผู้ใหญ่บ้าน" }] },
-    5: { care: [{ name: "นายสมนึก แดงดี",         tel: "0872951817", role: "ผู้ใหญ่บ้าน" }] },
-    6: { care: [{ name: "นายมะยูนุ มะเย็ง",       tel: "0849971802", role: "ผู้ใหญ่บ้าน" }] }
-  },
-  munoh: {
-    1: { care: [{ name: "นายสาลีมี สาและ",        tel: "0894620868", role: "ผู้ใหญ่บ้าน" }] },
-    2: { care: [{ name: "นายนาทวี ตันเหมนายู",    tel: "0894646467", role: "ผู้ใหญ่บ้าน" }] },
-    3: { care: [{ name: "นายมุสตอปา อาบะ",        tel: "0850770975", role: "ผู้ใหญ่บ้าน" }] },
-    4: { care: [{ name: "ร.ต.ประเสริฐ อาแว",      tel: "0873999709", role: "กำนัน / ผู้ใหญ่บ้าน" }] },
-    5: { care: [{ name: "นายอามาซะ สามะ",         tel: "0806303427", role: "ผู้ใหญ่บ้าน" }] }
-  },
-  pasemas: {
-    1: { care: [{ name: "นายฮารีมคาน โอระสะมันนี", tel: "0817677605", role: "ผู้ใหญ่บ้าน" }] },
-    2: { care: [{ name: "นายนาซูฮา หะยีอาแว",     tel: "0850787676", role: "ผู้ใหญ่บ้าน" }] },
-    3: { care: [{ name: "นายณรงค์ อาแวสือแม",     tel: "0629988149", role: "ผู้ใหญ่บ้าน" }] },
-    4: { care: [{ name: "นายมาฮาโซ มือเยาะ",      tel: "0801382240", role: "ผู้ใหญ่บ้าน" }] },
-    5: { care: [{ name: "นายมะรอดี บินสะมะแอ",    tel: "0896594425", role: "ผู้ใหญ่บ้าน" }] },
-    6: { care: [{ name: "นายปฏิวัติ เด่นอร่ามคาน", tel: "0813686863", role: "กำนัน / ผู้ใหญ่บ้าน" }] },
-    7: { care: [{ name: "นายอัสมี เจ๊ะอาแว",      tel: "0824159376", role: "ผู้ใหญ่บ้าน" }] },
-    8: { care: [{ name: "นายรุสวา ดอเลาะ",        tel: "0649500655", role: "ผู้ใหญ่บ้าน" }] }
-  },
-  kolok: {
-    community: {
-      care: [
-        { name: "น.ส.สุมิตร อูมา",         tel: "0993633100", role: "ผู้นำชุมชน" },
-        { name: "น.ส.สะปีน๊ะ มะแซ",        tel: "0869695313", role: "ผู้นำชุมชน" },
-        { name: "นางละมัย การุโณ",          tel: "0827038733", role: "ผู้นำชุมชน" },
-        { name: "นางวิลาวัลย์ คชกาล",       tel: "0831682610", role: "ผู้นำชุมชน" },
-        { name: "นายธงชัย บือราเฮง",        tel: "0634853736", role: "ผู้นำชุมชน" },
-        { name: "นายวราวุธ มาหามะ",         tel: "0634245389", role: "ผู้นำชุมชน" },
-        { name: "นายสาเหะ มาหะมะ",         tel: "0897378241", role: "ผู้นำชุมชน" },
-        { name: "น.ส.โนรีซา มะแซ",         tel: "0814394057", role: "ผู้นำชุมชน" },
-        { name: "นายอาเดอร์นันต์ เบ็ญสนิ",  tel: "0813059321", role: "ผู้นำชุมชน" },
-        { name: "นายบุญภาค สุขโร",          tel: "0902100194", role: "ผู้นำชุมชน" },
-        { name: "น.ส.สุกัญญา จันทร์มุณี",   tel: "0994739179", role: "ผู้นำชุมชน" },
-        { name: "นายสุฮายมิง อารง",         tel: "0869640838", role: "ผู้นำชุมชน" },
-        { name: "นายวัชริศ เจ๊ะเลาะ",       tel: "0815433221", role: "ผู้นำชุมชน" },
-        { name: "นายธรรมมูญ ขุนนุ้ย",       tel: "0894684098", role: "ผู้นำชุมชน" },
-        { name: "นายมุสเล็ม ซามะ",          tel: "0622482484", role: "ผู้นำชุมชน" },
-        { name: "นางสารีป๊ะ ยะโก๊ะ",        tel: "0827313077", role: "ผู้นำชุมชน" },
-        { name: "นายอัสมิง สะแม",           tel: "0873924515", role: "ผู้นำชุมชน" },
-        { name: "นางอัญชลี ยะโลมพันธ์",     tel: "0880693892", role: "ผู้นำชุมชน" },
-        { name: "นายประทิว แก้วคง",         tel: "0923595039", role: "ผู้นำชุมชน" },
-        { name: "นายอาแว แวหะมะ",           tel: "0894641319", role: "ผู้นำชุมชน" }
-      ]
-    }
-  }
-});
+// =========================
+// 🌱 Seed ข้อมูลผู้ดูแลรายตำบล (รันครั้งเดียว — ไม่เขียนทับถ้ามีข้อมูลอยู่แล้ว)
+// =========================
+function seedVillageCareIfEmpty() {
+  db.ref("villageCare").once("value", snap => {
+    if (snap.exists()) return; // มีข้อมูลอยู่แล้ว ไม่ต้อง seed ซ้ำ
+
+    db.ref("villageCare").set({
+      puyoh: {
+        1: { care: [{ name: "นายเฉลิมพล อำพันธ์",    tel: "0807047038", role: "ผู้ใหญ่บ้าน" }] },
+        2: { care: [{ name: "นายอาหามะ อูเซ็ง",       tel: "0892947402", role: "กำนัน / ผู้ใหญ่บ้าน" }] },
+        3: { care: [{ name: "นายไซมี มะ",             tel: "0810842978", role: "ผู้ใหญ่บ้าน" }] },
+        4: { care: [{ name: "นายนรวีร์ เจ๊ะเมาะ",     tel: "0808466067", role: "ผู้ใหญ่บ้าน" }] },
+        5: { care: [{ name: "นายสมนึก แดงดี",         tel: "0872951817", role: "ผู้ใหญ่บ้าน" }] },
+        6: { care: [{ name: "นายมะยูนุ มะเย็ง",       tel: "0849971802", role: "ผู้ใหญ่บ้าน" }] }
+      },
+      munoh: {
+        1: { care: [{ name: "นายสาลีมี สาและ",        tel: "0894620868", role: "ผู้ใหญ่บ้าน" }] },
+        2: { care: [{ name: "นายนาทวี ตันเหมนายู",    tel: "0894646467", role: "ผู้ใหญ่บ้าน" }] },
+        3: { care: [{ name: "นายมุสตอปา อาบะ",        tel: "0850770975", role: "ผู้ใหญ่บ้าน" }] },
+        4: { care: [{ name: "ร.ต.ประเสริฐ อาแว",      tel: "0873999709", role: "กำนัน / ผู้ใหญ่บ้าน" }] },
+        5: { care: [{ name: "นายอามาซะ สามะ",         tel: "0806303427", role: "ผู้ใหญ่บ้าน" }] }
+      },
+      pasemas: {
+        1: { care: [{ name: "นายฮารีมคาน โอระสะมันนี", tel: "0817677605", role: "ผู้ใหญ่บ้าน" }] },
+        2: { care: [{ name: "นายนาซูฮา หะยีอาแว",     tel: "0850787676", role: "ผู้ใหญ่บ้าน" }] },
+        3: { care: [{ name: "นายณรงค์ อาแวสือแม",     tel: "0629988149", role: "ผู้ใหญ่บ้าน" }] },
+        4: { care: [{ name: "นายมาฮาโซ มือเยาะ",      tel: "0801382240", role: "ผู้ใหญ่บ้าน" }] },
+        5: { care: [{ name: "นายมะรอดี บินสะมะแอ",    tel: "0896594425", role: "ผู้ใหญ่บ้าน" }] },
+        6: { care: [{ name: "นายปฏิวัติ เด่นอร่ามคาน", tel: "0813686863", role: "กำนัน / ผู้ใหญ่บ้าน" }] },
+        7: { care: [{ name: "นายอัสมี เจ๊ะอาแว",      tel: "0824159376", role: "ผู้ใหญ่บ้าน" }] },
+        8: { care: [{ name: "นายรุสวา ดอเลาะ",        tel: "0649500655", role: "ผู้ใหญ่บ้าน" }] }
+      },
+      kolok: {
+        community: {
+          care: [
+            { name: "น.ส.สุมิตร อูมา",         tel: "0993633100", role: "ผู้นำชุมชน" },
+            { name: "น.ส.สะปีน๊ะ มะแซ",        tel: "0869695313", role: "ผู้นำชุมชน" },
+            { name: "นางละมัย การุโณ",          tel: "0827038733", role: "ผู้นำชุมชน" },
+            { name: "นางวิลาวัลย์ คชกาล",       tel: "0831682610", role: "ผู้นำชุมชน" },
+            { name: "นายธงชัย บือราเฮง",        tel: "0634853736", role: "ผู้นำชุมชน" },
+            { name: "นายวราวุธ มาหามะ",         tel: "0634245389", role: "ผู้นำชุมชน" },
+            { name: "นายสาเหะ มาหะมะ",         tel: "0897378241", role: "ผู้นำชุมชน" },
+            { name: "น.ส.โนรีซา มะแซ",         tel: "0814394057", role: "ผู้นำชุมชน" },
+            { name: "นายอาเดอร์นันต์ เบ็ญสนิ",  tel: "0813059321", role: "ผู้นำชุมชน" },
+            { name: "นายบุญภาค สุขโร",          tel: "0902100194", role: "ผู้นำชุมชน" },
+            { name: "น.ส.สุกัญญา จันทร์มุณี",   tel: "0994739179", role: "ผู้นำชุมชน" },
+            { name: "นายสุฮายมิง อารง",         tel: "0869640838", role: "ผู้นำชุมชน" },
+            { name: "นายวัชริศ เจ๊ะเลาะ",       tel: "0815433221", role: "ผู้นำชุมชน" },
+            { name: "นายธรรมมูญ ขุนนุ้ย",       tel: "0894684098", role: "ผู้นำชุมชน" },
+            { name: "นายมุสเล็ม ซามะ",          tel: "0622482484", role: "ผู้นำชุมชน" },
+            { name: "นางสารีป๊ะ ยะโก๊ะ",        tel: "0827313077", role: "ผู้นำชุมชน" },
+            { name: "นายอัสมิง สะแม",           tel: "0873924515", role: "ผู้นำชุมชน" },
+            { name: "นางอัญชลี ยะโลมพันธ์",     tel: "0880693892", role: "ผู้นำชุมชน" },
+            { name: "นายประทิว แก้วคง",         tel: "0923595039", role: "ผู้นำชุมชน" },
+            { name: "นายอาแว แวหะมะ",           tel: "0894641319", role: "ผู้นำชุมชน" }
+          ]
+        }
+      }
+    });
+  });
+}
 
 // =========================
 // 🗓 formatDate / formatDateInput
@@ -1430,7 +1582,6 @@ function filterData() {
   updateChart(filtered);
 }
 
-
 function setStatusFilter(mode) {
   statusFilter = mode;
 
@@ -1442,3 +1593,59 @@ function setStatusFilter(mode) {
 
   loadFollow();
 }
+
+// =========================
+// 🚀 Init — รวม DOMContentLoaded เป็นจุดเดียว
+// ลำดับสำคัญ: build dropdown ก่อน → ผูก event → โหลดข้อมูล/กราฟ
+// =========================
+document.addEventListener("DOMContentLoaded", () => {
+  // 1) tambon dropdown (หน้าเพิ่มข้อมูล)
+  const tambonEl = document.getElementById("tambon");
+  if (tambonEl) {
+    tambonEl.addEventListener("change", function () {
+      document.getElementById("villageBox").innerHTML = buildVillageDropdown(this.value, "", "");
+      document.getElementById("soiBox").style.display = this.value === "kolok" ? "block" : "none";
+    });
+  }
+
+  // 2) build vaccineFilter dropdown ก่อนใครเรียกใช้ selectedVaccine
+  const vaccineSelect = document.getElementById("vaccineFilter");
+  if (vaccineSelect) {
+    vaccineSelect.innerHTML = `<option value="all">ทุกวัคซีน</option>`;
+    vaccineList.forEach(v => {
+      const op = document.createElement("option");
+      op.value = v;
+      op.textContent = vaccineLabel[v] || v;
+      vaccineSelect.appendChild(op);
+    });
+    vaccineSelect.addEventListener("change", () => {
+      selectedVaccine = vaccineSelect.value;
+      loadvaccineChart();
+      loadFollow();
+    });
+  }
+
+  // 3) tambonFilter → ผูกทั้ง hospital dropdown + ทั้งสองกราฟให้ sync กัน
+  const tambonSel = document.getElementById("tambonFilter");
+  if (tambonSel) {
+    tambonSel.addEventListener("change", () => {
+      updateHospitalFilter();
+      loadvaccineChart();
+      loadFollow();
+    });
+  }
+
+  // 4) hospitalFilter → ทำให้ตารางอัปเดตเมื่อเปลี่ยนหน่วยบริการ
+  const hospitalSel = document.getElementById("hospitalFilter");
+  if (hospitalSel) {
+    hospitalSel.addEventListener("change", () => { loadFollow(); });
+  }
+
+  // 5) seed ข้อมูลผู้ดูแล (รันครั้งเดียว ไม่ทับของเดิม)
+  seedVillageCareIfEmpty();
+
+  // 6) โหลดข้อมูลครั้งแรกหลังทุกอย่าง build เสร็จแล้ว
+  loadFollow();
+  loadvaccineChart();
+  if (document.getElementById("symptomList")) loadSymptoms();
+});
