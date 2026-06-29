@@ -653,7 +653,7 @@ async function resendFollowUp(key, userId) {
     if (!s)        throw new Error("ไม่พบข้อมูล");
     if (!s.userId) throw new Error("ไม่พบ LINE User ID — ผู้ปกครองยังไม่ลงทะเบียน LINE");
 
-    const res = await fetch("/api/resend-followup", {
+    const res = await fetch("https://vaccine-line-api.onrender.com/api/resend-followup", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({
