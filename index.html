@@ -3,730 +3,647 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VaxKolok — ระบบติดตามวัคซีน</title>
+<title>VaxKolok — ระบบติดตามวัคซีนเด็ก</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-<script src="app.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+<script src="app.js" defer></script>
 <style>
-/* ============================
-   TOKENS
-============================ */
-:root{
-  --ink:       #0d1b2a;
-  --ink-2:     #3d5166;
-  --ink-3:     #7a909f;
-  --canvas:    #f5f7fa;
-  --surface:   #ffffff;
-  --border:    #e3e8ef;
-
-  --green:     #0e9f6e;
-  --green-bg:  #ecfdf5;
-  --red:       #e02424;
-  --red-bg:    #fef2f2;
-  --amber:     #d97706;
-  --amber-bg:  #fffbeb;
-  --blue:      #2563eb;
-  --blue-bg:   #eff6ff;
-
-  --accent:    #0e9f6e;       /* signature — teal-green: เขียวสุขภาพ */
-  --accent-dk: #057a55;
-
-  --radius:    10px;
-  --radius-lg: 16px;
-
-  --font: 'IBM Plex Sans Thai', sans-serif;
-  --mono: 'IBM Plex Mono', monospace;
+:root {
+  --ink:#0d1b2a; --ink-2:#3d5166; --ink-3:#7a909f;
+  --canvas:#f5f7fa; --surface:#ffffff; --border:#e3e8ef;
+  --green:#0e9f6e; --green-bg:#ecfdf5;
+  --red:#e02424;   --red-bg:#fef2f2;
+  --amber:#d97706; --amber-bg:#fffbeb;
+  --blue:#2563eb;  --blue-bg:#eff6ff;
+  --accent:#059669; --accent-dk:#047857;
+  --radius:10px; --radius-lg:16px;
+  --font:'IBM Plex Sans Thai',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
 }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:var(--font); background:var(--canvas); color:var(--ink); padding-bottom:80px; font-size:15px; line-height:1.6; }
 
-*{ box-sizing:border-box; margin:0; padding:0; }
-
-body{
-  font-family: var(--font);
-  background: var(--canvas);
-  color: var(--ink);
-  padding-bottom: 80px;
-  font-size: 15px;
-  line-height: 1.6;
+/* ── TOPBAR ──────────────────────────────────── */
+.topbar {
+  background:#059669; padding:0 24px; height:60px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:1000; gap:16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
-
-/* ============================
-   TOPBAR
-============================ */
-.topbar{
-  position: sticky; top:0; z-index:1000;
-  display: flex; align-items: center; gap:8px;
-  padding: 0 20px; height: 56px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+.topbar-brand { display:flex; align-items:center; gap:10px; text-decoration:none; flex-shrink:0; }
+.topbar-brand .logo-icon {
+  width:36px; height:36px; background:rgba(255,255,255,.22);
+  border-radius:10px; display:flex; align-items:center; justify-content:center;
 }
-
-.topbar-brand{
-  font-size: 17px; font-weight:700;
-  color: var(--ink); letter-spacing:-.3px;
-  margin-right: auto; text-decoration:none;
-  display:flex; align-items:center; gap:8px;
-}
-
-.topbar-brand .dot{
-  width:10px; height:10px; border-radius:50%;
-  background: var(--accent); display:inline-block;
-}
-
-.topbar-link{
-  font-size:13px; font-weight:500;
-  color: var(--ink-2); text-decoration:none;
-  padding: 6px 12px; border-radius: var(--radius);
-  transition: background .15s, color .15s;
-  white-space:nowrap;
-}
-.topbar-link:hover{ background: var(--canvas); color: var(--ink); }
-.topbar-link.active{ background: var(--green-bg); color: var(--green); }
-
-.btn-avatar{
-  width:34px; height:34px; border-radius:50%;
-  border:1px solid var(--border);
-  background: var(--canvas);
-  display:flex; align-items:center; justify-content:center;
-  font-size:14px; color: var(--ink-2);
-  cursor:pointer;
-}
-
-/* ============================
-   HERO
-============================ */
-.hero{
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 28px 20px 24px;
-}
-
-.hero-inner{ max-width:1280px; margin:0 auto; }
-
-.hero-eyebrow{
-  font-family: var(--mono);
-  font-size:11px; letter-spacing:.1em; text-transform:uppercase;
-  color: var(--accent); margin-bottom:6px;
-}
-
-.hero-title{
-  font-size:26px; font-weight:700;
-  color: var(--ink); line-height:1.25;
-  margin-bottom:6px;
-}
-
-.hero-sub{
-  font-size:14px; color: var(--ink-2); margin-bottom:0;
-}
-
-/* ============================
-   KPI ROW — signature element:
-   large mono numerals in tinted
-   tiles with a left-accent bar
-============================ */
-.kpi-row{
-  display:grid;
-  grid-template-columns: repeat(4,1fr);
-  gap:12px; padding:20px;
-  max-width:1280px; margin:0 auto;
-}
-
-.kpi{
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px 18px 14px;
-  border-left: 4px solid var(--border);
-  position:relative; overflow:hidden;
-}
-.kpi.k-total { border-left-color: var(--blue); }
-.kpi.k-done  { border-left-color: var(--green); }
-.kpi.k-not   { border-left-color: var(--red); }
-.kpi.k-cover { border-left-color: var(--amber); }
-
-.kpi-label{
-  font-size:12px; font-weight:500; color: var(--ink-3);
-  text-transform:uppercase; letter-spacing:.05em;
-  margin-bottom:6px;
-}
-.kpi-val{
-  font-family: var(--mono);
-  font-size:34px; font-weight:500; line-height:1;
-  color: var(--ink);
-}
-.kpi-val span{ font-size:14px; color: var(--ink-3); margin-left:2px; }
-
-/* ============================
-   MAIN LAYOUT
-============================ */
-.main{ max-width:1280px; margin:0 auto; padding:0 20px; }
-
-/* ============================
-   CARD
-============================ */
-.card{
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow:hidden;
-}
-.card-head{
-  display:flex; align-items:center;
-  justify-content:space-between;
-  padding:14px 18px;
-  border-bottom:1px solid var(--border);
-}
-.card-head h6{
-  font-size:14px; font-weight:600;
-  color: var(--ink); margin:0;
-}
-.card-body{ padding:18px; }
-
-/* ============================
-   TOOLBAR / FILTER
-============================ */
-.filters{
-  display:flex; flex-wrap:wrap; gap:8px;
-  padding:14px 18px;
-  border-bottom:1px solid var(--border);
-  background: var(--canvas);
-}
-.form-control,
-.form-select{
-  height:38px; font-size:13px;
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  background: var(--surface);
-  color: var(--ink);
-}
-.form-control:focus,
-.form-select:focus{
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(14,159,110,.12);
-  outline:none;
-}
-
-.btn{
-  font-size:13px; font-weight:500;
-  border-radius: var(--radius);
-  padding:7px 14px; border:1px solid transparent;
-  cursor:pointer; transition: all .15s;
+.topbar-brand .logo-name { font-size:20px; font-weight:800; color:#fff; line-height:1.1; }
+.topbar-brand .logo-sub  { font-size:11px; color:rgba(255,255,255,.8); }
+.topbar-links { display:flex; align-items:center; gap:4px; margin-left:auto; }
+.topbar-link {
+  font-size:13px; font-weight:600; color:rgba(255,255,255,.85);
+  text-decoration:none; padding:6px 12px; border-radius:8px;
+  transition:background .15s; white-space:nowrap;
   display:inline-flex; align-items:center; gap:6px;
 }
-.btn-primary{
-  background:var(--blue); color:#fff; border-color:var(--blue);
-}
-.btn-primary:hover{ background:#1d4ed8; }
-
-.btn-success{
-  background:var(--green); color:#fff; border-color:var(--green);
-}
-.btn-success:hover{ background:var(--accent-dk); }
-
-.btn-outline{
-  background:var(--surface); color:var(--ink-2);
-  border-color:var(--border);
-}
-.btn-outline:hover{ background:var(--canvas); color:var(--ink); }
-
-.btn-outline-success{
-  background:var(--green-bg); color:var(--green);
-  border-color:var(--green);
-}
-.btn-outline-success:hover{ background:#d1fae5; }
-
-.btn-icon{
-  width:34px; height:34px; padding:0;
-  display:inline-flex; align-items:center;
-  justify-content:center;
+.topbar-link:hover  { background:rgba(255,255,255,.15); color:#fff; }
+.topbar-link.active { background:rgba(255,255,255,.22); color:#fff; }
+.btn-avatar {
+  width:34px; height:34px; border-radius:50%; border:2px solid rgba(255,255,255,.4);
+  background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center;
+  font-size:18px; color:#fff; cursor:pointer;
 }
 
-/* ============================
-   ACTION BAR
-============================ */
-.action-bar{
-  display:flex; flex-wrap:wrap; gap:8px;
-  padding:12px 18px;
-  border-bottom:1px solid var(--border);
-}
-
-/* ============================
-   ADD FORM (collapse)
-============================ */
-.add-form-wrap{
-  padding:18px;
-  border-top:1px solid var(--border);
-  background: var(--canvas);
-}
-
-.vaccine-grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fit,minmax(175px,1fr));
-  gap:12px; margin-top:14px;
-}
-
-.vaccine-tile{
-  background: var(--surface);
-  border:1px solid var(--border);
-  border-radius: var(--radius);
-  padding:12px 14px;
-}
-.vaccine-tile h6{
-  font-size:12px; font-weight:600;
-  color: var(--ink-2); margin-bottom:8px;
-  text-transform:uppercase; letter-spacing:.04em;
-}
-.vaccine-tile label{
-  display:flex; align-items:center; gap:6px;
-  font-size:13px; color:var(--ink);
-  margin-bottom:4px; cursor:pointer;
-}
-.vaccine-tile input[type=checkbox]{
-  accent-color: var(--accent);
-  width:15px; height:15px;
-}
-.vaccine-tile .form-control{ height:32px; margin-top:3px; }
-
-/* ============================
-   CHARTS
-============================ */
-.chart-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px; margin-bottom:20px;
-}
-
-.chart-desc{
-  font-size:13px; color:var(--ink-2);
-  background:var(--canvas);
-  border-radius:var(--radius); padding:10px 14px;
-  margin-top:10px;
-}
-
-/* ============================
-   TABLE
-============================ */
-.table-wrap{ overflow-x:auto; }
-
-table.tbl{
-  width:100%; border-collapse:collapse;
-  font-size:13px;
-}
-.tbl th{
-  background: var(--canvas);
-  font-size:11px; font-weight:600;
-  color:var(--ink-3); text-transform:uppercase;
-  letter-spacing:.05em; padding:10px 12px;
-  border-bottom:1px solid var(--border);
-  white-space:nowrap;
-}
-.tbl td{
-  padding:10px 12px; border-bottom:1px solid var(--border);
-  color: var(--ink); white-space:nowrap;
-}
-.tbl tr:last-child td{ border-bottom:none; }
-.tbl tr:hover td{ background:var(--canvas); }
-
-.badge-done{
-  display:inline-flex; align-items:center; gap:4px;
-  background:var(--green-bg); color:var(--green);
-  font-size:11px; font-weight:600;
-  padding:3px 8px; border-radius:20px;
-}
-.badge-notdone{
-  display:inline-flex; align-items:center; gap:4px;
-  background:var(--red-bg); color:var(--red);
-  font-size:11px; font-weight:600;
-  padding:3px 8px; border-radius:20px;
-}
-
-/* ============================
-   MOBILE CARD LIST
-============================ */
-.mobile-list{ display:none; }
-
-.child-card{
+/* ── OFFICIAL HEADER ─────────────────────────── */
+.official-header {
   background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius-lg);
-  padding:16px; margin-bottom:10px;
+  border-bottom:1px solid var(--border);
+  padding:16px 24px;
 }
-.child-card-top{
-  display:flex; justify-content:space-between;
-  align-items:flex-start; margin-bottom:10px;
+.official-header-inner {
+  max-width:1280px; margin:0 auto;
+  display:flex; align-items:center; gap:14px;
+  border-left:5px solid var(--accent);
+  padding-left:16px;
 }
-.child-card-name{ font-size:15px; font-weight:600; }
-.child-card-hn{ font-size:12px; color:var(--ink-3); margin-top:2px; }
-.child-card-row{
-  font-size:13px; color:var(--ink-2);
-  margin-bottom:4px;
+.official-header-icon {
+  width:44px; height:44px; border-radius:12px;
+  background:var(--accent); display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
 }
-.child-meta{
-  display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;
+.official-header-eyebrow {
+  font-size:11px; color:var(--ink-3); font-weight:500;
+  letter-spacing:.06em; text-transform:uppercase; margin-bottom:2px;
 }
-.tag{
-  font-size:12px; font-weight:500;
-  padding:3px 10px; border-radius:20px;
-  background:var(--blue-bg); color:var(--blue);
-}
-.tag-green{ background:var(--green-bg); color:var(--green); }
+.official-header-title { font-size:18px; font-weight:700; color:var(--ink); line-height:1.2; }
+.official-header-sub   { font-size:13px; color:var(--ink-2); }
 
-/* ============================
-   PAGINATION
-============================ */
-#pagination{
-  display:flex; justify-content:center;
-  gap:4px; padding:16px 0;
+/* ── KPI ─────────────────────────────────────── */
+.kpi-row {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:12px; padding:20px; max-width:1280px; margin:0 auto;
 }
-#pagination button{
-  width:34px; height:34px; padding:0;
-  font-size:13px; border-radius:var(--radius);
-  border:1px solid var(--border);
-  background:var(--surface); color:var(--ink-2);
-  cursor:pointer;
+.kpi {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:16px 18px 14px;
+  border-left:4px solid var(--border); position:relative;
 }
-#pagination button.active{
-  background:var(--ink); color:#fff; border-color:var(--ink);
-}
-#pagination button:hover:not(.active){
+.kpi.k-total { border-left-color:var(--blue);  }
+.kpi.k-done  { border-left-color:var(--green); }
+.kpi.k-not   { border-left-color:var(--red);   }
+.kpi.k-cover { border-left-color:var(--amber); }
+.kpi-icon  { font-size:15px; margin-bottom:8px; }
+.kpi-label { font-size:11px; font-weight:600; color:var(--ink-3); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+.kpi-val   { font-family:var(--mono); font-size:34px; font-weight:500; line-height:1; color:var(--ink); }
+.kpi-val span { font-size:14px; color:var(--ink-3); margin-left:2px; }
+
+/* ── MAIN ────────────────────────────────────── */
+.main { max-width:1280px; margin:0 auto; padding:0 20px; }
+
+/* ── CARD ────────────────────────────────────── */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+.card-head { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border); }
+.card-head h6 { font-size:14px; font-weight:600; color:var(--ink); margin:0; display:flex; align-items:center; gap:8px; }
+
+/* ── FILTERS ─────────────────────────────────── */
+.filters {
+  display:flex; flex-wrap:wrap; gap:8px;
+  padding:14px 18px; border-bottom:1px solid var(--border);
   background:var(--canvas);
 }
+/* ── INPUTS & SELECTS ── ใช้ specificity สูงกว่า Bootstrap */
+.filters select,
+.filters input,
+.filters .form-select,
+.filters .form-control,
+select.form-select,
+input.form-control {
+  height:38px !important;
+  font-size:13px !important;
+  font-family:var(--font) !important;
+  border:1.5px solid #d1d5db !important;
+  border-radius:10px !important;
+  background-color:#fff !important;
+  color:var(--ink) !important;
+  box-shadow:none !important;
+  transition:border-color .15s, box-shadow .15s;
+  -webkit-appearance:none;
+  appearance:none;
+  padding:0 12px !important;
+}
+/* arrow สำหรับ select */
+.filters select,
+.filters .form-select,
+select.form-select {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat:no-repeat !important;
+  background-position:right 10px center !important;
+  background-size:14px !important;
+  padding-right:32px !important;
+}
+/* focus */
+.filters select:focus,
+.filters input:focus,
+select.form-select:focus,
+input.form-control:focus {
+  border-color:#059669 !important;
+  box-shadow:0 0 0 3px rgba(5,150,105,.12) !important;
+  outline:none !important;
+}
+/* mobile */
+@media(max-width:768px){
+  .filters select,
+  .filters input,
+  select.form-select,
+  input.form-control { height:44px !important; font-size:15px !important; }
+}
+.filter-label {
+  font-size:11px; font-weight:600; color:var(--ink-3); letter-spacing:.06em;
+  text-transform:uppercase; align-self:center; white-space:nowrap;
+}
 
-/* ============================
-   MODAL
-============================ */
-.modal-content{
-  border:none;
-  border-radius:var(--radius-lg);
-  box-shadow:0 8px 40px rgba(0,0,0,.14);
+/* ── BUTTONS ─────────────────────────────────── */
+.btn {
+  font-size:13px; font-weight:500; border-radius:var(--radius);
+  padding:7px 14px; border:1px solid transparent; cursor:pointer;
+  transition:all .15s; display:inline-flex; align-items:center; gap:6px;
 }
-.modal-header{
-  border-bottom:1px solid var(--border);
-  padding:16px 20px;
-}
-.modal-footer{
-  border-top:1px solid var(--border);
-  padding:12px 20px;
-}
-.modal-title{
-  font-size:16px; font-weight:600;
+.btn-primary        { background:var(--blue);    color:#fff; border-color:var(--blue); }
+.btn-primary:hover  { background:#1d4ed8; }
+.btn-success        { background:var(--green);   color:#fff; border-color:var(--green); }
+.btn-success:hover  { background:var(--accent-dk); }
+.btn-outline        { background:var(--surface); color:var(--ink-2); border-color:var(--border); }
+.btn-outline:hover  { background:var(--canvas);  color:var(--ink); }
+.btn-outline-success{ background:var(--green-bg); color:var(--green); border-color:var(--green); }
+.btn-outline-success:hover { background:#d1fae5; }
+.btn-outline-primary      { background:var(--blue-bg); color:var(--blue); border-color:#bfdbfe; }
+.btn-outline-primary:hover { background:#dbeafe; }
+
+/* ── ACTION BAR ──────────────────────────────── */
+.action-bar {
+  display:flex; flex-wrap:wrap; gap:8px;
+  padding:12px 18px; border-bottom:1px solid var(--border);
+  align-items:center;
 }
 
-/* ============================
-   SCROLL-TOP
-============================ */
-#scrollTopBtn{
-  position:fixed; bottom:90px; right:20px;
-  width:42px; height:42px; border:none;
-  border-radius:50%;
-  background:var(--ink); color:#fff;
+/* ── CHART SECTION ───────────────────────────── */
+.chart-grid { display:grid; grid-template-columns:340px 1fr; gap:16px; margin-bottom:20px; align-items:start; }
+.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+.chart-card-head { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border); }
+.chart-card-head h6 { font-size:14px; font-weight:600; color:var(--ink); margin:0; display:flex; align-items:center; gap:8px; }
+.chart-card-body { padding:18px; overflow:hidden; }
+.donut-wrap  { position:relative; width:200px; height:200px; margin:0 auto 14px; overflow:hidden; }
+.donut-stats { display:flex; justify-content:center; gap:24px; margin-top:4px; }
+.donut-stat      { text-align:center; }
+.donut-stat-num  { font-size:26px; font-weight:800; line-height:1; }
+.donut-stat-lbl  { font-size:12px; color:var(--ink-3); margin-top:3px; }
+.dot-green { color:var(--green); }
+.dot-red   { color:var(--red);   }
+#villageFollowWrap { position:relative; overflow:hidden; transition:height .2s ease; }
+canvas { display:block; max-width:100%; }
+
+/* ── TABLE ───────────────────────────────────── */
+.table-wrap { overflow-x:auto; }
+table.tbl   { width:100%; border-collapse:collapse; font-size:13px; }
+.tbl th {
+  background:var(--canvas); font-size:11px; font-weight:600; color:var(--ink-3);
+  text-transform:uppercase; letter-spacing:.05em;
+  padding:10px 12px; border-bottom:1px solid var(--border); white-space:nowrap;
+}
+.tbl td   { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--ink); white-space:nowrap; }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr:hover td      { background:var(--canvas); }
+.tbl input { width:100%; border:1px solid transparent; border-radius:6px; padding:4px 8px; font-size:13px; background:transparent; }
+.tbl input:focus { border-color:var(--accent); background:var(--surface); outline:none; box-shadow:0 0 0 2px rgba(5,150,105,.1); }
+
+/* ── MOBILE CARDS ────────────────────────────── */
+.mobile-list { display:none; }
+.child-card  { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; margin-bottom:10px; }
+.child-card-top  { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.child-card-name { font-size:15px; font-weight:600; }
+.child-card-hn   { font-size:12px; color:var(--ink-3); margin-top:2px; }
+.child-card-row  { font-size:13px; color:var(--ink-2); margin-bottom:4px; }
+.child-meta { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.tag        { font-size:12px; font-weight:500; padding:3px 10px; border-radius:20px; background:var(--blue-bg); color:var(--blue); }
+.tag-green  { background:var(--green-bg); color:var(--green); }
+
+/* ── PAGINATION ──────────────────────────────── */
+#pagination { display:flex; justify-content:center; gap:4px; padding:16px 0; flex-wrap:wrap; }
+#pagination button { min-width:34px; height:34px; padding:0 8px; font-size:13px; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface); color:var(--ink-2); cursor:pointer; }
+#pagination button.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+#pagination button:hover:not(.active):not([disabled]) { background:var(--canvas); }
+#pagination button[disabled] { opacity:.5; cursor:not-allowed; }
+
+/* ── MODAL ───────────────────────────────────── */
+.modal-content { border:none; border-radius:var(--radius-lg); box-shadow:0 8px 40px rgba(0,0,0,.14); }
+.modal-header  { border-bottom:1px solid var(--border); padding:16px 20px; }
+.modal-footer  { border-top:1px solid var(--border); padding:12px 20px; }
+.modal-title   { font-size:16px; font-weight:600; }
+
+/* ── SCROLL TOP ──────────────────────────────── */
+#scrollTopBtn {
+  position:fixed; bottom:72px; right:20px; width:42px; height:42px;
+  border:none; border-radius:50%; background:var(--ink); color:#fff;
   display:none; align-items:center; justify-content:center;
   font-size:16px; cursor:pointer; z-index:800;
   box-shadow:0 2px 8px rgba(0,0,0,.2);
 }
 
-/* ============================
-   BOTTOM NAV
-============================ */
-.bottom-nav{
-  position:fixed; bottom:0; left:0; width:100%;
-  height:60px; background:var(--surface);
-  border-top:1px solid var(--border);
-  display:flex; justify-content:space-around; align-items:center;
-  z-index:999;
+/* ── BOTTOM NAV ──────────────────────────────── */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; width:100%; height:60px;
+  background:var(--surface); border-top:1px solid var(--border);
+  display:flex; justify-content:space-around; align-items:center; z-index:999;
 }
-.bottom-nav a{
-  display:flex; flex-direction:column; align-items:center;
-  text-decoration:none; color:var(--ink-2); font-size:11px; gap:3px;
-}
-.bottom-nav a i{ font-size:19px; }
-.bottom-nav a.active{ color:var(--accent); }
+.bottom-nav a { display:flex; flex-direction:column; align-items:center; text-decoration:none; color:var(--ink-2); font-size:11px; gap:3px; }
+.bottom-nav a i { font-size:19px; }
+.bottom-nav a.active { color:var(--accent); }
 
-/* ============================
+/* ════════════════════════════════════════════
    RESPONSIVE
-============================ */
-@media(max-width:900px){
-  .kpi-row{ grid-template-columns:repeat(2,1fr); }
-  .chart-grid{ grid-template-columns:1fr; }
+   ════════════════════════════════════════════ */
+
+/* TABLET ≤ 1024px */
+@media(max-width:1024px){
+  .kpi-row { grid-template-columns:repeat(2,1fr); }
+  .chart-grid { grid-template-columns:1fr; }
+  .donut-wrap { width:180px; height:180px; }
 }
+
+/* MOBILE ≤ 768px */
 @media(max-width:768px){
-  .topbar-link.hide-sm{ display:none; }
-  .table-responsive{ display:none; }
-  .mobile-list{ display:block; }
-  .kpi-row{ padding:14px; }
-  .main{ padding:0 12px; }
+  /* topbar */
+  .topbar { padding:0 14px; }
+  .topbar-links { display:none; }
+
+  /* official header — compact */
+  .official-header { padding:10px 14px; }
+  .official-header-icon { width:36px; height:36px; border-radius:10px; flex-shrink:0; }
+  .official-header-icon i { font-size:16px !important; }
+  .official-header-eyebrow { display:none; }
+  .official-header-title { font-size:15px; }
+  .official-header-sub { font-size:12px; }
+
+  /* KPI */
+  .kpi-row { padding:12px; gap:10px; }
+  .kpi { padding:12px 14px 10px; }
+  .kpi-val { font-size:28px; }
+  .kpi-label { font-size:10px; }
+
+  /* main */
+  .main { padding:0 10px; }
+
+  /* filters: stack, full-width */
+  .filters { flex-direction:column; gap:8px; padding:12px; }
+  .filters .form-select,
+  .filters .form-control { width:100% !important; min-width:0 !important; }
+  .filter-label { display:none; }
+
+  /* action bar */
+  .action-bar { padding:10px 12px; gap:6px; }
+  .action-bar .btn { font-size:12px; padding:6px 10px; }
+
+  /* charts */
+  .chart-grid { gap:12px; }
+  .donut-wrap { width:160px; height:160px; }
+  .donut-stat-num { font-size:22px; }
+
+  /* table → mobile cards */
+  .table-wrap.table-responsive { display:none; }
+  .mobile-list { display:block; }
+
+  /* pagination */
+  #pagination button { min-width:30px; height:30px; font-size:12px; }
+
+  /* card head */
+  .card-head { padding:12px 14px; }
+  .card-head h6 { font-size:13px; }
 }
+
+/* SMALL MOBILE ≤ 480px */
 @media(max-width:480px){
-  .kpi-row{ grid-template-columns:repeat(2,1fr); gap:8px; padding:10px; }
-  .kpi-val{ font-size:26px; }
+  /* topbar */
+  .topbar-brand .logo-sub { display:none; }
+
+  /* KPI */
+  .kpi-row { grid-template-columns:repeat(2,1fr); gap:8px; padding:8px; }
+  .kpi-val { font-size:24px; }
+  .kpi-icon { font-size:13px; }
+
+  /* official header — minimal */
+  .official-header-sub { display:none; }
+  .official-header-icon { display:none; }
+
+  /* action bar — icon only */
+  .action-bar .btn-text { display:none; }
+
+  /* bottom nav */
+  .bottom-nav a span { font-size:10px; }
+
+  /* modal full screen */
+  .modal-dialog { margin:0; max-width:100%; }
+  .modal-content { border-radius:0; }
 }
 
-
-
+/* VERY SMALL ≤ 360px */
+@media(max-width:360px){
+  .kpi-val { font-size:20px; }
+  .kpi { padding:10px 10px 8px; }
+  .kpi-label { font-size:9px; }
+}
 </style>
 </head>
 <body>
 
-<!-- ============================
-     TOPBAR
-============================ -->
+<!-- TOPBAR -->
 <nav class="topbar">
-  <a href="index.html" class="topbar-brand">
-    <span class="dot"></span> VaxKolok
+  <a href="landing.html" class="topbar-brand">
+    <div class="logo-icon">
+      <i class="fa-solid fa-syringe" style="color:#fff;font-size:16px;"></i>
+    </div>
+    <div>
+      <div class="logo-name">VaxKolok</div>
+      <div class="logo-sub">อ.สุไหงโก-ลก · จ.นราธิวาส</div>
+    </div>
   </a>
-
-  <a href="index.html" class="topbar-link active hide-sm">
-    <i class="fa fa-house fa-sm"></i> หน้าแรก
-  </a>
-  <a href="symptoms.html" class="topbar-link hide-sm">
-    <i class="fa fa-heartbeat fa-sm"></i> ติดตามอาการ
-  </a>
-  <a href="admin.html" id="adminMenu" class="topbar-link hide-sm">
-    <i class="fa fa-gear fa-sm"></i> Admin
-  </a>
-
-  <div class="dropdown ms-1">
-    <button class="btn-avatar dropdown-toggle border-0 bg-transparent"
-            data-bs-toggle="dropdown" aria-expanded="false">
-      <i class="fa fa-circle-user" style="font-size:24px;color:var(--ink-2)"></i>
+  <div class="topbar-links">
+    <a href="index.html"        class="topbar-link active"><i class="fa-solid fa-house fa-sm"></i> หน้าแรก</a>
+    <a href="symptoms.html"     class="topbar-link"><i class="fa-solid fa-heart-pulse fa-sm"></i> ติดตามอาการ</a>
+    <a href="admin.html" id="adminMenu" class="topbar-link"><i class="fa-solid fa-gear fa-sm"></i> Admin</a>
+    <a href="import-excel.html" class="topbar-link"><i class="fa-solid fa-file-import fa-sm"></i> นำเข้าข้อมูล</a>
+  </div>
+  <div class="dropdown">
+    <button class="btn-avatar dropdown-toggle border-0 bg-transparent" data-bs-toggle="dropdown">
+      <i class="fa-solid fa-circle-user"></i>
     </button>
-    <ul class="dropdown-menu dropdown-menu-end" style="font-size:13px;min-width:160px;border-radius:var(--radius-lg);border-color:var(--border)">
-      <li><div class="px-3 py-2" style="font-weight:600;font-size:13px" id="userNameDrop">—</div></li>
+    <ul class="dropdown-menu dropdown-menu-end" style="font-size:13px;min-width:180px;border-radius:12px;border-color:#e5e7eb;">
+      <li><div class="px-3 py-2" style="font-weight:600;" id="userNameDrop">—</div></li>
+      <li><hr class="dropdown-divider m-0"></li>
+      <li>
+        <a class="dropdown-item" href="index.html">
+          <i class="fa-solid fa-house fa-sm me-1"></i> หน้าแรก
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="symptoms.html">
+          <i class="fa-solid fa-heart-pulse fa-sm me-1"></i> ติดตามอาการ
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="admin.html" id="adminMenuMobile" style="display:none">
+          <i class="fa-solid fa-gear fa-sm me-1"></i> Admin
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="import-excel.html">
+          <i class="fa-solid fa-file-import fa-sm me-1"></i> นำเข้าข้อมูล
+        </a>
+      </li>
       <li><hr class="dropdown-divider m-0"></li>
       <li>
         <a class="dropdown-item text-danger" href="#" onclick="logout()">
-          <i class="fa fa-right-from-bracket fa-sm me-1"></i> ออกจากระบบ
+          <i class="fa-solid fa-right-from-bracket fa-sm me-1"></i> ออกจากระบบ
         </a>
       </li>
     </ul>
   </div>
 </nav>
 
-<!-- ============================
-     HERO
-============================ -->
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-eyebrow">VaxKolok · DHB Tracking System</div>
-    <h1 class="hero-title">สวัสดี <span id="heroName" style="color:var(--accent)">—</span></h1>
-    <p class="hero-sub">ยินดีต้อนรับสู่ระบบติดตามการฉีดวัคซีนเด็ก — ตรวจสอบ ติดตาม และบันทึกข้อมูลได้ในหน้าเดียว</p>
+<!-- OFFICIAL HEADER -->
+<div class="official-header">
+  <div class="official-header-inner">
+    <div class="official-header-icon">
+      <i class="fa-solid fa-shield-halved" style="color:#fff;font-size:20px;"></i>
+    </div>
+    <div>
+      <div class="official-header-eyebrow">VaxKolok · DHB Immunization Tracking System</div>
+      <div class="official-header-title">
+        สวัสดี, <span id="heroName" style="color:var(--accent)">—</span>
+      </div>
+      <div class="official-header-sub">
+        ระบบบันทึกและติดตามการรับวัคซีนเด็ก อำเภอสุไหงโก-ลก จังหวัดนราธิวาส
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ============================
-     KPI
-============================ -->
+<!-- KPI -->
 <div class="kpi-row">
   <div class="kpi k-total">
+    <div class="kpi-icon" style="color:var(--blue)"><i class="fa-solid fa-users"></i></div>
     <div class="kpi-label">เด็กทั้งหมด</div>
     <div class="kpi-val" id="total">—</div>
   </div>
   <div class="kpi k-done">
-    <div class="kpi-label">ได้รับวัคซีนแล้ว</div>
+    <div class="kpi-icon" style="color:var(--green)"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="kpi-label">ได้รับวัคซีนครบ</div>
     <div class="kpi-val" id="done">—</div>
   </div>
   <div class="kpi k-not">
+    <div class="kpi-icon" style="color:var(--red)"><i class="fa-solid fa-circle-xmark"></i></div>
     <div class="kpi-label">ยังไม่ครบ</div>
     <div class="kpi-val" id="notdone">—</div>
   </div>
   <div class="kpi k-cover">
+    <div class="kpi-icon" style="color:var(--amber)"><i class="fa-solid fa-chart-pie"></i></div>
     <div class="kpi-label">Coverage</div>
     <div class="kpi-val" id="percent">—<span>%</span></div>
   </div>
 </div>
 
-<!-- ============================
-     MAIN
-============================ -->
 <div class="main">
 
-  <!-- ===== FILTER + ACTION CARD ===== -->
+  <!-- FILTER + ACTION -->
   <div class="card mb-4">
-
     <div class="filters">
-        
-    <select id="vaccineFilter" onchange="loadvaccineChart(); loadFollow()" style="min-width:100px">
-      <option value="all">ทุกวัคซีน</option>
-    </select>
-      <select id="tambonFilter" onchange="updateHospitalFilter();loadFollow()" style="min-width:160px">
-        <option value="all">📍 ทุกตำบล</option>
+      <span class="filter-label"><i class="fa-solid fa-filter fa-xs"></i> กรอง</span>
+
+      <select id="vaccineFilter" style="min-width:110px">
+        <option value="all">ทุกวัคซีน</option>
+      </select>
+
+      <select id="tambonFilter" style="min-width:160px">
+        <option value="all">ทุกตำบล</option>
         <option value="kolok">สุไหงโก-ลก</option>
         <option value="munoh">มูโนะ</option>
         <option value="pasemas">ปาเสมัส</option>
         <option value="puyoh">ปูโยะ</option>
       </select>
 
-      <select id="hospitalFilter" onchange="loadFollow()" style="min-width:180px">
-        <option value="all">🏥 ทุกหน่วยบริการ</option>
+      <select id="hospitalFilter" style="min-width:200px">
+        <option value="all">ทุกหน่วยบริการ</option>
       </select>
 
-      <!-- <select id="ageFilter" onchange="getAgeMonths();loadFollow()" style="min-width:100px">
-<option value="all">👶 ทุกอายุ</option>
-        <option value="0">แรกเกิด</option>
-        <option value="1">1 เดือน</option>
-        <option value="2">2 เดือน</option>
-        <option value="3">3 เดือน</option>
-        <option value="4">4 เดือน</option>
-        <option value="5">5 เดือน</option>
-        <option value="6">6 เดือน</option>
-        <option value="9">9 เดือน</option>
-        <option value="12">1 ปี</option>
-        <option value="18">1 ปี 6 เดือน</option>
-        <option value="24">2 ปี</option>
-        <option value="36">3 ปี</option>
-        <option value="48">4 ปี</option>
-        <option value="60">5 ปี</option>
- </select> -->
-      <select id="typeAreaFilter" onchange="loadFollow()" style="min-width:100px">
-        <option value="all">👥 ทุกประเภท</option>
-        <option value="1">Type 1: อยู่จริงตามทะเบียน</option>
-        <option value="2">Type 2: มีชื่อ ไม่อยู่จริง</option>
-        <option value="3">Type 3: ไม่มีชื่อ แต่อยู่จริง</option>
-        <option value="4">Type 4: นอกเขต มารับบริการ</option>
+      <select id="typeAreaFilter" style="min-width:110px">
+        <option value="all">ทุกประเภทประชากร</option>
+        <option value="1">Type 1 — อยู่จริงตามทะเบียน</option>
+        <option value="2">Type 2 — มีชื่อ ไม่อยู่จริง</option>
+        <option value="3">Type 3 — ไม่มีชื่อ แต่อยู่จริง</option>
+        <option value="4">Type 4 — นอกเขต มารับบริการ</option>
       </select>
-     
-          <select id="quarterFilter" onchange="loadvaccineChart()"style="min-width:150px">
-            <option value="all">ทุกไตรมาส</option>
-            <option value="Q1">Q1</option>
-            <option value="Q2">Q2</option>
-            <option value="Q3">Q3</option>
-            <option value="Q4">Q4</option>
-          </select>
-      <input id="searchInput" class="form-control" placeholder="🔍 ค้นหา HN, ชื่อ..." onkeyup="loadFollow()" style="min-width:200px;flex:1">
+
+      <select id="ageFilter" style="min-width:120px">
+        <option value="all">ทุกช่วงอายุ</option>
+        <option value="0">0 ปี (แรกเกิด)</option>
+        <option value="1">1 ปี</option>
+        <option value="2">2 ปี</option>
+        <option value="3">3 ปี</option>
+        <option value="4">4 ปี</option>
+        <option value="5">5 ปีขึ้นไป</option>
+      </select>
+
+      <input id="searchInput" class="form-control" placeholder="ค้นหา HN, ชื่อ, เลขบัตร..."
+        onkeyup="loadFollow()" style="min-width:200px;flex:1">
     </div>
 
     <div class="action-bar">
-      <button onclick="setMode('percent')" class="btn btn-outline">
-        <i class="fa fa-chart-pie fa-sm"></i> ภาพรวม
-      </button>
-      <button onclick="setMode('village')" class="btn btn-outline">
-        <i class="fa fa-chart-bar fa-sm"></i> รายหมู่
-      </button>
-      <button onclick="openCareByTambon()" class="btn btn-outline">
-        <i class="fa fa-users fa-sm"></i> ผู้รับผิดชอบ
-      </button>
-      <button onclick="setStatusFilter('all')" class="btn btn-outline" id="btn-status-all">
-        ทั้งหมด
+      <button onclick="setStatusFilter('all')"     class="btn btn-outline" id="btn-status-all">
+        <i class="fa-solid fa-list fa-xs"></i> <span class="btn-text">ทั้งหมด</span>
       </button>
       <button onclick="setStatusFilter('notdone')" class="btn btn-outline" id="btn-status-notdone">
-        🔴 ยังไม่ฉีด
+        <i class="fa-solid fa-circle-xmark fa-xs" style="color:var(--red)"></i> <span class="btn-text">ยังไม่ครบ</span>
       </button>
-      <button onclick="setStatusFilter('done')" class="btn btn-outline" id="btn-status-done">
-        🟢 ฉีดแล้ว
+      <button onclick="setStatusFilter('done')"    class="btn btn-outline" id="btn-status-done">
+        <i class="fa-solid fa-circle-check fa-xs" style="color:var(--green)"></i> <span class="btn-text">ฉีดครบแล้ว</span>
+      </button>
+
+      <div style="flex:1"></div>
+
+      <button onclick="openCareByTambon()" class="btn btn-outline">
+        <i class="fa-solid fa-users fa-xs"></i> <span class="btn-text">ผู้รับผิดชอบ</span>
       </button>
       <a href="add.html" class="btn btn-outline-success" style="text-decoration:none">
-        <i class="fa fa-plus fa-sm"></i> เพิ่มข้อมูล
+        <i class="fa-solid fa-plus fa-xs"></i> <span class="btn-text">เพิ่มข้อมูล</span>
       </a>
     </div>
+  </div>
 
-</div>
-  <!-- ===== CHARTS ===== -->
+  <!-- CHARTS -->
   <div class="chart-grid mb-4">
 
-    <div class="card">
-      <div class="card-head">
-        <h6><i class="fa fa-chart-pie fa-sm me-2" style="color:var(--accent)"></i>ภาพรวมการติดตาม</h6>
+    <!-- Donut -->
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <h6>
+          <i class="fa-solid fa-chart-pie" style="color:var(--green);"></i>
+          ภาพรวมการฉีด
+        </h6>
       </div>
-      <div class="card-body">
-        <div style="height:320px"><canvas id="followChart"></canvas></div>
-        <div id="chartDescription" class="chart-desc"></div>
+      <div class="chart-card-body">
+        <div class="donut-wrap">
+          <canvas id="followChart"></canvas>
+        </div>
+        <div class="donut-stats">
+          <div class="donut-stat">
+            <div class="donut-stat-num dot-green" id="followDonutDone">—</div>
+            <div class="donut-stat-lbl">ฉีดครบแล้ว</div>
+          </div>
+          <div class="donut-stat">
+            <div class="donut-stat-num dot-red" id="followDonutNot">—</div>
+            <div class="donut-stat-lbl">ยังไม่ครบ</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-head">
-        <h6><i class="fa fa-syringe fa-sm me-2" style="color:var(--blue)"></i>ความครอบคลุมวัคซีน</h6>
-       
+    <!-- Bar รายหมู่/ตำบล -->
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <h6>
+          <i class="fa-solid fa-map-location-dot" style="color:var(--blue);"></i>
+          รายหมู่บ้าน / ตำบล
+        </h6>
+        <div style="font-size:12px;color:var(--ink-3);" id="villageFollowSub">ทุกตำบล · ทุกวัคซีน</div>
       </div>
-      <div class="card-body">
-        <div style="height:320px"><canvas id="vaccineChart"></canvas></div>
-        <div id="vaccineDescription" class="chart-desc"></div>
+      <div class="chart-card-body" style="padding-bottom:24px;">
+        <div id="villageFollowWrap" style="height:260px;">
+          <canvas id="villageChartFollow"></canvas>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <!-- ===== TABLE ===== -->
+  <!-- TABLE -->
   <div class="card mb-4">
     <div class="card-head">
-      <h6><i class="fa fa-table fa-sm me-2" style="color:var(--ink-2)"></i>รายชื่อเด็ก</h6>
+      <h6>
+        <i class="fa-solid fa-table-list" style="color:var(--ink-2);"></i>
+        รายชื่อเด็ก
+      </h6>
+      <span id="tableCount" style="font-size:12px;color:var(--ink-3);"></span>
     </div>
-
-    <!-- Desktop Table -->
     <div class="table-wrap table-responsive">
       <table class="tbl">
         <thead>
           <tr>
+            <th style="text-align:center;">#</th>
             <th>HN</th>
             <th>เลขบัตร</th>
-            <th>ชื่อ</th>
+            <th>ชื่อ-สกุล</th>
             <th>ตำบล</th>
-            <th>รพ.สต.</th>
-            <th>บ้าน</th>
+            <th>หน่วยบริการ</th>
+            <th>บ้านเลขที่</th>
             <th>หมู่</th>
             <th>วันเกิด</th>
             <th>อายุ</th>
             <th>วัคซีน</th>
             <th>ผู้ดูแล</th>
             <th>หมายเหตุ</th>
-            <th>เวลา</th>
-            <th>ลบ</th>
-            <th>สถานะการฉีด</th>
-            <th>สถานะประชากร</th>
+            <th>อัปเดต</th>
+            <th></th>
+            <th>สถานะฉีด</th>
+            <th>ประเภทประชากร</th>
           </tr>
         </thead>
         <tbody id="followTable"></tbody>
       </table>
     </div>
-
-    <!-- Mobile Cards -->
     <div id="mobileList" class="mobile-list" style="padding:12px"></div>
-
     <div id="pagination"></div>
   </div>
 
 </div>
- </div>
-  
 
-<!-- /main -->
-
-<!-- ============================
-     MODALS
-============================ -->
-<!-- Vaccine Editor -->
+<!-- MODALS -->
 <div class="modal fade" id="vaccineModal">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">แก้ไขวัคซีน</h5>
+        <h5 class="modal-title">
+          <i class="fa-solid fa-syringe fa-sm me-2" style="color:var(--accent)"></i>
+          แก้ไขประวัติวัคซีน
+        </h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" id="vaccineEditor"></div>
       <div class="modal-footer">
         <button class="btn btn-success" onclick="saveVaccines()">
-          <i class="fa fa-floppy-disk fa-sm"></i> บันทึก
+          <i class="fa-solid fa-floppy-disk fa-sm"></i> บันทึก
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Care Modal -->
 <div class="modal fade" id="careModal">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="careTitle">ผู้ดูแลหมู่บ้าน</h5>
+        <h5 class="modal-title" id="careTitle">
+          <i class="fa-solid fa-users fa-sm me-2" style="color:var(--accent)"></i>
+          ผู้รับผิดชอบหมู่บ้าน
+        </h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" id="careBody"></div>
@@ -734,95 +651,53 @@ table.tbl{
   </div>
 </div>
 
+<!-- hidden stubs -->
+<div id="chartDescription"   hidden></div>
+<div id="vaccineDescription" hidden></div>
+<canvas id="vaccineChart"    hidden></canvas>
 
-<!-- ============================
-     SCROLL TOP
-============================ -->
-<button id="scrollTopBtn" onclick="scrollToTop()">
-  <i class="fa fa-angle-up"></i>
+<button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <i class="fa-solid fa-angle-up"></i>
 </button>
 
-<!-- ============================
-     BOTTOM NAV (mobile)
-============================ -->
 <nav class="bottom-nav d-md-none">
   <a href="index.html" class="active">
-    <i class="fa fa-house"></i>
-    <span>หน้าแรก</span>
+    <i class="fa-solid fa-house"></i><span>หน้าแรก</span>
   </a>
   <a href="symptoms.html">
-    <i class="fa fa-heartbeat"></i>
-    <span>อาการ</span>
+    <i class="fa-solid fa-heart-pulse"></i><span>อาการ</span>
+  </a>
+  <a href="add.html">
+    <i class="fa-solid fa-plus"></i><span>เพิ่มข้อมูล</span>
   </a>
   <a href="admin.html">
-    <i class="fa fa-gear"></i>
-    <span>Admin</span>
+    <i class="fa-solid fa-gear"></i><span>Admin</span>
   </a>
 </nav>
 
 <script>
-/* auth */
 if (!localStorage.getItem("user")) window.location.href = "login.html";
 
 document.addEventListener("DOMContentLoaded", () => {
   const name = localStorage.getItem("name") || "ผู้ใช้งาน";
-  document.getElementById("heroName").textContent  = name;
+  document.getElementById("heroName").textContent     = name;
   document.getElementById("userNameDrop").textContent = name;
 
+  const role      = localStorage.getItem("role");
   const adminMenu = document.getElementById("adminMenu");
-  if (adminMenu && localStorage.getItem("role") !== "admin")
-    adminMenu.style.display = "none";
+  const adminMob  = document.getElementById("adminMenuMobile");
+  if (role !== "admin") {
+    if (adminMenu) adminMenu.style.display = "none";
+    if (adminMob)  adminMob.style.display  = "none";
+  } else {
+    if (adminMob) adminMob.style.display = "block";
+  }
 });
 
-loadFollow();
-loadvaccineChart();
-
-/* scroll top */
 window.addEventListener("scroll", () => {
   const btn = document.getElementById("scrollTopBtn");
-  btn.style.display = window.scrollY > 300 ? "flex" : "none";
+  if (btn) btn.style.display = window.scrollY > 300 ? "flex" : "none";
 });
-function scrollToTop(){ window.scrollTo({top:0, behavior:"smooth"}); }
-
-
-function closeSidebar(){
-  document.getElementById("sidebar").classList.remove("show");
-  document.getElementById("backdrop").classList.remove("show");
-}
-
-/* auth */
-if(!localStorage.getItem("user")){
-  window.location.href="login.html";
-}
-
-document.addEventListener("DOMContentLoaded", ()=>{
-
-
-  // 🔹 ดึงชื่อ
-document.querySelectorAll(".userInfo")
-.forEach(el=>{
-  el.innerText =
-  localStorage.getItem("name") || "ผู้ใช้งาน";
-});
-
-  });
-  loadFollow();
-  loadvaccineChart();
-
-/* admin */
-const adminMenu =
-document.getElementById("adminMenu");
-
-if(
-  adminMenu &&
-  localStorage.getItem("role") !== "admin"
-){
-  adminMenu.style.display = "none";
-}
-console.log(localStorage.getItem("profileImg"));
-
-
 </script>
-
 </body>
 </html>

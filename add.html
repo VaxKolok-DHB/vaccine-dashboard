@@ -28,7 +28,7 @@ body{font-family:var(--font);background:var(--canvas);color:var(--ink);min-heigh
 .field{margin-bottom:14px}.field:last-child{margin-bottom:0}
 label{display:block;font-size:13px;color:var(--ink-2);margin-bottom:5px;font-weight:500}
 .req{color:var(--red)}
-input[type=text],input[type=tel],input[type=date],select{width:100%;font-family:var(--font);font-size:15px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+input[type=text],input[type=tel],select{width:100%;font-family:var(--font);font-size:15px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
 input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,159,110,.12)}
 .date3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .tambon-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -82,8 +82,10 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 .vax-done .vax-sub{color:#059669}.vax-pending .vax-sub{color:#b91c1c}
 .badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px}
 .badge-done{background:#a7f3d0;color:#065f46}.badge-pending{background:#fecaca;color:#7f1d1d}
-.date-row{display:flex;gap:8px;margin-top:10px}.date-row input{flex:1}
-.save-vax-btn{padding:9px 14px;background:var(--red);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font)}
+/* Thai date picker for vaccines */
+.vax-date-pick{margin-top:10px}
+.vax-date-pick .date3 select{font-size:13px;padding:8px 6px}
+.save-vax-btn{width:100%;margin-top:8px;padding:9px;background:var(--red);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
 .chip-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem}
 .chip{font-size:12px;color:var(--ink-3);background:var(--surface);border:1px solid var(--border);padding:4px 12px;border-radius:99px}
 .summary-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0}
@@ -313,6 +315,7 @@ const VACCINES=[
 ];
 const VAX_LABEL={BCG:"BCG",HBV1:"HBV1",HBV2:"HBV2",DTP1:"DTP-HB-Hib1",DTP2:"DTP-HB-Hib2",DTP3:"DTP-HB-Hib3",DTP4:"DTP4",DTP5:"DTP5",IPV1:"IPV1",IPV2:"IPV2",OPV3:"OPV3",OPV4:"OPV4",OPV5:"OPV5",Rota1:"Rota1",Rota2:"Rota2",Rota3:"Rota3",MMR1:"MMR1",MMR2:"MMR2",JE1:"JE1",JE2:"JE2",HPV1:"HPV เข็ม 1",HPV2:"HPV เข็ม 2",dT:"dT (ป.6)"};
 const MONTHS_TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const MONTHS_FULL=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
 const TAMBON_DATA={
   puyoh:{label:"ปูโยะ",villages:[{val:"1",name:"หมู่ 1 - บ้านลาแล"},{val:"2",name:"หมู่ 2 - บ้านปูโยะ"},{val:"3",name:"หมู่ 3 - บ้านฆอแย"},{val:"4",name:"หมู่ 4 - บ้านน้ำตก"},{val:"5",name:"หมู่ 5 - บ้านตอออ"},{val:"6",name:"หมู่ 6 - บ้านกูยิ"}],hospitals:[{val:"10170",name:"รพ.สต.ปูโยะ"}]},
   munoh:{label:"มูโนะ",villages:[{val:"1",name:"หมู่ 1 - บ้านมูโนะ"},{val:"2",name:"หมู่ 2 - บ้านลูโบะลือซง"},{val:"3",name:"หมู่ 3 - บ้านปาดังยอ"},{val:"4",name:"หมู่ 4 - บ้านปูโปะ"},{val:"5",name:"หมู่ 5 - บ้านบูเก๊ะ"}],hospitals:[{val:"10169",name:"รพ.สต.มูโนะ"}]},
@@ -326,12 +329,12 @@ let foundKey=null,foundData=null;
 
 if(!localStorage.getItem("user")) window.location.href="login.html";
 
-// Init date dropdowns
+// Init birthdate dropdowns
 (function(){
   const d=document.getElementById("bDay");
   for(let i=1;i<=31;i++) d.innerHTML+=`<option value="${i}">${i}</option>`;
   const m=document.getElementById("bMonth");
-  MONTHS_TH.forEach((v,i)=>m.innerHTML+=`<option value="${i+1}">${v}</option>`);
+  MONTHS_FULL.forEach((v,i)=>m.innerHTML+=`<option value="${i+1}">${v}</option>`);
   const y=document.getElementById("bYear");
   const now=new Date().getFullYear()+543;
   for(let i=now;i>=now-15;i--) y.innerHTML+=`<option value="${i}">${i}</option>`;
@@ -371,7 +374,6 @@ function thaiDate(iso){
   const [y,m,d]=iso.split("-").map(Number);
   return `${d} ${MONTHS_TH[m-1]} ${y+543}`;
 }
-function todayISO(){return new Date().toISOString().split("T")[0];}
 function showErr(id,show){document.getElementById(id).style.display=show?"block":"none";}
 function toISO(val){
   if(!val) return "";
@@ -392,6 +394,30 @@ function showPage(n){
 function getHospitalName(val){
   for(const td of Object.values(TAMBON_DATA)){const h=td.hospitals.find(x=>x.val===val);if(h)return h.name;}
   return val;
+}
+
+// ====== Thai date input builder for vaccine fields ======
+function buildThaiDateInput(key){
+  const nowBE=new Date().getFullYear()+543;
+
+  let dayOpts='<option value="">วัน</option>';
+  for(let i=1;i<=31;i++) dayOpts+=`<option value="${i}">${i}</option>`;
+
+  let monOpts='<option value="">เดือน</option>';
+  MONTHS_FULL.forEach((name,i)=>monOpts+=`<option value="${i+1}">${name}</option>`);
+
+  let yrOpts='<option value="">ปี (พ.ศ.)</option>';
+  for(let y=nowBE;y>=nowBE-10;y--)
+    yrOpts+=`<option value="${y}">${y}</option>`;
+
+  return `<div class="vax-date-pick">
+    <div class="date3">
+      <select id="vd_${key}">${dayOpts}</select>
+      <select id="vm_${key}">${monOpts}</select>
+      <select id="vy_${key}">${yrOpts}</select>
+    </div>
+    <button class="save-vax-btn" onclick="saveVax('${key}')">บันทึกวันที่ฉีด</button>
+  </div>`;
 }
 
 // ====== PAGE 0: ค้นหา HN ======
@@ -448,7 +474,6 @@ async function searchByHN(){
 function continueWithData(){
   const hn=document.getElementById("searchHN").value.trim();
   if(foundData){
-    // พบ → prefill แล้วข้ามไป page 2 (วัคซีน)
     state.name=foundData.name||"";
     state.hn=foundData.hn||hn;
     state.cid=foundData.cid||"";
@@ -551,6 +576,7 @@ function renderPage2(){
   due.forEach(v=>{
     const saved=state.vaccines[v.name];
     const done=!!saved;
+    // Use vaccine name as key (safe chars only)
     const key=v.name.replace(/[\s-]/g,"_");
     const label=VAX_LABEL[v.name]||v.name;
     const div=document.createElement("div");
@@ -565,10 +591,7 @@ function renderPage2(){
       </div>
       <span class="badge ${done?"badge-done":"badge-pending"}">${done?"ครบ":"ค้างอยู่"}</span>
     </div>
-    ${done?"":` <div class="date-row">
-      <input type="date" id="date_${key}" max="${todayISO()}">
-      <button class="save-vax-btn" onclick="saveVax('${v.name}')">บันทึก</button>
-    </div>`}`;
+    ${done?"":buildThaiDateInput(key)}`;
     list.appendChild(div);
   });
   const nyl=document.getElementById("notYetList");
@@ -577,11 +600,20 @@ function renderPage2(){
   document.getElementById("notYetSection").style.display=notYet.length?"block":"none";
 }
 
-function saveVax(vaxName){
-  const key=vaxName.replace(/[\s-]/g,"_");
-  const dateEl=document.getElementById("date_"+key);
-  if(!dateEl||!dateEl.value){alert("กรุณาเลือกวันที่ฉีด "+(VAX_LABEL[vaxName]||vaxName));return;}
-  state.vaccines[vaxName]=dateEl.value;
+// saveVax รับ key (underscore form) แล้วหา vaccine name จริง
+function saveVax(key){
+  // หา vaccine name จาก key โดย map กลับ
+  const vaxName=VACCINES.find(v=>v.name.replace(/[\s-]/g,"_")===key)?.name||key;
+  const d=document.getElementById("vd_"+key)?.value;
+  const m=document.getElementById("vm_"+key)?.value;
+  const y=document.getElementById("vy_"+key)?.value;
+  if(!d||!m||!y){
+    alert("กรุณาเลือกวันที่ฉีด "+(VAX_LABEL[vaxName]||vaxName));
+    return;
+  }
+  const yearCE=parseInt(y)-543;
+  const iso=`${yearCE}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  state.vaccines[vaxName]=iso;
   renderPage2();
 }
 
