@@ -460,7 +460,7 @@ function loadFollow() {
     <i class="fa-solid fa-location-dot fa-xs" style="color:#6b7280;width:14px"></i> ${getTambonName(c.tambon)}
   </div>
   <div class="child-card-row">
-    <i class="fa-solid fa-house fa-xs" style="color:#6b7280;width:14px"></i> บ้าน ${c.house || "-"} หมู่ ${c.village || "-"}
+    <i class="fa-solid fa-house fa-xs" style="color:#6b7280;width:14px"></i> บ้าน ${c.house || "-"} ${c.tambon === "kolok" ? "" : "หมู่ "}${c.village || "-"}
   </div>
   <div class="child-meta">
     <span class="tag">${getAgeBadge(c.birth)}</span>
@@ -659,6 +659,11 @@ function updateIndexKPI() {
       if (!vMap[vKey]) vMap[vKey] = { done: 0, not: 0, lbl: "" };
       if (tambon === "all") {
         vMap[vKey].lbl = tambonMap?.[c.tambon] || c.tambon || "ไม่ระบุ";
+      } else if (tambon === "kolok") {
+        const comInfo = kolokCommunity?.[c.village];
+        vMap[vKey].lbl = comInfo
+          ? comInfo.name
+          : (c.village ? `ชุมชน ${c.village}` : "ไม่ระบุ");
       } else {
         const vInfo = villageData?.[tambon]?.[c.village];
         vMap[vKey].lbl = vInfo
