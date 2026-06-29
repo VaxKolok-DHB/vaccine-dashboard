@@ -397,10 +397,6 @@ function loadFollow() {
       const c = data[id] || {};
       if (!c.name?.trim() || !c.cid?.trim()) continue;
 
-      if (selectedVaccine !== "all") {
-        if (!c.vaccines || !c.vaccines[selectedVaccine]) continue;
-      }
-
       if (ageFilter !== "all") {
         const ageYears   = Math.floor(getAgeMonths(c.birth) / 12);
         const targetYear = parseInt(ageFilter);
@@ -429,10 +425,20 @@ function loadFollow() {
       const cid  = (c.cid  || "").toLowerCase();
       if (keyword && !name.includes(keyword) && !cid.includes(keyword) && !hn.includes(keyword)) continue;
 
-      const count  = c.vaccines ? Object.keys(c.vaccines).length : 0;
-      const isDone = count >= 10;
-      if (statusFilter === "done"    && !isDone) continue;
-      if (statusFilter === "notdone" &&  isDone) continue;
+      const count = c.vaccines ? Object.keys(c.vaccines).length : 0;
+      let isDone;
+      if (vaccineFilterActive) {
+        const minAge    = vaccineAgeSchedule?.[selectedVaccine] ?? 0;
+        const hasVax    = !!(c.vaccines?.[selectedVaccine]);
+        const oldEnough = getAgeMonths(c.birth) >= minAge;
+        if      (statusFilter === "done")    { if (!hasVax)              continue; isDone = true;  }
+        else if (statusFilter === "notdone") { if (hasVax || !oldEnough) continue; isDone = false; }
+        else                                 { if (!oldEnough) continue;           isDone = hasVax; }
+      } else {
+        isDone = count >= 10;
+        if (statusFilter === "done"    && !isDone) continue;
+        if (statusFilter === "notdone" &&  isDone) continue;
+      }
 
       if (isDone) { done++; } else { notdone++; }
 
@@ -447,7 +453,7 @@ function loadFollow() {
       <div class="child-card-hn">HN : ${c.hn || '-'}</div>
     </div>
     <span class="tag ${isDone ? 'tag-green' : ''}" style="${isDone ? '' : 'background:#fee2e2;color:#dc2626'}">
-      ${isDone ? 'ฉีดครบ' : 'ยังไม่ครบ'}
+      ${isDone ? (vaccineFilterActive ? 'ได้รับแล้ว' : 'ฉีดครบ') : (vaccineFilterActive ? 'ยังไม่ได้รับ' : 'ยังไม่ครบ')}
     </span>
   </div>
   <div class="child-card-row">
@@ -639,6 +645,11 @@ function updateIndexKPI() {
       if (statusFilter === "done"    && !isDone) continue;
       if (statusFilter === "notdone" &&  isDone) continue;
 
+      // กรองจากคลิกกราฟ (เฉพาะ village mode — tambon ถูกกรองแล้วจาก tambonFilter DOM)
+      if (selectedBarKey !== null && selectedBarMode === "village") {
+        if ((c.village || "ไม่ระบุ") !== selectedBarKey) continue;
+      }
+
       total++;
       if (isDone) done++;
 
@@ -748,7 +759,7 @@ function updateIndexKPI() {
           datasets: [
             { label: vax==="all"?"ฉีดครบแล้ว":`ได้รับ ${vaccineLabel?.[vax]||vax}`,
               data: doneD, backgroundColor: bgDone, borderRadius: 6, barThickness: 18 },
-            { label: "ยังไม่ครบ",
+            { label: vax==="all"?"ยังไม่ครบ":`ยังไม่ได้รับ ${vaccineLabel?.[vax]||vax}`,
               data: notD,  backgroundColor: bgNot,  borderRadius: 6, barThickness: 18 }
           ]
         },
