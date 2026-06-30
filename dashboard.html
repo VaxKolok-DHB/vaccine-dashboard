@@ -421,16 +421,25 @@ function populateVillageFilter() {
     return;
   }
 
-  sel.innerHTML = '<option value="all">ทุกหมู่</option>';
-  Object.entries(villageData[stTambon] || {})
+  const isKolok = (stTambon === "kolok");
+  sel.innerHTML = `<option value="all">${isKolok ? "ทุกชุมชน" : "ทุกหมู่"}</option>`;
+  const srcData = isKolok
+    ? (typeof kolokCommunity !== "undefined" ? kolokCommunity : {})
+    : (villageData?.[stTambon] || {});
+  Object.entries(srcData)
     .sort((a,b) => parseInt(a[0]) - parseInt(b[0]))
     .forEach(([vno, info]) => {
       const op = document.createElement("option");
       op.value = vno;
-      op.textContent = `หมู่ ${vno} – ${info.name}`;
+      op.textContent = isKolok ? info.name : `หมู่ ${vno} – ${info.name}`;
       sel.appendChild(op);
     });
-  if (lbl) lbl.style.display = "";
+  if (lbl) {
+    lbl.style.display = "";
+    lbl.innerHTML = isKolok
+      ? '<i class="fa-solid fa-people-group fa-xs"></i> ชุมชน'
+      : '<i class="fa-solid fa-house fa-xs"></i> หมู่บ้าน';
+  }
   sel.style.display = "";
 }
 
@@ -545,7 +554,16 @@ function drawDonut(children, vax) {
 function drawVillage(children, vax) {
   const vl  = document.getElementById("villageFilter")?.value || "all";
 
+  const isKolok = (stTambon === "kolok");
   const map = {};
+
+  // โกลก: เติมครบ 31 ชุมชนก่อน
+  if (isKolok && typeof kolokCommunity !== "undefined") {
+    Object.entries(kolokCommunity).forEach(([key, info]) => {
+      map[key] = { lbl: info.name, done: 0, not: 0 };
+    });
+  }
+
   children.forEach(c => {
     const s = getChildStatus(c, vax);
     if (!s.inBase) return;
@@ -553,6 +571,10 @@ function drawVillage(children, vax) {
     if (stTambon === "all") {
       key = c.tambon || "x";
       lbl = tambonMap?.[c.tambon] || c.tambon || "ไม่ระบุ";
+    } else if (isKolok) {
+      key = c.village || "0";
+      const comInfo = typeof kolokCommunity !== "undefined" ? kolokCommunity[c.village] : null;
+      lbl = comInfo ? comInfo.name : (c.village ? `ชุมชน ${c.village}` : "ไม่ระบุ");
     } else {
       key = (c.tambon||"x") + "_" + (c.village||"0");
       lbl = (typeof villageData !== "undefined" && villageData[c.tambon]?.[c.village])
@@ -563,8 +585,11 @@ function drawVillage(children, vax) {
     if (s.isDone) map[key].done++; else map[key].not++;
   });
 
-  const rows  = Object.values(map).filter(r=>r.done+r.not>0)
-    .sort((a,b)=> parseInt(a.lbl.match(/\d+/)?.[0]||99) - parseInt(b.lbl.match(/\d+/)?.[0]||99));
+  const rows = (isKolok
+    ? Object.entries(map).sort((a,b) => parseInt(a[0]) - parseInt(b[0])).map(([,r]) => r)
+    : Object.values(map).filter(r=>r.done+r.not>0)
+        .sort((a,b) => parseInt(a.lbl.match(/\d+/)?.[0]||99) - parseInt(b.lbl.match(/\d+/)?.[0]||99))
+  );
   const doneD = rows.map(r=>r.done);
   const notD  = rows.map(r=>r.not);
 

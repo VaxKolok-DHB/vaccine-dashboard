@@ -621,6 +621,13 @@ function updateIndexKPI() {
     let done = 0, total = 0;
     const vMap = {};
 
+    // เติมชุมชนโกลกทั้ง 31 ชุมชนก่อน เพื่อให้แสดงครบแม้ยังไม่มีข้อมูลเด็ก
+    if (tambon === "kolok") {
+      Object.entries(kolokCommunity).forEach(([key, info]) => {
+        vMap[key] = { done: 0, not: 0, lbl: info.name };
+      });
+    }
+
     for (const id in data) {
       const c = data[id] || {};
       if (!c.name?.trim()) continue;
@@ -772,7 +779,7 @@ function updateIndexKPI() {
           indexAxis: "y", responsive: true, maintainAspectRatio: false,
           onClick(event, elements) {
             if (!elements.length) { if (selectedBarKey !== null) clearBarFilter(); return; }
-            const idx       = elements[0].index;
+            const idx        = elements[0].index;
             const [key, obj] = rows[idx];
             if (selectedBarKey === key) { clearBarFilter(); return; }
             selectedBarKey  = key;
