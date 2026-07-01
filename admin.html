@@ -35,7 +35,6 @@
   --mono:'IBM Plex Mono',monospace;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;min-height:100vh;line-height:1.6}
-
 .shell{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
 
 /* topbar */
@@ -47,13 +46,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15
 .back-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:13px;text-decoration:none;font-family:var(--font);cursor:pointer;transition:color .15s,border-color .15s}
 .back-btn:hover{color:var(--text);border-color:var(--green)}
 
+/* pending alert banner */
+.pending-banner{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:var(--radius);padding:14px 20px;margin-bottom:20px;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pending-banner.show{display:flex}
+.pending-banner-text{font-size:14px;font-weight:500;color:#78350f}
+.pending-banner-text span{font-size:22px;font-weight:700;color:#92600a;margin-right:6px}
+.pending-btn{padding:7px 14px;border-radius:var(--radius-sm);background:#92600a;color:#fff;border:none;font-size:13px;font-family:var(--font);font-weight:500;cursor:pointer}
+.pending-btn:hover{opacity:.85}
+
 /* stat row */
 .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;flex:1;min-width:120px}
 .stat .val{font-size:26px;font-weight:600;line-height:1;margin-bottom:3px}
 .stat .lbl{font-size:12px;color:var(--muted)}
-.stat.s-all   .val{color:var(--text)}
-.stat.s-wait  .val{color:var(--amber)}
+.stat.s-all  .val{color:var(--text)}
+.stat.s-wait .val{color:var(--amber)}
 .stat.s-admin .val{color:var(--purple)}
 
 /* card */
@@ -66,7 +73,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15
 .filters input,.filters select{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:8px 12px;font-family:var(--font);font-size:13px;outline:none;transition:border-color .15s}
 .filters input{flex:1;min-width:160px}
 .filters input:focus,.filters select:focus{border-color:var(--green)}
-.filters select option{background:var(--surface)}
 
 /* loading bar */
 .load-bar{height:2px;background:var(--border);overflow:hidden}
@@ -84,6 +90,10 @@ tbody tr:hover{background:#f5fbf7}
 td{padding:13px 16px;vertical-align:middle}
 .cid{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .name{font-weight:500;font-size:14px;color:var(--text)}
+
+/* row highlight for pending */
+tbody tr.row-pending{background:#fffbeb}
+tbody tr.row-pending:hover{background:#fef3cd}
 
 /* badges */
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.2px;white-space:nowrap}
@@ -108,11 +118,11 @@ td{padding:13px 16px;vertical-align:middle}
 .timeline{padding:4px 20px 16px;display:flex;flex-direction:column;gap:0}
 .tl-row{display:flex;align-items:flex-start;gap:16px;padding:12px 0;border-bottom:1px solid var(--border)}
 .tl-row:last-child{border-bottom:none}
-.tl-line{display:flex;flex-direction:column;align-items:center;gap:0;width:14px;flex-shrink:0;padding-top:4px}
-.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.tl-dot.login {background:var(--green)}
-.tl-dot.logout{background:var(--red)}
-.tl-dot.edit  {background:var(--amber)}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.tl-dot.login  {background:var(--green)}
+.tl-dot.logout {background:var(--red)}
+.tl-dot.edit   {background:var(--amber)}
+.tl-dot.approve{background:var(--blue)}
 .tl-body{flex:1;min-width:0}
 .tl-who{font-weight:500;font-size:13px;color:var(--text)}
 .tl-act{font-size:12px;color:var(--muted);margin-top:1px}
@@ -130,11 +140,19 @@ td{padding:13px 16px;vertical-align:middle}
     <div class="brand">
       <div class="brand-dot"></div>
       <div>
-        <h1>VaxKolok — ตรวจการเข้าถึง</h1>
-        <p>จัดการผู้ใช้งานและประวัติการเข้าสู่ระบบ</p>
+        <h1>VaxKolok — จัดการผู้ใช้งาน</h1>
+        <p>ตรวจสอบการเข้าถึงและประวัติการใช้งาน</p>
       </div>
     </div>
     <a href="index.html" class="back-btn">← กลับหน้าแรก</a>
+  </div>
+
+  <!-- pending alert -->
+  <div class="pending-banner" id="pendingBanner">
+    <div class="pending-banner-text">
+      <span id="pendingCount">0</span> คำขอรออนุมัติ — กรุณาตรวจสอบและอนุมัติผู้ใช้งานใหม่
+    </div>
+    <button class="pending-btn" onclick="filterPending()">ดูรายการรออนุมัติ</button>
   </div>
 
   <div class="stats">
@@ -153,9 +171,7 @@ td{padding:13px 16px;vertical-align:middle}
   </div>
 
   <div class="card">
-    <div class="card-head">
-      👥 รายชื่อผู้ใช้งาน
-    </div>
+    <div class="card-head">รายชื่อผู้ใช้งาน</div>
     <div class="filters">
       <input id="searchInput" placeholder="ค้นหาชื่อ…" oninput="renderTable()">
       <select id="roleFilter" onchange="renderTable()">
@@ -184,7 +200,7 @@ td{padding:13px 16px;vertical-align:middle}
 
   <div class="card">
     <div class="card-head">
-      📋 ประวัติการใช้งาน
+      ประวัติการใช้งาน
       <span class="sub">30 รายการล่าสุด</span>
     </div>
     <div class="timeline" id="activityTimeline">
@@ -197,6 +213,17 @@ td{padding:13px 16px;vertical-align:middle}
 <div id="toast"></div>
 
 <script>
+// ─── Auth guard ───────────────────────────────────────────
+(function() {
+  const role = localStorage.getItem("role");
+  const user = localStorage.getItem("user");
+  if (!user || role !== "admin") {
+    alert("เฉพาะผู้ดูแลระบบเท่านั้น");
+    location.href = "index.html";
+  }
+})();
+
+// ─── Firebase ─────────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "HnOSpjSHma268VX3glsVJ9idzj9Uc1jjcqkJ7P11",
   authDomain: "vaccine-dashboard-bc687.firebaseapp.com",
@@ -218,33 +245,50 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
 }
 
-function renderTable() {
-  const kw     = document.getElementById("searchInput").value.toLowerCase();
-  const roleF  = document.getElementById("roleFilter").value;
-  const statF  = document.getElementById("statusFilter").value;
-  let total=0, pending=0, adminCnt=0, rows="";
+// ─── Filter to pending ────────────────────────────────────
+function filterPending() {
+  document.getElementById("statusFilter").value = "pending";
+  renderTable();
+  document.querySelector(".card").scrollIntoView({ behavior: "smooth" });
+}
 
-  Object.entries(usersCache).forEach(([id, u]) => {
+// ─── Render table ─────────────────────────────────────────
+function renderTable() {
+  const kw    = document.getElementById("searchInput").value.toLowerCase();
+  const roleF = document.getElementById("roleFilter").value;
+  const statF = document.getElementById("statusFilter").value;
+  let total = 0, pending = 0, adminCnt = 0, rows = "";
+
+  // sort: pending first
+  const entries = Object.entries(usersCache).sort((a, b) => {
+    const ap = a[1].status === "pending" ? 0 : 1;
+    const bp = b[1].status === "pending" ? 0 : 1;
+    return ap - bp;
+  });
+
+  entries.forEach(([id, u]) => {
     total++;
     if (u.status === "pending") pending++;
     if (u.role === "admin") adminCnt++;
-    if (kw    && !(u.name||"").toLowerCase().includes(kw)) return;
+    if (kw    && !(u.name || "").toLowerCase().includes(kw)) return;
     if (roleF && u.role !== roleF)   return;
     if (statF && u.status !== statF) return;
-    rows += `<tr>
-      <td class="cid">${u.cid||"—"}</td>
-      <td class="name">${u.name||"—"}</td>
-      <td><span class="badge ${u.role||''}">${u.role||"—"}</span></td>
-      <td><span class="badge ${u.status||''}">${u.status||"—"}</span></td>
+
+    const isPending = u.status === "pending";
+    rows += `<tr class="${isPending ? "row-pending" : ""}">
+      <td class="cid">${u.cid || "—"}</td>
+      <td class="name">${u.name || "—"} ${u.lastname || ""}</td>
+      <td><span class="badge ${u.role || ''}">${u.role || "—"}</span></td>
+      <td><span class="badge ${u.status || ''}">${isPending ? "⏳ รออนุมัติ" : "✓ อนุมัติแล้ว"}</span></td>
       <td><div class="arow">
         <select class="role-sel" onchange="changeRole('${id}',this.value)">
-          <option value="user"  ${u.role==="user"?"selected":""}>user</option>
-          <option value="admin" ${u.role==="admin"?"selected":""}>admin</option>
+          <option value="user"  ${u.role === "user"  ? "selected" : ""}>user</option>
+          <option value="admin" ${u.role === "admin" ? "selected" : ""}>admin</option>
         </select>
-        ${u.status==="pending"
-          ? `<button class="btn btn-ok" onclick="approveUser('${id}')">✅ อนุมัติ</button>`
-          : `<span class="badge approved" style="font-size:10px">✓ แล้ว</span>`}
-        <button class="btn btn-del" onclick="deleteUser('${id}')">🗑</button>
+        ${isPending
+          ? `<button class="btn btn-ok" onclick="approveUser('${id}')">อนุมัติ</button>`
+          : `<span style="font-size:11px;color:var(--muted)">อนุมัติแล้ว</span>`}
+        <button class="btn btn-del" onclick="deleteUser('${id}')">ลบ</button>
       </div></td>
     </tr>`;
   });
@@ -254,71 +298,106 @@ function renderTable() {
   document.getElementById("statTotal").textContent   = total;
   document.getElementById("statPending").textContent = pending;
   document.getElementById("statAdmin").textContent   = adminCnt;
+
+  // pending banner
+  const banner = document.getElementById("pendingBanner");
+  document.getElementById("pendingCount").textContent = pending;
+  banner.classList.toggle("show", pending > 0);
 }
 
+// ─── Load users (real-time) ───────────────────────────────
 function loadAdmin() {
   db.ref("users").on("value", snap => {
     usersCache = snap.val() || {};
-    if (!loaded) { document.getElementById("loadBar").style.display="none"; loaded=true; }
+    if (!loaded) {
+      document.getElementById("loadBar").style.display = "none";
+      loaded = true;
+    }
     renderTable();
   });
 }
 
+// ─── Actions ─────────────────────────────────────────────
 function approveUser(id) {
   if (!confirm("อนุมัติผู้ใช้นี้?")) return;
-  db.ref("users/"+id).update({status:"approved"})
-    .then(()=>{toast("✅ อนุมัติแล้ว");saveLog("อนุมัติผู้ใช้",id);})
-    .catch(e=>toast("❌ "+e.message));
+  db.ref("users/" + id).update({ status: "approved" })
+    .then(() => {
+      toast("อนุมัติแล้ว");
+      saveLog("อนุมัติผู้ใช้", usersCache[id]?.name || id);
+    })
+    .catch(e => toast("ผิดพลาด: " + e.message));
 }
 
 function changeRole(id, role) {
-  const before = usersCache[id]?.role||"";
-  db.ref("users/"+id).update({role})
-    .then(()=>{toast("🔄 เปลี่ยน Role → "+role);saveLog("เปลี่ยน Role",id,before,role);})
-    .catch(e=>toast("❌ "+e.message));
+  const before = usersCache[id]?.role || "";
+  if (before === role) return;
+  db.ref("users/" + id).update({ role })
+    .then(() => {
+      toast("เปลี่ยน Role เป็น " + role);
+      saveLog("เปลี่ยน Role", usersCache[id]?.name || id, before, role);
+    })
+    .catch(e => toast("ผิดพลาด: " + e.message));
 }
 
 function deleteUser(id) {
-  const name = usersCache[id]?.name||id;
+  const name = usersCache[id]?.name || id;
   if (!confirm(`ลบผู้ใช้ "${name}"?`)) return;
-  db.ref("users/"+id).remove()
-    .then(()=>{toast("🗑 ลบ: "+name);saveLog("ลบผู้ใช้",id);})
-    .catch(e=>toast("❌ "+e.message));
+  db.ref("users/" + id).remove()
+    .then(() => {
+      toast("ลบแล้ว: " + name);
+      saveLog("ลบผู้ใช้", name);
+    })
+    .catch(e => toast("ผิดพลาด: " + e.message));
 }
 
-function saveLog(action, detail="", before="", after="") {
+function saveLog(action, detail = "", before = "", after = "") {
   const n = new Date();
   db.ref("loginLogs").push({
-    user: localStorage.getItem("name")||"Unknown",
-    role: localStorage.getItem("role")||"user",
+    user: localStorage.getItem("name") || "Admin",
+    role: localStorage.getItem("role") || "admin",
     action, detail, before, after,
-    page: location.pathname,
     date: n.toLocaleDateString("th-TH"),
     time: n.toLocaleTimeString("th-TH"),
     timestamp: Date.now(),
   });
 }
 
+// ─── Activity timeline ────────────────────────────────────
 function loadLogs() {
-  db.ref("loginLogs").limitToLast(30).on("value", snap => {
-    const items = Object.values(snap.val()||{}).reverse();
+  db.ref("loginLogs").orderByChild("timestamp").limitToLast(30).on("value", snap => {
+    const items = Object.values(snap.val() || {}).reverse();
     if (!items.length) {
       document.getElementById("activityTimeline").innerHTML =
         `<div style="text-align:center;color:var(--muted);padding:24px;font-size:13px">ยังไม่มีประวัติ</div>`;
       return;
     }
     document.getElementById("activityTimeline").innerHTML = items.map(l => {
+      // รองรับทั้ง field เก่า (name/loginTime/logoutTime) และใหม่ (user/action/time)
+      const userName = l.user || l.name || "—";
+      let action = l.action;
+      if (!action) {
+        if (l.loginTime)  action = "เข้าสู่ระบบ";
+        else if (l.logoutTime) action = "ออกจากระบบ";
+        else action = "—";
+      }
+      const timeStr = l.time || l.loginTime || l.logoutTime || "";
+
       let dot = "edit";
-      if (l.action==="เข้าสู่ระบบ") dot="login";
-      if (l.action==="ออกจากระบบ") dot="logout";
-      const extra = l.after ? ` → ${l.after}` : (l.detail&&l.detail!==l.user ? ` (${l.detail})` : "");
+      if (action === "เข้าสู่ระบบ")   dot = "login";
+      if (action === "ออกจากระบบ")    dot = "logout";
+      if (action === "อนุมัติผู้ใช้") dot = "approve";
+
+      const extra = l.after
+        ? ` → ${l.after}`
+        : (l.detail && l.detail !== userName ? ` (${l.detail})` : "");
+
       return `<div class="tl-row">
-        <div class="tl-line"><div class="tl-dot ${dot}"></div></div>
+        <div class="tl-dot ${dot}"></div>
         <div class="tl-body">
-          <div class="tl-who">${l.user||"—"}</div>
-          <div class="tl-act">${l.action||"—"}${extra}</div>
+          <div class="tl-who">${userName}</div>
+          <div class="tl-act">${action}${extra}</div>
         </div>
-        <div class="tl-time">${l.date||""}<br>${l.time||""}</div>
+        <div class="tl-time">${l.date || ""}<br>${timeStr}</div>
       </div>`;
     }).join("");
   });

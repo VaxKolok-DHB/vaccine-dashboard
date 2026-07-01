@@ -248,9 +248,13 @@ function login() {
     localStorage.setItem("username", fullName);
     localStorage.setItem("role",     foundUser.role || "user");
     db.ref("loginLogs").push({
-      cid: foundUser.cid, name: fullName, role: foundUser.role || "user",
+      user: fullName,
+      cid: foundUser.cid,
+      role: foundUser.role || "user",
+      action: "เข้าสู่ระบบ",
       date: new Date().toLocaleDateString("th-TH"),
-      loginTime: new Date().toLocaleTimeString("th-TH")
+      time: new Date().toLocaleTimeString("th-TH"),
+      timestamp: Date.now()
     });
     window.location.href = "index.html";
   });
@@ -278,11 +282,27 @@ function register() {
     if (snap.exists()) { msg.innerText = "มีผู้ใช้นี้แล้ว"; return; }
     db.ref("users/" + cid).set({
       cid, name, lastname, email, phone, position,
-      role: "user", status: "pending", createdAt: new Date().toISOString()
+      role: "user", status: "approved", createdAt: new Date().toISOString()
     }).then(() => {
-      msg.style.color = "green";
-      msg.innerText = "สมัครสำเร็จ รอผู้ดูแลอนุมัติ";
-      setTimeout(() => { window.location.href = "login.html"; }, 1500);
+      // บันทึก log
+      db.ref("loginLogs").push({
+        user: name + " " + lastname,
+        cid,
+        role: "user",
+        action: "สมัครสมาชิก",
+        date: new Date().toLocaleDateString("th-TH"),
+        time: new Date().toLocaleTimeString("th-TH"),
+        timestamp: Date.now()
+      });
+      // login ทันที
+      localStorage.setItem("user",     cid);
+      localStorage.setItem("name",     name + " " + lastname);
+      localStorage.setItem("username", name + " " + lastname);
+      localStorage.setItem("role",     "user");
+      window.location.href = "index.html";
+    }).catch(err => {
+      msg.style.color = "red";
+      msg.innerText = "เกิดข้อผิดพลาด: " + err.message;
     });
   });
 }
@@ -807,7 +827,8 @@ function updateIndexKPI() {
           scales: {
             x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:12}},
                  title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:12},color:"#6b7280"} },
-            y: { grid:{display:false}, ticks:{font:{size:12},padding:4} }
+            y: { grid:{display:false}, ticks:{font:{size:12},padding:4},
+                 afterFit: s => { s.width = Math.max(s.width, 120); } }
           }
         }
       });
@@ -926,7 +947,8 @@ function saveVaccines() {
       })
     ]);
   }).then(() => {
-    alert("บันทึกแล้ว");
+    const modalEl = document.getElementById("vaccineModal");
+    if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).hide();
     try { sendLineFollowUp(currentId); } catch (e) { /* LINE ไม่ได้ตั้งค่า */ }
     try { loadFollow(); }               catch (e) { console.error(e); }
     try { loadvaccineChart(); }         catch (e) { console.error(e); }
@@ -1086,9 +1108,12 @@ function deleteChild(id) {
 // =========================
 function logout() {
   db.ref("loginLogs").push({
-    name: localStorage.getItem("name"), role: localStorage.getItem("role"),
-    action: "ออกจากระบบ", date: new Date().toLocaleDateString("th-TH"),
-    logoutTime: new Date().toLocaleTimeString("th-TH")
+    user: localStorage.getItem("name") || "—",
+    role: localStorage.getItem("role") || "user",
+    action: "ออกจากระบบ",
+    date: new Date().toLocaleDateString("th-TH"),
+    time: new Date().toLocaleTimeString("th-TH"),
+    timestamp: Date.now()
   }).then(() => { localStorage.clear(); location.href = "login.html"; });
 }
 

@@ -38,7 +38,6 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 .btn-primary:hover{background:var(--green-dk)}.btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
 .btn-secondary{width:100%;padding:11px;font-size:14px;background:var(--surface);color:var(--ink-2);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;margin-top:8px;font-family:var(--font);transition:background .15s}
 .err{font-size:12px;color:var(--red);margin-top:4px;display:none}
-/* Search page */
 .search-hero{text-align:center;padding:2rem 0 1rem}
 .search-hero-icon{font-size:48px;margin-bottom:.75rem}
 .search-hero-title{font-size:20px;font-weight:700;color:var(--ink);margin-bottom:6px}
@@ -59,13 +58,11 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 .divider-text{text-align:center;font-size:12px;color:var(--ink-3);margin:1.25rem 0;position:relative}
 .divider-text::before,.divider-text::after{content:"";position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
 .divider-text::before{left:0}.divider-text::after{right:0}
-/* existing banner */
 .existing-banner{background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px}
 .existing-banner-icon{font-size:22px;flex-shrink:0}
 .existing-banner-title{font-size:14px;font-weight:700;color:#92400e;margin-bottom:3px}
 .existing-banner-sub{font-size:13px;color:#b45309}
 .prefill-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:var(--amber-bg);color:#92400e;border:1px solid #fde68a;border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:middle}
-/* child banner */
 .child-banner{background:var(--green-bg);border:1px solid #a7f3d0;border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:12px}
 .avatar{width:42px;height:42px;border-radius:50%;background:#6ee7b7;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .section-label{font-size:12px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin:.75rem 0 .5rem}
@@ -82,7 +79,6 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 .vax-done .vax-sub{color:#059669}.vax-pending .vax-sub{color:#b91c1c}
 .badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px}
 .badge-done{background:#a7f3d0;color:#065f46}.badge-pending{background:#fecaca;color:#7f1d1d}
-/* Thai date picker for vaccines */
 .vax-date-pick{margin-top:10px}
 .vax-date-pick .date3 select{font-size:13px;padding:8px 6px}
 .save-vax-btn{width:100%;margin-top:8px;padding:9px;background:var(--red);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
@@ -207,6 +203,10 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
         <div class="err" id="errVillage">กรุณาเลือกหมู่บ้าน</div>
       </div>
       <div class="field">
+        <label>บ้านเลขที่</label>
+        <input type="text" id="house" placeholder="เช่น 12/3">
+      </div>
+      <div class="field">
         <label>หน่วยบริการ <span class="req">*</span></label>
         <select id="hospital"><option value="">-- เลือก รพ.สต. --</option></select>
         <div class="err" id="errHospital">กรุณาเลือกหน่วยบริการ</div>
@@ -263,6 +263,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
       <p class="card-title">ข้อมูลที่อยู่</p>
       <div class="summary-row"><span class="s-label">ตำบล</span><span class="s-val" id="sumTambon">—</span></div>
       <div class="summary-row"><span class="s-label">หมู่บ้าน</span><span class="s-val" id="sumVillage">—</span></div>
+      <div class="summary-row"><span class="s-label">บ้านเลขที่</span><span class="s-val" id="sumHouse">—</span></div>
       <div class="summary-row"><span class="s-label">หน่วยบริการ</span><span class="s-val" id="sumHospital">—</span></div>
       <div class="summary-row"><span class="s-label">เบอร์ผู้ดูแล</span><span class="s-val" id="sumPhone">—</span></div>
       <div class="summary-row"><span class="s-label">HN</span><span class="s-val" id="sumHN">—</span></div>
@@ -324,10 +325,24 @@ const TAMBON_DATA={
 };
 const TAMBON_LABEL={kolok:"สุไหงโก-ลก",munoh:"มูโนะ",puyoh:"ปูโยะ",pasemas:"ปาเสมัส"};
 
-let state={name:"",hn:"",cid:"",birth:"",tambon:"",tambonLabel:"",village:"",hospital:"",hospitalName:"",phone:"",vaccines:{},ageMonths:0};
+let state={name:"",hn:"",cid:"",birth:"",tambon:"",tambonLabel:"",village:"",hospital:"",hospitalName:"",house:"",phone:"",vaccines:{},ageMonths:0};
 let foundKey=null,foundData=null;
 
 if(!localStorage.getItem("user")) window.location.href="login.html";
+
+// ====== บันทึก activity log ======
+function actLog(action, detail) {
+  const n = new Date();
+  db.ref("loginLogs").push({
+    user: localStorage.getItem("name") || "—",
+    role: localStorage.getItem("role") || "user",
+    action,
+    detail,
+    date: n.toLocaleDateString("th-TH"),
+    time: n.toLocaleTimeString("th-TH"),
+    timestamp: Date.now(),
+  });
+}
 
 // Init birthdate dropdowns
 (function(){
@@ -340,7 +355,6 @@ if(!localStorage.getItem("user")) window.location.href="login.html";
   for(let i=now;i>=now-15;i--) y.innerHTML+=`<option value="${i}">${i}</option>`;
 })();
 
-// Tambon click
 document.getElementById("tambonGrid").addEventListener("click",e=>{
   const btn=e.target.closest(".tambon-btn");
   if(!btn) return;
@@ -396,20 +410,14 @@ function getHospitalName(val){
   return val;
 }
 
-// ====== Thai date input builder for vaccine fields ======
 function buildThaiDateInput(key){
   const nowBE=new Date().getFullYear()+543;
-
   let dayOpts='<option value="">วัน</option>';
   for(let i=1;i<=31;i++) dayOpts+=`<option value="${i}">${i}</option>`;
-
   let monOpts='<option value="">เดือน</option>';
   MONTHS_FULL.forEach((name,i)=>monOpts+=`<option value="${i+1}">${name}</option>`);
-
   let yrOpts='<option value="">ปี (พ.ศ.)</option>';
-  for(let y=nowBE;y>=nowBE-10;y--)
-    yrOpts+=`<option value="${y}">${y}</option>`;
-
+  for(let y=nowBE;y>=nowBE-10;y--) yrOpts+=`<option value="${y}">${y}</option>`;
   return `<div class="vax-date-pick">
     <div class="date3">
       <select id="vd_${key}">${dayOpts}</select>
@@ -420,14 +428,12 @@ function buildThaiDateInput(key){
   </div>`;
 }
 
-// ====== PAGE 0: ค้นหา HN ======
 async function searchByHN(){
   const hn=document.getElementById("searchHN").value.trim();
   if(!hn){showErr("errSearchHN",true);return;}
   showErr("errSearchHN",false);
   const btn=document.getElementById("searchBtn");
-  btn.disabled=true;
-  btn.innerHTML=`<span class="spinner"></span> ค้นหา...`;
+  btn.disabled=true;btn.innerHTML=`<span class="spinner"></span> ค้นหา...`;
   try{
     const snap=await db.ref("children").orderByChild("hn").equalTo(hn).once("value");
     const data=snap.val();
@@ -435,10 +441,8 @@ async function searchByHN(){
     const aEl=document.getElementById("searchActions");
     const sEl=document.getElementById("skipSection");
     rEl.style.display="block";aEl.style.display="block";sEl.style.display="none";
-
     if(data){
-      foundKey=Object.keys(data)[0];
-      foundData=data[foundKey];
+      foundKey=Object.keys(data)[0];foundData=data[foundKey];
       const age=calcAge(toISO(foundData.birth));
       const vCount=foundData.vaccines?Object.keys(foundData.vaccines).length:0;
       const tambonTH=TAMBON_LABEL[foundData.tambon]||foundData.tambon||"—";
@@ -474,35 +478,22 @@ async function searchByHN(){
 function continueWithData(){
   const hn=document.getElementById("searchHN").value.trim();
   if(foundData){
-    state.name=foundData.name||"";
-    state.hn=foundData.hn||hn;
-    state.cid=foundData.cid||"";
-    state.birth=toISO(foundData.birth)||"";
-    state.tambon=foundData.tambon||"";
+    state.name=foundData.name||"";state.hn=foundData.hn||hn;state.cid=foundData.cid||"";
+    state.birth=toISO(foundData.birth)||"";state.tambon=foundData.tambon||"";
     state.tambonLabel=TAMBON_LABEL[foundData.tambon]||foundData.tambon||"";
-    state.village=foundData.village||"";
-    state.hospital=foundData.hospital||"";
-    state.hospitalName=getHospitalName(foundData.hospital||"");
-    state.phone=foundData.phone||"";
-    state.ageMonths=state.birth?calcAge(state.birth):0;
-    state.vaccines={};
-    if(foundData.vaccines){
-      Object.entries(foundData.vaccines).forEach(([k,v])=>{const iso=toISO(v);if(iso) state.vaccines[k]=iso;});
-    }
+    state.village=foundData.village||"";state.hospital=foundData.hospital||"";
+    state.hospitalName=getHospitalName(foundData.hospital||"");state.house=foundData.house||"";state.phone=foundData.phone||"";
+    state.ageMonths=state.birth?calcAge(state.birth):0;state.vaccines={};
+    if(foundData.vaccines){Object.entries(foundData.vaccines).forEach(([k,v])=>{const iso=toISO(v);if(iso) state.vaccines[k]=iso;});}
     prefillPage1();
     document.getElementById("existingBanner").style.display="flex";
-    document.getElementById("existingBannerSub").textContent=
-      `${state.name} · HN ${state.hn} · มีวัคซีนแล้ว ${Object.keys(state.vaccines).length} เข็ม`;
-    renderPage2();
-    showPage(2);
-  } else {
-    startFresh(hn);
-  }
+    document.getElementById("existingBannerSub").textContent=`${state.name} · HN ${state.hn} · มีวัคซีนแล้ว ${Object.keys(state.vaccines).length} เข็ม`;
+    renderPage2();showPage(2);
+  } else {startFresh(hn);}
 }
 
 function startFresh(hn=""){
-  foundKey=null;foundData=null;
-  clearPage1();
+  foundKey=null;foundData=null;clearPage1();
   const val=hn||document.getElementById("searchHN").value.trim()||"";
   document.getElementById("childHN").value=val;
   if(val) document.getElementById("hnFromSearch").style.display="inline-flex";
@@ -525,12 +516,13 @@ function prefillPage1(){
     document.querySelectorAll(".tambon-btn").forEach(b=>b.classList.toggle("selected",b.dataset.val===state.tambon));
     buildVH(state.tambon,state.village,state.hospital);
   }
+  document.getElementById("house").value=state.house;
   document.getElementById("phone").value=state.phone;
 }
 
 function clearPage1(){
-  state={name:"",hn:"",cid:"",birth:"",tambon:"",tambonLabel:"",village:"",hospital:"",hospitalName:"",phone:"",vaccines:{},ageMonths:0};
-  ["childName","childHN","childCID","phone"].forEach(id=>document.getElementById(id).value="");
+  state={name:"",hn:"",cid:"",birth:"",tambon:"",tambonLabel:"",village:"",hospital:"",hospitalName:"",house:"",phone:"",vaccines:{},ageMonths:0};
+  ["childName","childHN","childCID","house","phone"].forEach(id=>document.getElementById(id).value="");
   ["bDay","bMonth","bYear"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("village").innerHTML=`<option value="">-- เลือกหมู่บ้าน --</option>`;
   document.getElementById("hospital").innerHTML=`<option value="">-- เลือก รพ.สต. --</option>`;
@@ -538,7 +530,6 @@ function clearPage1(){
   document.getElementById("hnFromSearch").style.display="none";
 }
 
-// ====== PAGE 1 → 2 ======
 function goPage2(){
   const name=document.getElementById("childName").value.trim();
   const hn=document.getElementById("childHN").value.trim();
@@ -559,28 +550,22 @@ function goPage2(){
   const birthISO=`${yearCE}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
   state.name=name;state.hn=hn;state.cid=document.getElementById("childCID").value.trim();
   state.birth=birthISO;state.village=village;state.hospital=hospital;
-  state.hospitalName=getHospitalName(hospital);state.phone=document.getElementById("phone").value.trim();
+  state.hospitalName=getHospitalName(hospital);state.house=document.getElementById("house").value.trim();state.phone=document.getElementById("phone").value.trim();
   state.ageMonths=calcAge(birthISO);
   renderPage2();showPage(2);
 }
 
-// ====== Render วัคซีน ======
 function renderPage2(){
   const age=state.ageMonths;
   const due=VACCINES.filter(v=>age>=v.minMonths);
   const notYet=VACCINES.filter(v=>age<v.minMonths);
   document.getElementById("bannerName").textContent=state.name;
   document.getElementById("bannerAge").textContent=`อายุ ${Math.floor(age/12)} ปี ${age%12} เดือน · ${state.tambonLabel}`;
-  const list=document.getElementById("vaxList");
-  list.innerHTML="";
+  const list=document.getElementById("vaxList");list.innerHTML="";
   due.forEach(v=>{
-    const saved=state.vaccines[v.name];
-    const done=!!saved;
-    // Use vaccine name as key (safe chars only)
-    const key=v.name.replace(/[\s-]/g,"_");
-    const label=VAX_LABEL[v.name]||v.name;
-    const div=document.createElement("div");
-    div.className="vax-item "+(done?"vax-done":"vax-pending");
+    const saved=state.vaccines[v.name];const done=!!saved;
+    const key=v.name.replace(/[\s-]/g,"_");const label=VAX_LABEL[v.name]||v.name;
+    const div=document.createElement("div");div.className="vax-item "+(done?"vax-done":"vax-pending");
     div.innerHTML=`<div class="vax-row">
       <div class="vax-left">
         <div class="vax-icon ${done?"done":"pending"}"><i class="ti ti-${done?"check":"x"}"></i></div>
@@ -590,46 +575,37 @@ function renderPage2(){
         </div>
       </div>
       <span class="badge ${done?"badge-done":"badge-pending"}">${done?"ครบ":"ค้างอยู่"}</span>
-    </div>
-    ${done?"":buildThaiDateInput(key)}`;
+    </div>${done?"":buildThaiDateInput(key)}`;
     list.appendChild(div);
   });
-  const nyl=document.getElementById("notYetList");
-  nyl.innerHTML="";
+  const nyl=document.getElementById("notYetList");nyl.innerHTML="";
   notYet.forEach(v=>{const s=document.createElement("span");s.className="chip";s.textContent=`${VAX_LABEL[v.name]||v.name} · อายุ ${v.minMonths} เดือน`;nyl.appendChild(s);});
   document.getElementById("notYetSection").style.display=notYet.length?"block":"none";
 }
 
-// saveVax รับ key (underscore form) แล้วหา vaccine name จริง
 function saveVax(key){
-  // หา vaccine name จาก key โดย map กลับ
   const vaxName=VACCINES.find(v=>v.name.replace(/[\s-]/g,"_")===key)?.name||key;
   const d=document.getElementById("vd_"+key)?.value;
   const m=document.getElementById("vm_"+key)?.value;
   const y=document.getElementById("vy_"+key)?.value;
-  if(!d||!m||!y){
-    alert("กรุณาเลือกวันที่ฉีด "+(VAX_LABEL[vaxName]||vaxName));
-    return;
-  }
+  if(!d||!m||!y){alert("กรุณาเลือกวันที่ฉีด "+(VAX_LABEL[vaxName]||vaxName));return;}
   const yearCE=parseInt(y)-543;
   const iso=`${yearCE}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-  state.vaccines[vaxName]=iso;
-  renderPage2();
+  state.vaccines[vaxName]=iso;renderPage2();
 }
 
-// ====== PAGE 2 → 3 ======
 function goPage3(){
   const age=state.ageMonths;
   document.getElementById("sumName").textContent=state.name;
   document.getElementById("sumAge").textContent=`เกิด ${thaiDate(state.birth)} · อายุ ${Math.floor(age/12)} ปี ${age%12} เดือน`;
   document.getElementById("sumTambon").textContent=state.tambonLabel||"—";
   document.getElementById("sumVillage").textContent=state.village||"—";
+  document.getElementById("sumHouse").textContent=state.house||"ไม่ระบุ";
   document.getElementById("sumHospital").textContent=state.hospitalName||"—";
   document.getElementById("sumPhone").textContent=state.phone||"ไม่ระบุ";
   document.getElementById("sumHN").textContent=state.hn||"—";
   const sv=Object.entries(state.vaccines);
-  const vl=document.getElementById("sumVaxList");
-  vl.innerHTML="";
+  const vl=document.getElementById("sumVaxList");vl.innerHTML="";
   if(sv.length===0){document.getElementById("sumNoVax").style.display="block";}
   else{
     document.getElementById("sumNoVax").style.display="none";
@@ -643,7 +619,7 @@ function goPage3(){
   showPage(3);
 }
 
-// ====== Submit ======
+// ====== Submit + บันทึก log ======
 async function submitData(){
   const btn=document.getElementById("confirmBtn");
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span> กำลังบันทึก...`;
@@ -652,20 +628,28 @@ async function submitData(){
   const payload={
     name:state.name,hn:state.hn,cid:state.cid,birth:state.birth,
     tambon:state.tambon,village:state.village,hospital:state.hospital,
-    phone:state.phone,vaccines:vaccinesObj,
+    house:state.house,phone:state.phone,vaccines:vaccinesObj,
     typeArea:foundData?.typeArea||"1",
     updatedAt:new Date().toLocaleString("th-TH"),
     createdAt:foundData?.createdAt||new Date().toISOString(),
   };
   try{
+    const vaxCount=Object.keys(vaccinesObj).length;
+    const sympBase={name:state.name,hn:state.hn,cid:state.cid,birth:state.birth,phone:state.phone,vaccines:vaccinesObj};
     if(foundKey){
-      await db.ref("children/"+foundKey).update(payload);
-      await db.ref("symptoms/"+foundKey).update({name:state.name,hn:state.hn,cid:state.cid,birth:state.birth,phone:state.phone,vaccines:vaccinesObj});
+      await Promise.all([
+        db.ref("children/"+foundKey).update(payload),
+        db.ref("symptoms/"+foundKey).update(sympBase),
+      ]);
+      actLog("แก้ไขข้อมูลเด็ก", `${state.name} · HN ${state.hn} · วัคซีน ${vaxCount} เข็ม`);
       document.getElementById("successMsg").textContent=`อัปเดตข้อมูล ${state.name} (HN: ${state.hn}) เรียบร้อยแล้ว`;
     } else {
       const newRef=db.ref("children").push();
-      await newRef.set(payload);
-      await db.ref("symptoms/"+newRef.key).set({name:state.name,hn:state.hn,cid:state.cid,birth:state.birth,phone:state.phone,vaccines:vaccinesObj,symptom:"ยังไม่ระบุ",level:"🟢 ปกติ",status:"รอติดตาม",priority:99,time:Date.now()});
+      await Promise.all([
+        newRef.set(payload),
+        db.ref("symptoms/"+newRef.key).set({...sympBase,symptom:"ยังไม่ระบุ",level:"🟢 ปกติ",status:"รอติดตาม",priority:99,time:Date.now()}),
+      ]);
+      actLog("เพิ่มข้อมูลเด็ก", `${state.name} · HN ${state.hn} · วัคซีน ${vaxCount} เข็ม`);
       document.getElementById("successMsg").textContent=`บันทึก ${state.name} (HN: ${state.hn}) เรียบร้อยแล้ว`;
     }
     showPage(4);
@@ -675,10 +659,8 @@ async function submitData(){
   }
 }
 
-// ====== Reset ======
 function resetAll(){
-  foundKey=null;foundData=null;
-  clearPage1();
+  foundKey=null;foundData=null;clearPage1();
   document.getElementById("searchHN").value="";
   document.getElementById("searchResult").style.display="none";
   document.getElementById("searchActions").style.display="none";

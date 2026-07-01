@@ -13,20 +13,17 @@
     background: #f0f4f8;
     font-family: 'Sarabun', sans-serif;
   }
-
   .card {
     border-radius: 16px;
     border: none;
     box-shadow: 0 2px 16px rgba(0,0,0,0.07);
   }
-
   .form-label {
     font-size: 13px;
     font-weight: 500;
     color: #6b7280;
     margin-bottom: 5px;
   }
-
   .form-control, .form-select {
     border-radius: 8px;
     padding: 10px 12px;
@@ -37,18 +34,12 @@
     color: #111827;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-
   .form-control:focus, .form-select:focus {
     border-color: #1D9E75;
     box-shadow: 0 0 0 3px rgba(29,158,117,0.12);
     outline: none;
   }
-
-  .form-control::placeholder {
-    color: #9ca3af;
-  }
-
-  /* ตำแหน่ง tag */
+  .form-control::placeholder { color: #9ca3af; }
   .pos-tag {
     display: inline-flex;
     align-items: center;
@@ -61,8 +52,6 @@
     font-weight: 500;
     margin-top: 6px;
   }
-
-  /* กล่อง PDPA */
   .pdpa-box {
     background: #f9fafb;
     border: 1px solid #e5e7eb;
@@ -70,7 +59,6 @@
     border-radius: 10px;
     padding: 14px 16px;
   }
-
   .pdpa-title {
     font-size: 14px;
     font-weight: 600;
@@ -80,55 +68,27 @@
     align-items: center;
     gap: 7px;
   }
-
-  .pdpa-title svg {
-    width: 16px;
-    height: 16px;
-    color: #1D9E75;
-    flex-shrink: 0;
-  }
-
   .pdpa-scroll {
     max-height: 160px;
     overflow-y: auto;
     padding-right: 4px;
     margin-bottom: 12px;
   }
-
-  .pdpa-scroll::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  .pdpa-scroll::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 4px;
-  }
-
+  .pdpa-scroll::-webkit-scrollbar { width: 4px; }
+  .pdpa-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
   .pdpa-body {
     font-size: 13px;
     color: #6b7280;
     line-height: 1.75;
   }
-
   .pdpa-item {
     display: flex;
     gap: 8px;
     align-items: flex-start;
     margin-bottom: 7px;
   }
-
-  .pdpa-item .icon-check {
-    color: #1D9E75;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  .pdpa-item .icon-warn {
-    color: #d97706;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
+  .pdpa-item .icon-check { color: #1D9E75; flex-shrink: 0; margin-top: 2px; }
+  .pdpa-item .icon-warn  { color: #d97706; flex-shrink: 0; margin-top: 2px; }
   .pdpa-check-row {
     display: flex;
     align-items: center;
@@ -136,7 +96,6 @@
     padding-top: 10px;
     border-top: 1px solid #e5e7eb;
   }
-
   .pdpa-check-row input[type=checkbox] {
     width: 16px;
     height: 16px;
@@ -144,7 +103,6 @@
     cursor: pointer;
     flex-shrink: 0;
   }
-
   .pdpa-check-row label {
     font-size: 13px;
     color: #111827;
@@ -152,8 +110,6 @@
     font-weight: 500;
     margin: 0;
   }
-
-  /* ปุ่ม */
   .btn-primary {
     background: #1D9E75;
     border: none;
@@ -164,17 +120,12 @@
     font-family: 'Sarabun', sans-serif;
     transition: background 0.15s;
   }
-
-  .btn-primary:hover:not(:disabled) {
-    background: #0F6E56;
-  }
-
+  .btn-primary:hover:not(:disabled) { background: #0F6E56; }
   .btn-primary:disabled {
     background: #e5e7eb;
     color: #9ca3af;
     cursor: not-allowed;
   }
-
   .btn-light {
     border-radius: 8px;
     padding: 11px;
@@ -184,20 +135,9 @@
     background: #fff;
     color: #6b7280;
   }
-
-  .btn-light:hover {
-    background: #f3f4f6;
-  }
-
-  .divider {
-    border: none;
-    border-top: 1px solid #e5e7eb;
-    margin: 4px 0 16px;
-  }
-
-  #other-wrap {
-    display: none;
-  }
+  .btn-light:hover { background: #f3f4f6; }
+  .divider { border: none; border-top: 1px solid #e5e7eb; margin: 4px 0 16px; }
+  #other-wrap { display: none; }
 </style>
 </head>
 
@@ -267,13 +207,9 @@
         <option value="อสม">อสม.</option>
         <option value="other">อื่น ๆ (ระบุเอง)</option>
       </select>
-
-      <!-- ช่องพิมพ์เมื่อเลือก "อื่น ๆ" -->
       <div id="other-wrap" class="mt-2">
         <input type="text" id="position-other" class="form-control" placeholder="ระบุตำแหน่งของท่าน">
       </div>
-
-      <!-- Tag แสดงตำแหน่งที่เลือก -->
       <div id="pos-preview" style="display:none;">
         <span class="pos-tag">
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -289,7 +225,7 @@
     <!-- PDPA -->
     <div class="pdpa-box mb-4">
       <div class="pdpa-title">
-        <svg fill="none" stroke="#1D9E75" stroke-width="2" viewBox="0 0 24 24">
+        <svg width="16" height="16" fill="none" stroke="#1D9E75" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
         </svg>
         ข้อตกลงการรักษาความลับข้อมูล
@@ -300,28 +236,24 @@
       <div class="pdpa-scroll">
         <div class="pdpa-body">
           <p style="margin-bottom:10px;">ระบบนี้มีข้อมูลส่วนบุคคลและข้อมูลสุขภาพ ซึ่งเป็นข้อมูลอ่อนไหวตามกฎหมายคุ้มครองข้อมูลส่วนบุคคล (PDPA) ก่อนเข้าใช้งาน ท่านรับทราบและตกลงว่า</p>
-
           <div class="pdpa-item">
             <svg class="icon-check" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
             </svg>
             <span>จะไม่นำข้อมูลในระบบไปเผยแพร่ ส่งต่อ หรือเปิดเผยแก่บุคคลอื่นโดยไม่ได้รับอนุญาต</span>
           </div>
-
           <div class="pdpa-item">
             <svg class="icon-check" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
             </svg>
             <span>จะใช้ข้อมูลเพื่อวัตถุประสงค์ในการปฏิบัติงานที่ได้รับมอบหมายเท่านั้น</span>
           </div>
-
           <div class="pdpa-item">
             <svg class="icon-check" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
             </svg>
-            <span>จะไม่นำภาพหน้าจอ เอกสาร หรือข้อมูลใด ๆ จากระบบไปเผยแพร่บนเว็บไซต์ สื่อสังคมออนไลน์ หรือช่องทางสาธารณะก่อนได้รับอนุญาต</span>
+            <span>จะไม่นำภาพหน้าจอ เอกสาร หรือข้อมูลใด ๆ จากระบบไปเผยแพร่บนสื่อสาธารณะก่อนได้รับอนุญาต</span>
           </div>
-
           <div class="pdpa-item">
             <svg class="icon-warn" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
@@ -347,84 +279,40 @@
       </button>
     </div>
 
-    <p id="msg" class="text-danger text-center mt-3 mb-0" style="font-size:13px;min-height:18px;"></p>
+    <p id="msg" class="text-center mt-3 mb-0" style="font-size:13px;min-height:18px;"></p>
 
   </div>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase + app.js (มี register() อยู่แล้ว) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="app.js"></script>
 
 <script>
   function handlePosChange() {
-    const sel = document.getElementById('position');
-    const otherWrap = document.getElementById('other-wrap');
-    const preview = document.getElementById('pos-preview');
+    const sel         = document.getElementById('position');
+    const otherWrap   = document.getElementById('other-wrap');
+    const preview     = document.getElementById('pos-preview');
     const previewText = document.getElementById('pos-preview-text');
-
     if (sel.value === 'other') {
       otherWrap.style.display = 'block';
-      preview.style.display = 'none';
+      preview.style.display   = 'none';
       document.getElementById('position-other').focus();
     } else if (sel.value) {
       otherWrap.style.display = 'none';
       previewText.textContent = sel.value;
-      preview.style.display = 'block';
+      preview.style.display   = 'block';
     } else {
       otherWrap.style.display = 'none';
-      preview.style.display = 'none';
+      preview.style.display   = 'none';
     }
   }
 
   function toggleBtn() {
-    const agreed = document.getElementById('pdpa-agree').checked;
-    document.getElementById('btn-reg').disabled = !agreed;
-  }
-
-  function getPosition() {
-    const sel = document.getElementById('position').value;
-    if (sel === 'other') return document.getElementById('position-other').value.trim();
-    return sel;
-  }
-
-  function register() {
-    const name     = document.getElementById('name').value.trim();
-    const lastname = document.getElementById('lastname').value.trim();
-    const cid      = document.getElementById('cid').value.trim();
-    const email    = document.getElementById('email').value.trim();
-    const phone    = document.getElementById('phone').value.trim();
-    const position = getPosition();
-    const msg      = document.getElementById('msg');
-
-    if (!name || !lastname || !cid || !email || !phone) {
-      msg.textContent = 'กรุณากรอกข้อมูลให้ครบทุกช่อง';
-      return;
-    }
-    if (cid.length !== 13) {
-      msg.textContent = 'เลขบัตรประชาชนต้องมี 13 หลัก';
-      return;
-    }
-    if (phone.length < 9) {
-      msg.textContent = 'เบอร์โทรไม่ถูกต้อง';
-      return;
-    }
-    if (!position) {
-      msg.textContent = 'กรุณาเลือกหรือระบุตำแหน่งงาน';
-      return;
-    }
-
-    msg.textContent = '';
-
-    // ===== ส่งข้อมูลไป Firebase (ปรับใน app.js ตามต้องการ) =====
-    // ตัวอย่าง:
-    // const db = firebase.database();
-    // db.ref('users').push({ name, lastname, cid, email, phone, position })
-    //   .then(() => window.location.href = 'login.html')
-    //   .catch(err => { msg.textContent = 'เกิดข้อผิดพลาด: ' + err.message; });
+    document.getElementById('btn-reg').disabled =
+      !document.getElementById('pdpa-agree').checked;
   }
 </script>
-
 </body>
 </html>
