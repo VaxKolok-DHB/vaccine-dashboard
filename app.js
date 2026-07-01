@@ -780,7 +780,11 @@ function updateIndexKPI() {
       const bgNot = rows.map(([key]) =>
         selectedBarKey === null ? "#f87171" : (key === selectedBarKey ? "#f87171" : "rgba(248,113,113,0.3)"));
 
-      vWrap.style.height = Math.max(260, rows.length * 44 + 80) + "px";
+      const isMob = window.innerWidth < 640;
+      const yMinW = isMob ? 140 : 110;
+      const barSz = isMob ? 14 : 18;
+
+      vWrap.style.height = Math.max(260, rows.length * (isMob ? 52 : 44) + 80) + "px";
       vWrap.innerHTML = '<canvas id="villageChartFollow"></canvas>';
       const vCtx = document.getElementById("villageChartFollow").getContext("2d");
 
@@ -790,13 +794,14 @@ function updateIndexKPI() {
           labels: vLabels,
           datasets: [
             { label: vax==="all"?"ฉีดครบแล้ว":`ได้รับ ${vaccineLabel?.[vax]||vax}`,
-              data: doneD, backgroundColor: bgDone, borderRadius: 6, barThickness: 18 },
+              data: doneD, backgroundColor: bgDone, borderRadius: 6, barThickness: barSz },
             { label: vax==="all"?"ยังไม่ครบ":`ยังไม่ได้รับ ${vaccineLabel?.[vax]||vax}`,
-              data: notD,  backgroundColor: bgNot,  borderRadius: 6, barThickness: 18 }
+              data: notD,  backgroundColor: bgNot,  borderRadius: 6, barThickness: barSz }
           ]
         },
         options: {
           indexAxis: "y", responsive: true, maintainAspectRatio: false,
+          layout: { padding: { right: 8 } },
           onClick(event, elements) {
             if (!elements.length) { if (selectedBarKey !== null) clearBarFilter(); return; }
             const idx        = elements[0].index;
@@ -818,19 +823,27 @@ function updateIndexKPI() {
             if (canvas) canvas.style.cursor = elements.length ? "pointer" : "default";
           },
           plugins: {
-            legend: { position:"top", labels:{ boxWidth:12,padding:16,font:{size:13},usePointStyle:true } },
+            legend: { position:"top", labels:{ boxWidth:12,padding:16,font:{size:isMob?11:13},usePointStyle:true } },
             tooltip: { callbacks: { label: c => {
               const t = totD[c.dataIndex] || 1;
               return ` ${c.dataset.label}: ${c.parsed.x} คน (${(c.parsed.x/t*100).toFixed(0)}%)`;
             }}}
           },
           scales: {
-            x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:12}},
-                 title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:12},color:"#6b7280"} },
+            x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:isMob?10:12}},
+                 title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:isMob?10:12},color:"#6b7280"} },
             y: { grid:{display:false},
-                 ticks:{font:{size: window.innerWidth < 600 ? 10 : 12}, padding:8},
-                 afterFit: s => { s.width = window.innerWidth < 600 ? 150 : Math.max(s.width, 120); } }
+                 ticks:{font:{size:isMob?10:12}, padding:isMob?6:4, autoSkip:false, maxRotation:0},
+                 afterFit(scale) { if (scale.width < yMinW) scale.width = yMinW; } }
           }
+        }
+      });
+      // backup: re-enforce y-axis width after first paint
+      requestAnimationFrame(() => {
+        const ch = window._idxVillage;
+        if (ch && ch.scales && ch.scales.y && ch.scales.y.width < yMinW) {
+          ch.scales.y.width = yMinW;
+          ch.draw();
         }
       });
     }
