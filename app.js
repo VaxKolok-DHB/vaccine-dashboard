@@ -827,8 +827,9 @@ function updateIndexKPI() {
           scales: {
             x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:12}},
                  title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:12},color:"#6b7280"} },
-            y: { grid:{display:false}, ticks:{font:{size:12},padding:4},
-                 afterFit: s => { s.width = Math.max(s.width, 120); } }
+            y: { grid:{display:false},
+                 ticks:{font:{size: window.innerWidth < 600 ? 10 : 12}, padding:8},
+                 afterFit: s => { s.width = window.innerWidth < 600 ? 150 : Math.max(s.width, 120); } }
           }
         }
       });
