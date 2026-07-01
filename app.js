@@ -248,13 +248,9 @@ function login() {
     localStorage.setItem("username", fullName);
     localStorage.setItem("role",     foundUser.role || "user");
     db.ref("loginLogs").push({
-      user: fullName,
-      cid: foundUser.cid,
-      role: foundUser.role || "user",
-      action: "เข้าสู่ระบบ",
+      cid: foundUser.cid, name: fullName, role: foundUser.role || "user",
       date: new Date().toLocaleDateString("th-TH"),
-      time: new Date().toLocaleTimeString("th-TH"),
-      timestamp: Date.now()
+      loginTime: new Date().toLocaleTimeString("th-TH")
     });
     window.location.href = "index.html";
   });
@@ -282,27 +278,11 @@ function register() {
     if (snap.exists()) { msg.innerText = "มีผู้ใช้นี้แล้ว"; return; }
     db.ref("users/" + cid).set({
       cid, name, lastname, email, phone, position,
-      role: "user", status: "approved", createdAt: new Date().toISOString()
+      role: "user", status: "pending", createdAt: new Date().toISOString()
     }).then(() => {
-      // บันทึก log
-      db.ref("loginLogs").push({
-        user: name + " " + lastname,
-        cid,
-        role: "user",
-        action: "สมัครสมาชิก",
-        date: new Date().toLocaleDateString("th-TH"),
-        time: new Date().toLocaleTimeString("th-TH"),
-        timestamp: Date.now()
-      });
-      // login ทันที
-      localStorage.setItem("user",     cid);
-      localStorage.setItem("name",     name + " " + lastname);
-      localStorage.setItem("username", name + " " + lastname);
-      localStorage.setItem("role",     "user");
-      window.location.href = "index.html";
-    }).catch(err => {
-      msg.style.color = "red";
-      msg.innerText = "เกิดข้อผิดพลาด: " + err.message;
+      msg.style.color = "green";
+      msg.innerText = "สมัครสำเร็จ รอผู้ดูแลอนุมัติ";
+      setTimeout(() => { window.location.href = "login.html"; }, 1500);
     });
   });
 }
@@ -650,7 +630,7 @@ function updateIndexKPI() {
 
     for (const id in data) {
       const c = data[id] || {};
-      if (!c.name?.trim() || !c.cid?.trim()) continue;
+      if (!c.name?.trim()) continue;
       if (tambon     !== "all" && c.tambon            !== tambon)     continue;
       if (typeArea   !== "all" && (c.typeArea || "1") !== typeArea)   continue;
       if (hospitalKPI !== "all" && c.hospital         !== hospitalKPI) continue;
@@ -782,8 +762,6 @@ function updateIndexKPI() {
 
       const isMob = window.innerWidth < 640;
       const yMinW = isMob ? 140 : 110;
-      const barSz = isMob ? 14 : 18;
-
       vWrap.style.height = Math.max(260, rows.length * (isMob ? 52 : 44) + 80) + "px";
       vWrap.innerHTML = '<canvas id="villageChartFollow"></canvas>';
       const vCtx = document.getElementById("villageChartFollow").getContext("2d");
@@ -794,14 +772,13 @@ function updateIndexKPI() {
           labels: vLabels,
           datasets: [
             { label: vax==="all"?"ฉีดครบแล้ว":`ได้รับ ${vaccineLabel?.[vax]||vax}`,
-              data: doneD, backgroundColor: bgDone, borderRadius: 6, barThickness: barSz },
+              data: doneD, backgroundColor: bgDone, borderRadius: 6, barThickness: isMob ? 14 : 18 },
             { label: vax==="all"?"ยังไม่ครบ":`ยังไม่ได้รับ ${vaccineLabel?.[vax]||vax}`,
-              data: notD,  backgroundColor: bgNot,  borderRadius: 6, barThickness: barSz }
+              data: notD,  backgroundColor: bgNot,  borderRadius: 6, barThickness: isMob ? 14 : 18 }
           ]
         },
         options: {
           indexAxis: "y", responsive: true, maintainAspectRatio: false,
-          layout: { padding: { right: 8 } },
           onClick(event, elements) {
             if (!elements.length) { if (selectedBarKey !== null) clearBarFilter(); return; }
             const idx        = elements[0].index;
@@ -833,17 +810,26 @@ function updateIndexKPI() {
             x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:isMob?10:12}},
                  title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:isMob?10:12},color:"#6b7280"} },
             y: { grid:{display:false},
-                 ticks:{font:{size:isMob?10:12}, padding:isMob?6:4, autoSkip:false, maxRotation:0},
+                 ticks:{font:{size:isMob?10:12},padding:isMob?6:4,autoSkip:false,maxRotation:0},
                  afterFit(scale) { if (scale.width < yMinW) scale.width = yMinW; } }
           }
-        }
+        },
+        plugins: [{
+          id: "yMinW",
+          afterLayout(chart) {
+            const y = chart.scales.y;
+            if (y && y.width < yMinW) {
+              y.width = yMinW;
+              y.right = y.left + yMinW;
+              if (chart.chartArea) chart.chartArea.left = y.right;
+            }
+          }
+        }]
       });
-      // backup: re-enforce y-axis width after first paint
       requestAnimationFrame(() => {
         const ch = window._idxVillage;
-        if (ch && ch.scales && ch.scales.y && ch.scales.y.width < yMinW) {
-          ch.scales.y.width = yMinW;
-          ch.draw();
+        if (ch && ch.scales?.y && ch.scales.y.width < yMinW) {
+          ch.scales.y.width = yMinW; ch.draw();
         }
       });
     }
@@ -1122,12 +1108,9 @@ function deleteChild(id) {
 // =========================
 function logout() {
   db.ref("loginLogs").push({
-    user: localStorage.getItem("name") || "—",
-    role: localStorage.getItem("role") || "user",
-    action: "ออกจากระบบ",
-    date: new Date().toLocaleDateString("th-TH"),
-    time: new Date().toLocaleTimeString("th-TH"),
-    timestamp: Date.now()
+    name: localStorage.getItem("name"), role: localStorage.getItem("role"),
+    action: "ออกจากระบบ", date: new Date().toLocaleDateString("th-TH"),
+    logoutTime: new Date().toLocaleTimeString("th-TH")
   }).then(() => { localStorage.clear(); location.href = "login.html"; });
 }
 
