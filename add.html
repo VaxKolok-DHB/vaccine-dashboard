@@ -652,6 +652,8 @@ async function submitData(){
       actLog("เพิ่มข้อมูลเด็ก", `${state.name} · HN ${state.hn} · วัคซีน ${vaxCount} เข็ม`);
       document.getElementById("successMsg").textContent=`บันทึก ${state.name} (HN: ${state.hn}) เรียบร้อยแล้ว`;
     }
+    // reset ปุ่มก่อนไป success — ป้องกันปุ่มค้างรอบถัดไป
+    btn.disabled=false;btn.innerHTML=`<i class="ti ti-circle-check"></i> ยืนยันบันทึกข้อมูล`;
     showPage(4);
   } catch(err){
     btn.disabled=false;btn.innerHTML=`<i class="ti ti-circle-check"></i> ยืนยันบันทึกข้อมูล`;
@@ -665,6 +667,9 @@ function resetAll(){
   document.getElementById("searchResult").style.display="none";
   document.getElementById("searchActions").style.display="none";
   document.getElementById("skipSection").style.display="block";
+  // reset ปุ่มยืนยัน ป้องกันค้างกรณีมีปัญหา
+  const btn=document.getElementById("confirmBtn");
+  if(btn){btn.disabled=false;btn.innerHTML=`<i class="ti ti-circle-check"></i> ยืนยันบันทึกข้อมูล`;}
   showPage(0);
 }
 </script>
