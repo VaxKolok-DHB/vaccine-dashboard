@@ -453,7 +453,7 @@ function getChildStatus(c, vax) {
 function filterChildren(vax) {
   const vl = document.getElementById("villageFilter")?.value || "all";
   return Object.values(dashAllChildren).filter(c => {
-    if (!c.name?.trim()) return false;
+    if (!c.name?.trim() || !c.cid?.trim()) return false;
     if (stTambon !== "all" && c.tambon           !== stTambon) return false;
     if (stType   !== "all" && (c.typeArea||"1")  !== stType)   return false;
     if (vl       !== "all" && c.village          !== vl)       return false;
@@ -601,7 +601,9 @@ function drawVillage(children, vax) {
 
   if (dashVillageInst) { dashVillageInst.destroy(); dashVillageInst = null; }
   const wrap = document.getElementById("villageChartWrap");
-  wrap.style.height = Math.max(260, rows.length*44+80) + "px";
+  const isMob = window.innerWidth < 640;
+  const yMinW = isMob ? 140 : 110;
+  wrap.style.height = Math.max(260, rows.length * (isMob ? 52 : 44) + 80) + "px";
   wrap.innerHTML = '<canvas id="dashVillageChart"></canvas>';
   const ctx = document.getElementById("dashVillageChart").getContext("2d");
 
@@ -611,15 +613,16 @@ function drawVillage(children, vax) {
       labels: rows.map(r=>r.lbl),
       datasets:[
         { label: vax==="all"?"ฉีดครบแล้ว":`ได้รับ ${safeLabel(vax)}`,
-          data:doneD, backgroundColor:"#059669", borderRadius:6, barThickness:18 },
+          data:doneD, backgroundColor:"#059669", borderRadius:6, barThickness: isMob ? 14 : 18 },
         { label:"ยังไม่ฉีด",
-          data:notD,  backgroundColor:"#f87171", borderRadius:6, barThickness:18 },
+          data:notD,  backgroundColor:"#f87171", borderRadius:6, barThickness: isMob ? 14 : 18 },
       ]
     },
     options:{
       indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ right:8 } },
       plugins:{
-        legend:{ position:"top", labels:{ font:{family:"IBM Plex Sans Thai",size:13,weight:"700"}, padding:16, usePointStyle:true } },
+        legend:{ position:"top", labels:{ font:{family:"IBM Plex Sans Thai",size:isMob?11:13,weight:"700"}, padding:16, usePointStyle:true } },
         tooltip:{ bodyFont:{family:"IBM Plex Sans Thai",size:13},
           callbacks:{ label: c => {
             const t = (doneD[c.dataIndex]||0)+(notD[c.dataIndex]||0);
@@ -629,10 +632,18 @@ function drawVillage(children, vax) {
         }
       },
       scales:{
-        x:{ grid:{color:"#f3f4f6"}, ticks:{font:{family:"IBM Plex Sans Thai",size:12}},
-            title:{display:true,text:"จำนวนเด็ก (คน)",font:{family:"IBM Plex Sans Thai",size:12},color:"#6b7280"} },
-        y:{ grid:{display:false}, ticks:{font:{family:"IBM Plex Sans Thai",size:12},padding:6} }
+        x:{ grid:{color:"#f3f4f6"}, ticks:{font:{family:"IBM Plex Sans Thai",size:isMob?10:12}},
+            title:{display:true,text:"จำนวนเด็ก (คน)",font:{family:"IBM Plex Sans Thai",size:isMob?10:12},color:"#6b7280"} },
+        y:{ grid:{display:false},
+            ticks:{font:{family:"IBM Plex Sans Thai",size:isMob?10:12},padding:isMob?6:4,autoSkip:false,maxRotation:0},
+            afterFit(scale) { if (scale.width < yMinW) scale.width = yMinW; } }
       }
+    }
+  });
+  requestAnimationFrame(() => {
+    const ch = dashVillageInst;
+    if (ch && ch.scales && ch.scales.y && ch.scales.y.width < yMinW) {
+      ch.scales.y.width = yMinW; ch.draw();
     }
   });
 }
@@ -657,7 +668,7 @@ window.addEventListener("load", () => {
   buildVaccineDropdown();
   db.ref("children").once("value", snap => {
     const raw = snap.val() || {};
-    Object.entries(raw).forEach(([k,v]) => { if (v?.name?.trim()) dashAllChildren[k] = v; });
+    Object.entries(raw).forEach(([k,v]) => { if (v?.name?.trim() && v?.cid?.trim()) dashAllChildren[k] = v; });
     document.getElementById("updateTime").textContent =
       new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}) + " น.";
     onFilterChange();
