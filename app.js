@@ -650,7 +650,7 @@ function updateIndexKPI() {
 
     for (const id in data) {
       const c = data[id] || {};
-      if (!c.name?.trim()) continue;
+      if (!c.name?.trim() || !c.cid?.trim()) continue;
       if (tambon     !== "all" && c.tambon            !== tambon)     continue;
       if (typeArea   !== "all" && (c.typeArea || "1") !== typeArea)   continue;
       if (hospitalKPI !== "all" && c.hospital         !== hospitalKPI) continue;
