@@ -761,9 +761,16 @@ function updateIndexKPI() {
         selectedBarKey === null ? "#f87171" : (key === selectedBarKey ? "#f87171" : "rgba(248,113,113,0.3)"));
 
       const isMob = window.innerWidth < 640;
-      const yMinW = isMob ? 140 : 110;
-      vWrap.style.height = Math.max(260, rows.length * (isMob ? 52 : 44) + 80) + "px";
-      vWrap.innerHTML = '<canvas id="villageChartFollow"></canvas>';
+      const lbW   = isMob ? 115 : 135;   // ความกว้างของช่อง label (HTML)
+      const innerH = Math.max(260, rows.length * (isMob ? 52 : 44) + 80);
+      vWrap.style.height = innerH + "px";
+
+      // ใช้ position:relative เพื่อ overlay HTML labels บนกราฟ
+      const vInner = document.createElement("div");
+      vInner.style.cssText = "position:relative;width:100%;height:100%;";
+      vInner.innerHTML = '<canvas id="villageChartFollow"></canvas>';
+      vWrap.innerHTML = "";
+      vWrap.appendChild(vInner);
       const vCtx = document.getElementById("villageChartFollow").getContext("2d");
 
       window._idxVillage = new Chart(vCtx, {
@@ -779,6 +786,8 @@ function updateIndexKPI() {
         },
         options: {
           indexAxis: "y", responsive: true, maintainAspectRatio: false,
+          // layout.padding.left เปิดพื้นที่ด้านซ้ายให้ HTML labels
+          layout: { padding: { left: lbW, right: 8 } },
           onClick(event, elements) {
             if (!elements.length) { if (selectedBarKey !== null) clearBarFilter(); return; }
             const idx        = elements[0].index;
@@ -809,28 +818,23 @@ function updateIndexKPI() {
           scales: {
             x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:isMob?10:12}},
                  title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:isMob?10:12},color:"#6b7280"} },
-            y: { grid:{display:false},
-                 ticks:{font:{size:isMob?10:12},padding:isMob?6:4,autoSkip:false,maxRotation:0},
-                 afterFit(scale) { if (scale.width < yMinW) scale.width = yMinW; } }
+            y: { display: false }   // ซ่อน y-axis ของ Chart.js → ใช้ HTML labels แทน
           }
-        },
-        plugins: [{
-          id: "yMinW",
-          afterLayout(chart) {
-            const y = chart.scales.y;
-            if (y && y.width < yMinW) {
-              y.width = yMinW;
-              y.right = y.left + yMinW;
-              if (chart.chartArea) chart.chartArea.left = y.right;
-            }
-          }
-        }]
+        }
       });
+
+      // วาง HTML labels ให้ตรงกับตำแหน่งแถบพอดี
       requestAnimationFrame(() => {
         const ch = window._idxVillage;
-        if (ch && ch.scales?.y && ch.scales.y.width < yMinW) {
-          ch.scales.y.width = yMinW; ch.draw();
-        }
+        if (!ch || !ch.scales.y) return;
+        const yScale = ch.scales.y;
+        yScale.ticks.forEach((_, i) => {
+          const yPx = yScale.getPixelForTick(i);
+          const el  = document.createElement("div");
+          el.style.cssText = `position:absolute;left:0;top:${yPx}px;width:${lbW - 4}px;transform:translateY(-50%);font-size:${isMob ? 10 : 12}px;text-align:right;padding-right:6px;color:#374151;pointer-events:none;line-height:1.3;white-space:nowrap;overflow:visible;`;
+          el.textContent = vLabels[i] || "";
+          vInner.appendChild(el);
+        });
       });
     }
   });

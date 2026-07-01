@@ -602,15 +602,23 @@ function drawVillage(children, vax) {
   if (dashVillageInst) { dashVillageInst.destroy(); dashVillageInst = null; }
   const wrap = document.getElementById("villageChartWrap");
   const isMob = window.innerWidth < 640;
-  const yMinW = isMob ? 140 : 110;
-  wrap.style.height = Math.max(260, rows.length * (isMob ? 52 : 44) + 80) + "px";
-  wrap.innerHTML = '<canvas id="dashVillageChart"></canvas>';
+  const lbW   = isMob ? 115 : 135;   // ความกว้างของช่อง label (HTML)
+  const innerH = Math.max(260, rows.length * (isMob ? 52 : 44) + 80);
+  wrap.style.height = innerH + "px";
+
+  // ใช้ position:relative เพื่อ overlay HTML labels บนกราฟ
+  const wInner = document.createElement("div");
+  wInner.style.cssText = "position:relative;width:100%;height:100%;";
+  wInner.innerHTML = '<canvas id="dashVillageChart"></canvas>';
+  wrap.innerHTML = "";
+  wrap.appendChild(wInner);
   const ctx = document.getElementById("dashVillageChart").getContext("2d");
+  const vLabels = rows.map(r => r.lbl);
 
   dashVillageInst = new Chart(ctx, {
     type:"bar",
     data:{
-      labels: rows.map(r=>r.lbl),
+      labels: vLabels,
       datasets:[
         { label: vax==="all"?"ฉีดครบแล้ว":`ได้รับ ${safeLabel(vax)}`,
           data:doneD, backgroundColor:"#059669", borderRadius:6, barThickness: isMob ? 14 : 18 },
@@ -620,7 +628,8 @@ function drawVillage(children, vax) {
     },
     options:{
       indexAxis:"y", responsive:true, maintainAspectRatio:false,
-      layout:{ padding:{ right:8 } },
+      // layout.padding.left เปิดพื้นที่ด้านซ้ายให้ HTML labels
+      layout:{ padding:{ left: lbW, right:8 } },
       plugins:{
         legend:{ position:"top", labels:{ font:{family:"IBM Plex Sans Thai",size:isMob?11:13,weight:"700"}, padding:16, usePointStyle:true } },
         tooltip:{ bodyFont:{family:"IBM Plex Sans Thai",size:13},
@@ -634,17 +643,22 @@ function drawVillage(children, vax) {
       scales:{
         x:{ grid:{color:"#f3f4f6"}, ticks:{font:{family:"IBM Plex Sans Thai",size:isMob?10:12}},
             title:{display:true,text:"จำนวนเด็ก (คน)",font:{family:"IBM Plex Sans Thai",size:isMob?10:12},color:"#6b7280"} },
-        y:{ grid:{display:false},
-            ticks:{font:{family:"IBM Plex Sans Thai",size:isMob?10:12},padding:isMob?6:4,autoSkip:false,maxRotation:0},
-            afterFit(scale) { if (scale.width < yMinW) scale.width = yMinW; } }
+        y:{ display: false }   // ซ่อน y-axis ของ Chart.js → ใช้ HTML labels แทน
       }
     }
   });
+
+  // วาง HTML labels ให้ตรงกับตำแหน่งแถบพอดี
   requestAnimationFrame(() => {
-    const ch = dashVillageInst;
-    if (ch && ch.scales && ch.scales.y && ch.scales.y.width < yMinW) {
-      ch.scales.y.width = yMinW; ch.draw();
-    }
+    const y = dashVillageInst?.scales?.y;
+    if (!y) return;
+    y.ticks.forEach((_, i) => {
+      const yPx = y.getPixelForTick(i);
+      const el  = document.createElement("div");
+      el.style.cssText = `position:absolute;left:0;top:${yPx}px;width:${lbW - 4}px;transform:translateY(-50%);font-family:'IBM Plex Sans Thai',sans-serif;font-size:${isMob ? 10 : 12}px;text-align:right;padding-right:6px;color:#374151;pointer-events:none;line-height:1.3;white-space:nowrap;overflow:visible;`;
+      el.textContent = vLabels[i] || "";
+      wInner.appendChild(el);
+    });
   });
 }
 

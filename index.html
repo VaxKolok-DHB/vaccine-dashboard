@@ -209,7 +209,8 @@ input.form-control:focus {
 .donut-stat-lbl  { font-size:12px; color:var(--ink-3); margin-top:3px; }
 .dot-green { color:var(--green); }
 .dot-red   { color:var(--red);   }
-#villageFollowWrap { position:relative; overflow:hidden; transition:height .2s ease; }
+/* ลบ overflow:hidden — ไม่งั้นจะตัด HTML label overlay */
+#villageFollowWrap { position:relative; transition:height .2s ease; }
 canvas { display:block; max-width:100%; }
 
 /* ── TABLE ───────────────────────────────────── */
@@ -577,7 +578,7 @@ table.tbl   { width:100%; border-collapse:collapse; font-size:13px; }
             <th>ชื่อ-สกุล</th>
             <th>ตำบล</th>
             <th>หน่วยบริการ</th>
-            <th>บ้านเลขที่   </th>
+            <th>บ้านเลขที่</th>
             <th>หมู่</th>
             <th>วันเกิด</th>
             <th>อายุ</th>
