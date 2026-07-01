@@ -115,7 +115,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
   <!-- PAGE 0: ค้นหา HN -->
   <div class="page active" id="p0">
     <div class="search-hero">
-      <div class="search-hero-icon">🔍</div>
+      <div class="search-hero-icon"><i class="ti ti-search" style="font-size:48px;color:var(--green)"></i></div>
       <div class="search-hero-title">ค้นหาก่อนเพิ่มข้อมูล</div>
       <div class="search-hero-sub">กรอก HN เพื่อตรวจสอบว่ามีข้อมูลในระบบแล้วหรือยัง</div>
     </div>
@@ -153,7 +153,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
       <div class="bar done"></div><div class="bar"></div><div class="bar"></div>
     </div>
     <div id="existingBanner" class="existing-banner" style="display:none">
-      <div class="existing-banner-icon">⚠️</div>
+      <div class="existing-banner-icon"><i class="ti ti-alert-triangle" style="color:var(--amber)"></i></div>
       <div>
         <div class="existing-banner-title">พบข้อมูลในระบบแล้ว</div>
         <div class="existing-banner-sub" id="existingBannerSub">ข้อมูลบางส่วนถูกเติมให้อัตโนมัติ</div>
@@ -227,7 +227,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
       <div class="bar done"></div><div class="bar done"></div><div class="bar"></div>
     </div>
     <div class="child-banner">
-      <div class="avatar">👶</div>
+      <div class="avatar"><i class="ti ti-user" style="font-size:20px;color:#065f46"></i></div>
       <div>
         <div style="font-size:15px;font-weight:600;color:#065f46" id="bannerName">—</div>
         <div style="font-size:13px;color:#059669" id="bannerAge">—</div>
@@ -251,7 +251,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
     </div>
     <div class="child-banner" style="justify-content:space-between">
       <div style="display:flex;align-items:center;gap:12px">
-        <div class="avatar">👶</div>
+        <div class="avatar"><i class="ti ti-user" style="font-size:20px;color:#065f46"></i></div>
         <div>
           <div style="font-size:16px;font-weight:700;color:#065f46" id="sumName">—</div>
           <div style="font-size:13px;color:#059669" id="sumAge">—</div>
@@ -287,7 +287,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
   <!-- SUCCESS -->
   <div class="page" id="pSuccess">
     <div class="success-screen">
-      <div class="success-icon">✅</div>
+      <div class="success-icon"><i class="ti ti-circle-check" style="font-size:56px;color:var(--green)"></i></div>
       <div class="success-title">บันทึกข้อมูลสำเร็จ</div>
       <div class="success-sub" id="successMsg">ข้อมูลถูกบันทึกเรียบร้อยแล้ว</div>
       <div class="success-actions">
@@ -448,14 +448,14 @@ async function searchByHN(){
       const tambonTH=TAMBON_LABEL[foundData.tambon]||foundData.tambon||"—";
       const hospName=getHospitalName(foundData.hospital||"");
       rEl.innerHTML=`<div class="result-card result-found">
-        <div class="result-title">✅ พบข้อมูลในระบบแล้ว</div>
+        <div class="result-title"><i class="ti ti-circle-check" style="color:#065f46"></i> พบข้อมูลในระบบแล้ว</div>
         <div class="result-sub">${foundData.name||"—"}</div>
         <div class="result-meta">
           <span class="meta-chip">HN: ${foundData.hn||"—"}</span>
           <span class="meta-chip">อายุ ${Math.floor(age/12)} ปี ${age%12} เดือน</span>
-          <span class="meta-chip">💉 ${vCount} เข็ม</span>
-          <span class="meta-chip">📍 ${tambonTH}</span>
-          <span class="meta-chip">🏥 ${hospName}</span>
+          <span class="meta-chip"><i class="ti ti-vaccine"></i> ${vCount} เข็ม</span>
+          <span class="meta-chip"><i class="ti ti-map-pin"></i> ${tambonTH}</span>
+          <span class="meta-chip"><i class="ti ti-building-hospital"></i> ${hospName}</span>
         </div>
       </div>`;
       document.getElementById("btnContinue").innerHTML=`<i class="ti ti-vaccine"></i> <span id="btnContinueLabel">เพิ่ม/แก้ไขวัคซีน</span>`;
@@ -464,7 +464,7 @@ async function searchByHN(){
     } else {
       foundKey=null;foundData=null;
       rEl.innerHTML=`<div class="result-card result-notfound">
-        <div class="result-title">ℹ️ ไม่พบ HN นี้ในระบบ</div>
+        <div class="result-title"><i class="ti ti-info-circle" style="color:#1e40af"></i> ไม่พบ HN นี้ในระบบ</div>
         <div class="result-sub">HN "${hn}" ยังไม่มีในฐานข้อมูล — สามารถเพิ่มข้อมูลใหม่ได้เลย</div>
       </div>`;
       document.getElementById("btnContinue").innerHTML=`<i class="ti ti-user-plus"></i> <span id="btnContinueLabel">เพิ่มข้อมูลใหม่ (HN นี้)</span>`;
@@ -647,7 +647,7 @@ async function submitData(){
       const newRef=db.ref("children").push();
       await Promise.all([
         newRef.set(payload),
-        db.ref("symptoms/"+newRef.key).set({...sympBase,symptom:"ยังไม่ระบุ",level:"🟢 ปกติ",status:"รอติดตาม",priority:99,time:Date.now()}),
+        db.ref("symptoms/"+newRef.key).set({...sympBase,symptom:"ยังไม่ระบุ",level:"ปกติ",status:"รอติดตาม",priority:99,time:Date.now()}),
       ]);
       actLog("เพิ่มข้อมูลเด็ก", `${state.name} · HN ${state.hn} · วัคซีน ${vaxCount} เข็ม`);
       document.getElementById("successMsg").textContent=`บันทึก ${state.name} (HN: ${state.hn}) เรียบร้อยแล้ว`;
