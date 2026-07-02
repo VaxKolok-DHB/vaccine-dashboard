@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -121,7 +121,6 @@ body { font-family:var(--font); background:var(--canvas); color:var(--ink); padd
   padding:14px 18px; border-bottom:1px solid var(--border);
   background:var(--canvas);
 }
-/* ── INPUTS & SELECTS ── ใช้ specificity สูงกว่า Bootstrap */
 .filters select,
 .filters input,
 .filters .form-select,
@@ -141,7 +140,6 @@ input.form-control {
   appearance:none;
   padding:0 12px !important;
 }
-/* arrow สำหรับ select */
 .filters select,
 .filters .form-select,
 select.form-select {
@@ -151,7 +149,6 @@ select.form-select {
   background-size:14px !important;
   padding-right:32px !important;
 }
-/* focus */
 .filters select:focus,
 .filters input:focus,
 select.form-select:focus,
@@ -160,7 +157,6 @@ input.form-control:focus {
   box-shadow:0 0 0 3px rgba(5,150,105,.12) !important;
   outline:none !important;
 }
-/* mobile */
 @media(max-width:768px){
   .filters select,
   .filters input,
@@ -209,7 +205,6 @@ input.form-control:focus {
 .donut-stat-lbl  { font-size:12px; color:var(--ink-3); margin-top:3px; }
 .dot-green { color:var(--green); }
 .dot-red   { color:var(--red);   }
-/* ลบ overflow:hidden — ไม่งั้นจะตัด HTML label overlay */
 #villageFollowWrap { position:relative; transition:height .2s ease; }
 canvas { display:block; max-width:100%; }
 
@@ -274,89 +269,55 @@ table.tbl   { width:100%; border-collapse:collapse; font-size:13px; }
    RESPONSIVE
    ════════════════════════════════════════════ */
 
-/* TABLET ≤ 1024px */
 @media(max-width:1024px){
   .kpi-row { grid-template-columns:repeat(2,1fr); }
   .chart-grid { grid-template-columns:1fr; }
   .donut-wrap { width:180px; height:180px; }
 }
 
-/* MOBILE ≤ 768px */
 @media(max-width:768px){
-  /* topbar */
   .topbar { padding:0 14px; }
   .topbar-links { display:none; }
-
-  /* official header — compact */
   .official-header { padding:10px 14px; }
   .official-header-icon { width:36px; height:36px; border-radius:10px; flex-shrink:0; }
   .official-header-icon i { font-size:16px !important; }
   .official-header-eyebrow { display:none; }
   .official-header-title { font-size:15px; }
   .official-header-sub { font-size:12px; }
-
-  /* KPI */
   .kpi-row { padding:12px; gap:10px; }
   .kpi { padding:12px 14px 10px; }
   .kpi-val { font-size:28px; }
   .kpi-label { font-size:10px; }
-
-  /* main */
   .main { padding:0 10px; }
-
-  /* filters: stack, full-width */
   .filters { flex-direction:column; gap:8px; padding:12px; }
   .filters .form-select,
   .filters .form-control { width:100% !important; min-width:0 !important; }
   .filter-label { display:none; }
-
-  /* action bar */
   .action-bar { padding:10px 12px; gap:6px; }
   .action-bar .btn { font-size:12px; padding:6px 10px; }
-
-  /* charts */
   .chart-grid { gap:12px; }
   .donut-wrap { width:160px; height:160px; }
   .donut-stat-num { font-size:22px; }
-
-  /* table → mobile cards */
   .table-wrap.table-responsive { display:none; }
   .mobile-list { display:block; }
-
-  /* pagination */
   #pagination button { min-width:30px; height:30px; font-size:12px; }
-
-  /* card head */
   .card-head { padding:12px 14px; }
   .card-head h6 { font-size:13px; }
 }
 
-/* SMALL MOBILE ≤ 480px */
 @media(max-width:480px){
-  /* topbar */
   .topbar-brand .logo-sub { display:none; }
-
-  /* KPI */
   .kpi-row { grid-template-columns:repeat(2,1fr); gap:8px; padding:8px; }
   .kpi-val { font-size:24px; }
   .kpi-icon { font-size:13px; }
-
-  /* official header — minimal */
   .official-header-sub { display:none; }
   .official-header-icon { display:none; }
-
-  /* action bar — icon only */
   .action-bar .btn-text { display:none; }
-
-  /* bottom nav */
   .bottom-nav a span { font-size:10px; }
-
-  /* modal full screen */
   .modal-dialog { margin:0; max-width:100%; }
   .modal-content { border-radius:0; }
 }
 
-/* VERY SMALL ≤ 360px */
 @media(max-width:360px){
   .kpi-val { font-size:20px; }
   .kpi { padding:10px 10px 8px; }

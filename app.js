@@ -760,12 +760,18 @@ function updateIndexKPI() {
       const bgNot = rows.map(([key]) =>
         selectedBarKey === null ? "#f87171" : (key === selectedBarKey ? "#f87171" : "rgba(248,113,113,0.3)"));
 
-      // คำนวณจาก container จริง — ใช้ได้ทุกขนาดหน้าจอ
+      // วัดจาก container จริง — แม่นยำกว่า window.innerWidth
       const cW    = vWrap.offsetWidth || window.innerWidth;
-      const lbW   = Math.max(90, Math.min(Math.round(cW * 0.33), 160));
-      const fs    = cW < 360 ? 9 : cW < 480 ? 10 : 12;
-      const barTh = cW < 480 ? 12 : cW < 768 ? 14 : 18;
-      const rowH  = cW < 480 ? 48 : 44;
+      const fs    = cW < 360 ? 10 : cW < 520 ? 11 : 12;
+      const barTh = cW < 360 ? 12 : cW < 520 ? 14 : 18;
+      const rowH  = cW < 520 ? 50 : 44;
+
+      // วัดความกว้าง label จริงด้วย Canvas API — ป้องกัน label ทับแถบทุกกรณี
+      const _mc  = document.createElement("canvas").getContext("2d");
+      _mc.font   = `${fs}px 'IBM Plex Sans Thai', sans-serif`;
+      const maxW = Math.max(...vLabels.map(l => _mc.measureText(l).width), 60);
+      const lbW  = Math.ceil(maxW) + 20;   // เพิ่ม gap 20px
+
       const innerH = Math.max(260, rows.length * rowH + 80);
       vWrap.style.height = innerH + "px";
       if (window._idxVillage) { window._idxVillage.destroy(); window._idxVillage = null; }
@@ -807,7 +813,7 @@ function updateIndexKPI() {
             if (canvas) canvas.style.cursor = elements.length ? "pointer" : "default";
           },
           plugins: {
-            legend: { position:"top", labels:{ boxWidth:12,padding:16,font:{size:fs+1},usePointStyle:true } },
+            legend: { position:"top", labels:{ boxWidth:12,padding:16,font:{size:fs},usePointStyle:true } },
             tooltip: { callbacks: { label: c => {
               const t = totD[c.dataIndex] || 1;
               return ` ${c.dataset.label}: ${c.parsed.x} คน (${(c.parsed.x/t*100).toFixed(0)}%)`;
@@ -819,35 +825,26 @@ function updateIndexKPI() {
             y: { display: false }
           }
         },
-        // วาด label โดยตรงบน canvas — ทำงานได้ทุก Chart.js version และทุกขนาดจอ
+        // ใช้ chart.chartArea.left แทน lbW — ตรงกับตำแหน่งแถบจริงเสมอ ทุกขนาดจอ
         plugins: [{
           id: "yLabels",
           afterDraw(chart) {
             const { ctx } = chart;
             const yScale  = chart.scales.y;
             if (!yScale) return;
-            // คำนวณ lbW ใหม่จาก chartArea จริง เพื่อรองรับ resize
-            const drawLbW = chart.chartArea.left;
-            const drawFs  = chart.width < 360 ? 9 : chart.width < 480 ? 10 : 12;
+            const x = chart.chartArea.left - 6;
             ctx.save();
-            ctx.font         = `${drawFs}px 'IBM Plex Sans Thai', sans-serif`;
+            ctx.font         = `${fs}px 'IBM Plex Sans Thai', sans-serif`;
             ctx.fillStyle    = "#374151";
             ctx.textAlign    = "right";
             ctx.textBaseline = "middle";
             yScale.ticks.forEach((_, i) => {
-              ctx.fillText(vLabels[i] || "", drawLbW - 6, yScale.getPixelForTick(i));
+              ctx.fillText(vLabels[i] || "", x, yScale.getPixelForTick(i));
             });
             ctx.restore();
           }
         }]
       });
-
-      // รองรับ resize / หมุนหน้าจอ — วาดใหม่โดยอัตโนมัติ
-      if (window._idxVillageRO) window._idxVillageRO.disconnect();
-      window._idxVillageRO = new ResizeObserver(() => {
-        if (window._idxVillage) window._idxVillage.resize();
-      });
-      window._idxVillageRO.observe(vWrap);
     }
   });
 }
