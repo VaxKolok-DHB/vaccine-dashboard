@@ -760,17 +760,12 @@ function updateIndexKPI() {
       const bgNot = rows.map(([key]) =>
         selectedBarKey === null ? "#f87171" : (key === selectedBarKey ? "#f87171" : "rgba(248,113,113,0.3)"));
 
-      const isMob = window.innerWidth < 640;
-      const lbW   = isMob ? 115 : 135;   // ความกว้างของช่อง label (HTML)
+      const isMob  = window.innerWidth < 640;
+      const lbW    = isMob ? 120 : 140;  // พื้นที่ซ้ายสำหรับ label
       const innerH = Math.max(260, rows.length * (isMob ? 52 : 44) + 80);
       vWrap.style.height = innerH + "px";
-
-      // ใช้ position:relative เพื่อ overlay HTML labels บนกราฟ
-      const vInner = document.createElement("div");
-      vInner.style.cssText = "position:relative;width:100%;height:100%;";
-      vInner.innerHTML = '<canvas id="villageChartFollow"></canvas>';
-      vWrap.innerHTML = "";
-      vWrap.appendChild(vInner);
+      if (window._idxVillage) { window._idxVillage.destroy(); window._idxVillage = null; }
+      vWrap.innerHTML = '<canvas id="villageChartFollow"></canvas>';
       const vCtx = document.getElementById("villageChartFollow").getContext("2d");
 
       window._idxVillage = new Chart(vCtx, {
@@ -786,7 +781,6 @@ function updateIndexKPI() {
         },
         options: {
           indexAxis: "y", responsive: true, maintainAspectRatio: false,
-          // layout.padding.left เปิดพื้นที่ด้านซ้ายให้ HTML labels
           layout: { padding: { left: lbW, right: 8 } },
           onClick(event, elements) {
             if (!elements.length) { if (selectedBarKey !== null) clearBarFilter(); return; }
@@ -818,23 +812,28 @@ function updateIndexKPI() {
           scales: {
             x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:isMob?10:12}},
                  title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:isMob?10:12},color:"#6b7280"} },
-            y: { display: false }   // ซ่อน y-axis ของ Chart.js → ใช้ HTML labels แทน
+            y: { display: false }
           }
-        }
-      });
-
-      // วาง HTML labels ให้ตรงกับตำแหน่งแถบพอดี
-      requestAnimationFrame(() => {
-        const ch = window._idxVillage;
-        if (!ch || !ch.scales.y) return;
-        const yScale = ch.scales.y;
-        yScale.ticks.forEach((_, i) => {
-          const yPx = yScale.getPixelForTick(i);
-          const el  = document.createElement("div");
-          el.style.cssText = `position:absolute;left:0;top:${yPx}px;width:${lbW - 4}px;transform:translateY(-50%);font-size:${isMob ? 10 : 12}px;text-align:right;padding-right:6px;color:#374151;pointer-events:none;line-height:1.3;white-space:nowrap;overflow:visible;`;
-          el.textContent = vLabels[i] || "";
-          vInner.appendChild(el);
-        });
+        },
+        // วาด label ชื่อตำบล/หมู่บ้านลงบน canvas โดยตรง (ใช้ได้ทุก Chart.js version)
+        plugins: [{
+          id: "yLabels",
+          afterDraw(chart) {
+            const { ctx } = chart;
+            const yScale  = chart.scales.y;
+            if (!yScale) return;
+            const fs = isMob ? 10 : 12;
+            ctx.save();
+            ctx.font         = `${fs}px 'IBM Plex Sans Thai', sans-serif`;
+            ctx.fillStyle    = "#374151";
+            ctx.textAlign    = "right";
+            ctx.textBaseline = "middle";
+            yScale.ticks.forEach((_, i) => {
+              ctx.fillText(vLabels[i] || "", lbW - 6, yScale.getPixelForTick(i));
+            });
+            ctx.restore();
+          }
+        }]
       });
     }
   });
