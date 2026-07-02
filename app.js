@@ -760,9 +760,13 @@ function updateIndexKPI() {
       const bgNot = rows.map(([key]) =>
         selectedBarKey === null ? "#f87171" : (key === selectedBarKey ? "#f87171" : "rgba(248,113,113,0.3)"));
 
-      const isMob  = window.innerWidth < 640;
-      const lbW    = isMob ? 120 : 140;  // พื้นที่ซ้ายสำหรับ label
-      const innerH = Math.max(260, rows.length * (isMob ? 52 : 44) + 80);
+      // คำนวณจาก container จริง — ใช้ได้ทุกขนาดหน้าจอ
+      const cW    = vWrap.offsetWidth || window.innerWidth;
+      const lbW   = Math.max(90, Math.min(Math.round(cW * 0.33), 160));
+      const fs    = cW < 360 ? 9 : cW < 480 ? 10 : 12;
+      const barTh = cW < 480 ? 12 : cW < 768 ? 14 : 18;
+      const rowH  = cW < 480 ? 48 : 44;
+      const innerH = Math.max(260, rows.length * rowH + 80);
       vWrap.style.height = innerH + "px";
       if (window._idxVillage) { window._idxVillage.destroy(); window._idxVillage = null; }
       vWrap.innerHTML = '<canvas id="villageChartFollow"></canvas>';
@@ -774,9 +778,9 @@ function updateIndexKPI() {
           labels: vLabels,
           datasets: [
             { label: vax==="all"?"ฉีดครบแล้ว":`ได้รับ ${vaccineLabel?.[vax]||vax}`,
-              data: doneD, backgroundColor: bgDone, borderRadius: 6, barThickness: isMob ? 14 : 18 },
+              data: doneD, backgroundColor: bgDone, borderRadius: 6, barThickness: barTh },
             { label: vax==="all"?"ยังไม่ครบ":`ยังไม่ได้รับ ${vaccineLabel?.[vax]||vax}`,
-              data: notD,  backgroundColor: bgNot,  borderRadius: 6, barThickness: isMob ? 14 : 18 }
+              data: notD,  backgroundColor: bgNot,  borderRadius: 6, barThickness: barTh }
           ]
         },
         options: {
@@ -803,38 +807,47 @@ function updateIndexKPI() {
             if (canvas) canvas.style.cursor = elements.length ? "pointer" : "default";
           },
           plugins: {
-            legend: { position:"top", labels:{ boxWidth:12,padding:16,font:{size:isMob?11:13},usePointStyle:true } },
+            legend: { position:"top", labels:{ boxWidth:12,padding:16,font:{size:fs+1},usePointStyle:true } },
             tooltip: { callbacks: { label: c => {
               const t = totD[c.dataIndex] || 1;
               return ` ${c.dataset.label}: ${c.parsed.x} คน (${(c.parsed.x/t*100).toFixed(0)}%)`;
             }}}
           },
           scales: {
-            x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:isMob?10:12}},
-                 title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:isMob?10:12},color:"#6b7280"} },
+            x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:fs}},
+                 title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:fs},color:"#6b7280"} },
             y: { display: false }
           }
         },
-        // วาด label ชื่อตำบล/หมู่บ้านลงบน canvas โดยตรง (ใช้ได้ทุก Chart.js version)
+        // วาด label โดยตรงบน canvas — ทำงานได้ทุก Chart.js version และทุกขนาดจอ
         plugins: [{
           id: "yLabels",
           afterDraw(chart) {
             const { ctx } = chart;
             const yScale  = chart.scales.y;
             if (!yScale) return;
-            const fs = isMob ? 10 : 12;
+            // คำนวณ lbW ใหม่จาก chartArea จริง เพื่อรองรับ resize
+            const drawLbW = chart.chartArea.left;
+            const drawFs  = chart.width < 360 ? 9 : chart.width < 480 ? 10 : 12;
             ctx.save();
-            ctx.font         = `${fs}px 'IBM Plex Sans Thai', sans-serif`;
+            ctx.font         = `${drawFs}px 'IBM Plex Sans Thai', sans-serif`;
             ctx.fillStyle    = "#374151";
             ctx.textAlign    = "right";
             ctx.textBaseline = "middle";
             yScale.ticks.forEach((_, i) => {
-              ctx.fillText(vLabels[i] || "", lbW - 6, yScale.getPixelForTick(i));
+              ctx.fillText(vLabels[i] || "", drawLbW - 6, yScale.getPixelForTick(i));
             });
             ctx.restore();
           }
         }]
       });
+
+      // รองรับ resize / หมุนหน้าจอ — วาดใหม่โดยอัตโนมัติ
+      if (window._idxVillageRO) window._idxVillageRO.disconnect();
+      window._idxVillageRO = new ResizeObserver(() => {
+        if (window._idxVillage) window._idxVillage.resize();
+      });
+      window._idxVillageRO.observe(vWrap);
     }
   });
 }
