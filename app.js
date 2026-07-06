@@ -1501,10 +1501,17 @@ function openCareByTambon() {
     villages.forEach(v => {
       const group = data[v];
       if (!group.care) return;
+      let label;
+      if (tambonKey === "kolok") {
+        label = kolokCommunity[v]?.name || `ชุมชน ${v}`;
+      } else {
+        const vInfo = villageData[tambonKey]?.[v];
+        label = vInfo ? `หมู่ ${v} – ${vInfo.name}` : `หมู่ ${v}`;
+      }
       html += `
         <div style="border:1px solid #eee;border-radius:14px;padding:12px;margin-bottom:12px;background:#fafafa;">
           <div style="font-weight:600;margin-bottom:6px;color:#374151;">
-            <i class="fa-solid fa-house fa-xs" style="color:#6b7280;margin-right:6px"></i>หมู่ ${v}
+            <i class="fa-solid fa-house fa-xs" style="color:#6b7280;margin-right:6px"></i>${label}
           </div>
           ${group.care.map(c => `
           <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;">
@@ -1512,9 +1519,10 @@ function openCareByTambon() {
               <i class="fa-solid fa-user fa-xs" style="color:#6b7280;margin-right:4px"></i>${c.name}
               <br><small style="color:#6b7280;">${c.role||"-"}</small>
             </div>
+            ${c.tel ? `
             <a href="tel:${c.tel}" style="color:#16a34a;text-decoration:none;">
               <i class="fa-solid fa-phone fa-xs"></i> ${c.tel}
-            </a>
+            </a>` : ""}
           </div>`).join("")}
         </div>`;
     });
@@ -1589,15 +1597,119 @@ function seedVillageCareIfEmpty() {
         7:{care:[{name:"นายอัสมี เจ๊ะอาแว",tel:"0824159376",role:"ผู้ใหญ่บ้าน"}]},
         8:{care:[{name:"นายรุสวา ดอเลาะ",tel:"0649500655",role:"ผู้ใหญ่บ้าน"}]}
       },
-      kolok:{ community:{ care:[
-        {name:"น.ส.สุมิตร อูมา",tel:"0993633100",role:"ผู้นำชุมชน"},
-        {name:"น.ส.สะปีน๊ะ มะแซ",tel:"0869695313",role:"ผู้นำชุมชน"},
-        {name:"นางละมัย การุโณ",tel:"0827038733",role:"ผู้นำชุมชน"},
-        {name:"นางวิลาวัลย์ คชกาล",tel:"0831682610",role:"ผู้นำชุมชน"},
-        {name:"นายธงชัย บือราเฮง",tel:"0634853736",role:"ผู้นำชุมชน"},
-        {name:"นายวราวุธ มาหามะ",tel:"0634245389",role:"ผู้นำชุมชน"}
-      ]}}
+      kolok: KOLOK_CARE_DATA
     });
+  });
+}
+
+// ข้อมูลผู้รับผิดชอบ 31 ชุมชน ต.สุไหงโก-ลก
+// นำเข้าจากไฟล์ "ชุมชนสำรวจรายชื่อรับผิดชอบวัคซีน อายุ 0-5 ปี ปีงบ2569"
+// คีย์ตรงกับหมายเลขชุมชนใน kolokCommunity
+const KOLOK_CARE_DATA = {
+  1:  { care: [ {name:"นางสายยุตร ศิริรัตน์",        tel:"0658895531", role:"อสม."}, {name:"นส.สุมิตรา อูมา",              role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  2:  { care: [ {name:"นางคอซียะ ลิอีนิง",           tel:"0831912390", role:"อสม."}, {name:"นส.อาสนะ ดอเล๊าะ",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  3:  { care: [ {name:"นส.สมพิศ ว่องไว",             tel:"0896571560", role:"อสม."}, {name:"นายชื่น ทิพรัตน์",              role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  4:  { care: [ {name:"นายสุคนธ์ คงช่วย",            tel:"0848547109", role:"อสม."}, {name:"นางวารินท์ ยอดแก้ว",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  5:  { care: [ {name:"นางอุไรรัตน์ เอี่ยมสุวรรณมณี", tel:"0850771040", role:"อสม."}, {name:"นายวันชัย ยะโกะ",               role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  6:  { care: [ {name:"นส.มารียานา มักตา",            tel:"0816086914", role:"อสม."}, {name:"นส.มาสลีนา บินอาแวหะมะ",        role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  7:  { care: [ {name:"นางสัมมณี มะอีเป็ง",           tel:"0963513267", role:"อสม."}, {name:"นายสาเหะมามะนอ สาเหะมะหะมะฆานาปีเยาะ", role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  8:  { care: [ {name:"นส.โนรีซา มะแซ",              tel:"0814394057", role:"อสม."}, {name:"นส.โนรีซา มะแซ",               role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  9:  { care: [ {name:"นส.ยามิงละห์ มะ",             tel:"0831944388", role:"อสม."}, {name:"นายอาแซมะสอรี มาเจะ",           role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  10: { care: [ {name:"นส.กนกกานต์ กิ่งแก้ว",        tel:"0936590487", role:"อสม."}, {name:"นายบุญภาค สุขโร",               role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  11: { care: [ {name:"นางจารุวรรณ ด้วงชู",          tel:"0961862273", role:"อสม."}, {name:"นายเสริมมิตร ขุมขันธ์",         role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  12: { care: [ {name:"นายวสันต์ ฮะสะเล็ม",          tel:"0869655758", role:"อสม."}, {name:"นายสุฮายมิง อารง",             role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  13: { care: [ {name:"นส.อาซีเยาะ วงศ์วานโต๊ะบุน",   tel:"0822619942", role:"อสม."}, {name:"นายวัชริศ เจ๊ะเลาะ",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  14: { care: [ {name:"นส.เพ็ญบุณฑริก คล่องทองจีน",   tel:"0943175963", role:"อสม."}, {name:"นายธรรมนูญ ขุนนุ้ย",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  15: { care: [ {name:"นางมาลา บุญวงศ์",             tel:"0650457281", role:"อสม."}, {name:"นายมุสเล็ม ซามะ",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  16: { care: [ {name:"นส.บุษา สุแสวง",              tel:"0869607757", role:"อสม."}, {name:"นางสารีป๊ะ ยะโก๊ะ",             role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  17: { care: [ {name:"นส.วรรณี มะเย็ง",             tel:"0873998372", role:"อสม."}, {name:"นายอัสมิง สะแม",               role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  18: { care: [ {name:"นางฮอม สุระป้อม",             tel:"0831860931", role:"อสม."}, {name:"นางอัญชลี ยะโลมพันธ์",          role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  19: { care: [ {name:"นส.จันทร์น้อย เจนใจ",         tel:"0833168496", role:"อสม."}, {name:"นายธนัตถ์สรณ์ จันทร์วิลาศ",     role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  20: { care: [ {name:"นส.ธีรนุช เจ๊ะแว",            tel:"0848819986", role:"อสม."}, {name:"นายอาแว แวหะมะ",               role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  21: { care: [ {name:"นางเพียงใจ ศรีสุวรรณ์",       tel:"0874989794", role:"อสม."}, {name:"นายสุมาตร บุญรักษ์",            role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  22: { care: [ {name:"นางคอรีเยาะ อูเซ็ง",          tel:"0629658571", role:"อสม."}, {name:"นายอัลวา มูซอ",                role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  23: { care: [ {name:"นางยานิง แลหะ",               tel:"0805425828", role:"อสม."}, {name:"นางสุวารีย์ วาเซ็ง",            role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  24: { care: [ {name:"นางสุรีรัตน์ ยาทองไชย์",       tel:"0989568588", role:"อสม."}, {name:"นส.สุดา สือแต",                role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  25: { care: [ {name:"นส.แวสุไวด๊ะ แวมูซอ",         tel:"0834979120", role:"อสม."}, {name:"นส.อาซีซะ มาลูเด็ง",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  26: { care: [ {name:"นส.จารินี เหาะสัน",           tel:"0831842856", role:"อสม."}, {name:"นายอาเล็ม บือราเฮง",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  27: { care: [ {name:"นางวิลาวัณย์ เจียมวิโรจน์",    tel:"0827864284", role:"อสม."}, {name:"นายวิชาญ จันทร์เอิบ",           role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  28: { care: [ {name:"นส.อาดีรา หะมะ",              tel:"0925465842", role:"อสม."}, {name:"นายบาฮารง เจ๊ะเงาะ",            role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  29: { care: [ {name:"นางสารภี นาวี",               tel:"0633382208", role:"อสม."}, {name:"นายมนัส เจ๊ะอีซอ",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  30: { care: [ {name:"นส.นูรีดา โซ๊ชูม๊ะ",           tel:"0629016887", role:"อสม."}, {name:"นายแวกอรี เจ๊ะมะ",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
+  31: { care: [ {name:"นส.ยานา ยูโซ๊ะ",              tel:"0620830886", role:"อสม."}, {name:"นางนงนุช ไชยวงษ์",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] }
+};
+
+// force-update เฉพาะข้อมูล kolok ให้เป็นชุดใหม่ (ไม่ต้องรอ villageCare ทั้งก้อนว่าง)
+// เช็คจาก villageCare/kolok/1 — ถ้ายังไม่ใช่โครงสร้างใหม่ (ไม่มี care ของชุมชนหมายเลข 1) ให้เขียนทับ
+function seedKolokCareIfNeeded() {
+  db.ref("villageCare/kolok/1/care").once("value", snap => {
+    if (snap.exists()) return;
+    db.ref("villageCare/kolok").set(KOLOK_CARE_DATA);
+  });
+}
+
+// =========================
+// สท. รับผิดชอบรายเขต (ต.สุไหงโก-ลก)
+// นำเข้าจากไฟล์ "รายชื่อ สท. ที่รับผิดชอบชุมชน 69"
+// แต่ละเขตมี สท. 6 คน ดูแลกลุ่มชุมชนร่วมกัน (ไม่ใช่ 1 คนต่อ 1 ชุมชน)
+// communities อ้างอิงคีย์เดียวกับ kolokCommunity
+// หมายเหตุ: ชุมชน #6 (กือดำบำรู) ถูกแบ่งดูแลข้ามเขต (ซ.2 อยู่เขต 1, ซ.1/ซ.3 อยู่เขต 3) ตามไฟล์ต้นฉบับ
+// ชุมชน #13 (จือแลตูลี) มีเครื่องหมาย * กำกับในไฟล์ต้นฉบับ (ยังไม่ทราบความหมายที่แน่ชัด) จัดไว้ในเขต 3
+const KOLOK_DISTRICT_DATA = {
+  1: {
+    councilors: ["นางเขมิกา ล้อธรรมคุณ","นายมนัส เบญจสาร","นายกามัน เจ๊ะมูซอ","นายมาหามะ อาแว","นายสัตยวงศ์ สุขราช","นางสาวสายทิพย์ พุ่มชัย"],
+    communities: [9,10,20,4,7,16,2,25,27,11,6]
+  },
+  2: {
+    councilors: ["นายเดชยดา สะมะแอ","นายมนัส เจ๊ะอีซอ","นายมะวี อารอมะ","นายสุพจน์ คงช่วย","นายธนัตถ์สรณ์ จันทร์วิลาศ","นางอัญชลี ยะโลมพันธ์"],
+    communities: [26,29,18,30,14,15,19,5,28,3,21,31]
+  },
+  3: {
+    councilors: ["นายสมชาติ สุคนธ์","นายกามารอเด็ง มามะ","นายแวสดี แวอูเซ็ง","นางสาวสุมิตรา อูมา","นายเจ๊ะอาแซ เจ๊ะแว","นางสาวธันยพัต เจริญรัตนะภัทร์"],
+    communities: [8,23,24,1,17,22,12,6,13]
+  }
+};
+
+// เก็บไว้ใต้ villageCare (ไม่ใช่ path ใหม่ระดับบนสุด) เพราะ Firebase rules ของเว็บนี้
+// อนุญาตเฉพาะ path ที่กำหนดไว้แล้ว (children, users, villageCare, ฯลฯ) — path ใหม่ระดับบนสุด
+// จะโดน permission_denied ทันที
+function seedKolokDistrictsIfNeeded() {
+  db.ref("villageCare/kolokDistricts/1/councilors").once("value", snap => {
+    if (snap.exists()) return;
+    db.ref("villageCare/kolokDistricts").set(KOLOK_DISTRICT_DATA);
+  });
+}
+
+function openCouncilByDistrict() {
+  db.ref("villageCare/kolokDistricts").once("value", snap => {
+    const data = snap.val() || {};
+    const order = ["1","2","3"];
+    let html = "";
+    order.forEach(d => {
+      const group = data[d];
+      if (!group) return;
+      const communityNames = (group.communities || [])
+        .map(id => kolokCommunity[id]?.name || `ชุมชน ${id}`)
+        .join(", ");
+      html += `
+        <div style="border:1px solid #eee;border-radius:14px;padding:14px;margin-bottom:14px;background:#fafafa;">
+          <div style="font-size:15px;font-weight:700;color:#1d4ed8;margin-bottom:10px;">
+            <i class="fa-solid fa-landmark fa-xs" style="margin-right:6px"></i>เขต ${d}
+          </div>
+          <div style="margin-bottom:10px;">
+            ${(group.councilors || []).map(name => `
+              <span class="tag" style="margin:2px 4px 2px 0;display:inline-block;">
+                <i class="fa-solid fa-user fa-xs"></i> ${name}
+              </span>`).join("")}
+          </div>
+          <div style="font-size:13px;color:#374151;line-height:1.6;">
+            <b>ชุมชนที่ดูแล:</b> ${communityNames || "-"}
+          </div>
+        </div>`;
+    });
+    if (!html) html = "<p style='color:#9ca3af;text-align:center;padding:20px'>ไม่มีข้อมูล สท.</p>";
+    document.getElementById("councilBody").innerHTML = html;
+    new bootstrap.Modal(document.getElementById("councilModal")).show();
   });
 }
 
@@ -1737,6 +1849,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   seedVillageCareIfEmpty();
+  seedKolokCareIfNeeded();
+  seedKolokDistrictsIfNeeded();
 
   // โหลดข้อมูล
   if (document.getElementById("followTable") || document.getElementById("mobileList")) {

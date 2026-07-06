@@ -468,6 +468,9 @@ table.tbl   { width:100%; border-collapse:collapse; font-size:13px; }
       <button onclick="openCareByTambon()" class="btn btn-outline">
         <i class="fa-solid fa-users fa-xs"></i> <span class="btn-text">ผู้รับผิดชอบ</span>
       </button>
+      <button onclick="openCouncilByDistrict()" class="btn btn-outline">
+        <i class="fa-solid fa-landmark fa-xs"></i> <span class="btn-text">สท. รับผิดชอบ</span>
+      </button>
       <a href="add.html" class="btn btn-outline-success" style="text-decoration:none">
         <i class="fa-solid fa-plus fa-xs"></i> <span class="btn-text">เพิ่มข้อมูล</span>
       </a>
@@ -593,6 +596,21 @@ table.tbl   { width:100%; border-collapse:collapse; font-size:13px; }
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" id="careBody"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="councilModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-landmark fa-sm me-2" style="color:var(--accent)"></i>
+          สท. รับผิดชอบรายเขต (ต.สุไหงโก-ลก)
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="councilBody"></div>
     </div>
   </div>
 </div>
