@@ -47,9 +47,9 @@ body{
   background:var(--surface);
   border:1px solid var(--border);
   border-radius:var(--radius);
-  padding:36px 32px 32px;
+  padding:36px 26px 32px;
   width:100%;
-  max-width:420px;
+  max-width:520px;
   box-shadow:0 2px 16px rgba(26,79,160,.07);
 }
 
@@ -113,6 +113,74 @@ body{
 .field .err{font-size:12px;color:var(--red);margin-top:5px;display:none}
 .field.has-err input{border-color:var(--red)}
 .field.has-err .err{display:block}
+
+/* cid digit boxes — จัดวางแบบทางการ ตามรูปแบบเลขบัตรประชาชนไทย 1-2345-67890-12-1 */
+.field label.cid-label{
+  font-size:12px;
+  font-weight:600;
+  color:var(--muted);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.cid-panel{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px 8px;
+  overflow-x:auto;
+}
+.cid-boxes{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  flex-wrap:nowrap;
+  width:max-content;
+  margin:0 auto;
+}
+.field .cid-digit{
+  width:24px;
+  height:40px;
+  padding:0;
+  text-align:center;
+  font-size:15px;
+  font-weight:700;
+  font-family:var(--font);
+  font-variant-numeric:tabular-nums;
+  background:#fff;
+  border:1.5px solid var(--border);
+  border-radius:7px;
+  box-shadow:inset 0 1px 2px rgba(15,30,61,.04);
+  flex:0 0 auto;
+  transition:border-color .15s,box-shadow .15s,color .15s;
+}
+.field .cid-digit.filled{
+  border-color:var(--blue-light);
+  color:var(--blue);
+}
+.field .cid-digit:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px var(--blue-light);
+}
+.cid-sep{
+  color:var(--muted);
+  font-size:20px;
+  font-weight:700;
+  padding:0 1px;
+  user-select:none;
+  flex:0 0 auto;
+}
+.field.has-err .cid-panel{border-color:var(--red);background:var(--red-light)}
+.field.has-err .cid-digit{border-color:var(--red)}
+
+@media(max-width:380px){
+  .box{padding:28px 14px 26px}
+  .field .cid-digit{width:20px;height:36px;font-size:13px}
+  .cid-panel{padding:12px 4px}
+  .cid-boxes{gap:2px}
+  .cid-sep{font-size:16px}
+}
 
 /* button */
 .btn-login{
@@ -235,17 +303,30 @@ body{
   <div class="divider"></div>
 
   <div class="field" id="fieldCid">
-    <label for="cid">เลขบัตรประชาชน 13 หลัก</label>
-    <input
-      type="text"
-      id="cid"
-      placeholder="0 0000 00000 00 0"
-      maxlength="13"
-      inputmode="numeric"
-      autocomplete="off"
-      oninput="this.value=this.value.replace(/[^0-9]/g,'');clearErr()"
-    >
-    <div class="err" id="cidErr">กรุณากรอกเลขบัตรประชาชน 13 หลักให้ครบ</div>
+    <label class="cid-label">เลขบัตรประชาชน 13 หลัก</label>
+    <div class="cid-panel">
+      <div class="cid-boxes" id="cidBoxes">
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="0">
+        <span class="cid-sep">-</span>
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="1">
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="2">
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="3">
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="4">
+        <span class="cid-sep">-</span>
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="5">
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="6">
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="7">
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="8">
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="9">
+        <span class="cid-sep">-</span>
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="10">
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="11">
+        <span class="cid-sep">-</span>
+        <input type="text" class="cid-digit" maxlength="1" inputmode="numeric" autocomplete="off" data-idx="12">
+      </div>
+    </div>
+    <input type="hidden" id="cid">
+    <div class="err" id="cidErr">กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก</div>
   </div>
 
   <button class="btn-login" id="loginBtn" onclick="login()">
@@ -306,15 +387,64 @@ const msgObserver = new MutationObserver(() => {
 });
 msgObserver.observe(msgEl, { childList: true, subtree: true, characterData: true });
 
-document.getElementById("cid").addEventListener("keydown", e => {
-  if (e.key === "Enter") login();
+// ─── ช่องกรอกเลขบัตรประชาชนแบบแยกทีละหลัก ──────────────────
+// กันปัญหากรอกไม่ครบ 13 หลัก: แต่ละช่องรับได้ 1 ตัวเลข
+// เลื่อนโฟกัสไปช่องถัดไปอัตโนมัติ, กด Backspace ในช่องว่างจะถอยไปช่องก่อนหน้า,
+// วางเลขบัตรทั้งชุด (paste) จะกระจายตัวเลขลงแต่ละช่องให้อัตโนมัติ
+const digitInputs = Array.from(document.querySelectorAll(".cid-digit"));
+const hiddenCid    = document.getElementById("cid");
+
+function syncHiddenCid() {
+  hiddenCid.value = digitInputs.map(i => i.value).join("");
+  clearErr();
+}
+
+digitInputs.forEach((inp, idx) => {
+  inp.addEventListener("input", () => {
+    inp.value = inp.value.replace(/[^0-9]/g, "").slice(-1);
+    inp.classList.toggle("filled", !!inp.value);
+    syncHiddenCid();
+    if (inp.value && idx < digitInputs.length - 1) {
+      digitInputs[idx + 1].focus();
+    }
+  });
+
+  inp.addEventListener("keydown", e => {
+    if (e.key === "Backspace" && !inp.value && idx > 0) {
+      digitInputs[idx - 1].focus();
+    } else if (e.key === "ArrowLeft" && idx > 0) {
+      digitInputs[idx - 1].focus();
+    } else if (e.key === "ArrowRight" && idx < digitInputs.length - 1) {
+      digitInputs[idx + 1].focus();
+    } else if (e.key === "Enter") {
+      login();
+    }
+  });
+
+  inp.addEventListener("paste", e => {
+    e.preventDefault();
+    const paste = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "");
+    if (!paste) return;
+    paste.split("").slice(0, digitInputs.length).forEach((d, i) => {
+      if (digitInputs[idx + i]) {
+        digitInputs[idx + i].value = d;
+        digitInputs[idx + i].classList.add("filled");
+      }
+    });
+    syncHiddenCid();
+    const lastFilled = Math.min(idx + paste.length, digitInputs.length) - 1;
+    if (digitInputs[lastFilled]) digitInputs[lastFilled].focus();
+  });
 });
+
+if (digitInputs[0]) digitInputs[0].focus();
 
 // Wrapper: validate + loading state ก่อนส่งให้ app.js
 const _origLogin = window.login;
 window.login = function() {
   clearErr();
-  const cid = document.getElementById("cid").value.replace(/\D/g, "");
+  syncHiddenCid();
+  const cid = hiddenCid.value.replace(/\D/g, "");
   if (cid.length !== 13) {
     document.getElementById("fieldCid").classList.add("has-err");
     return;
@@ -325,4 +455,3 @@ window.login = function() {
 </script>
 </body>
 </html>
-
