@@ -110,6 +110,7 @@ tbody tr.row-pending:hover{background:#fef3cd}
 .btn:hover{opacity:.8}
 .btn-ok {background:var(--green-light);color:var(--green)}
 .btn-del{background:var(--red-light);color:var(--red)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 
 /* empty */
 .empty td{text-align:center;color:var(--muted);padding:36px;font-size:13px}
@@ -214,11 +215,17 @@ tbody tr.row-pending:hover{background:#fef3cd}
 
 <script>
 // ─── Auth guard ───────────────────────────────────────────
+// เจ้าหน้าที่ (staff) ในระบบนี้ คือผู้ใช้ที่มี role = "admin"
+// ฟังก์ชันนี้เช็คสิทธิ์แบบสดจาก localStorage ทุกครั้งที่เรียกใช้
+// (ไม่ใช่เช็คครั้งเดียวตอนโหลดหน้า) เพื่อป้องกันกรณี session
+// หมดอายุ / ถูกแก้ไข / ใช้เครื่องร่วมกันระหว่างการใช้งานหน้านี้
+function isStaff() {
+  return localStorage.getItem("user") && localStorage.getItem("role") === "admin";
+}
+
 (function() {
-  const role = localStorage.getItem("role");
-  const user = localStorage.getItem("user");
-  if (!user || role !== "admin") {
-    alert("เฉพาะผู้ดูแลระบบเท่านั้น");
+  if (!isStaff()) {
+    alert("เฉพาะเจ้าหน้าที่ (ผู้ดูแลระบบ) เท่านั้นที่เข้าใช้งานหน้านี้ได้");
     location.href = "index.html";
   }
 })();
@@ -257,6 +264,7 @@ function renderTable() {
   const kw    = document.getElementById("searchInput").value.toLowerCase();
   const roleF = document.getElementById("roleFilter").value;
   const statF = document.getElementById("statusFilter").value;
+  const staff = isStaff();
   let total = 0, pending = 0, adminCnt = 0, rows = "";
 
   // sort: pending first
@@ -281,14 +289,14 @@ function renderTable() {
       <td><span class="badge ${u.role || ''}">${u.role || "—"}</span></td>
       <td><span class="badge ${u.status || ''}">${isPending ? "⏳ รออนุมัติ" : "✓ อนุมัติแล้ว"}</span></td>
       <td><div class="arow">
-        <select class="role-sel" onchange="changeRole('${id}',this.value)">
+        <select class="role-sel" onchange="changeRole('${id}',this.value)" ${staff ? "" : "disabled"}>
           <option value="user"  ${u.role === "user"  ? "selected" : ""}>user</option>
           <option value="admin" ${u.role === "admin" ? "selected" : ""}>admin</option>
         </select>
         ${isPending
-          ? `<button class="btn btn-ok" onclick="approveUser('${id}')">อนุมัติ</button>`
+          ? `<button class="btn btn-ok" onclick="approveUser('${id}')" ${staff ? "" : "disabled title=" + JSON.stringify("เฉพาะเจ้าหน้าที่เท่านั้น")}>อนุมัติ</button>`
           : `<span style="font-size:11px;color:var(--muted)">อนุมัติแล้ว</span>`}
-        <button class="btn btn-del" onclick="deleteUser('${id}')">ลบ</button>
+        <button class="btn btn-del" onclick="deleteUser('${id}')" ${staff ? "" : "disabled"}>ลบ</button>
       </div></td>
     </tr>`;
   });
@@ -319,6 +327,14 @@ function loadAdmin() {
 
 // ─── Actions ─────────────────────────────────────────────
 function approveUser(id) {
+  // เช็คสิทธิ์ซ้ำอีกชั้นตรงจุดที่ทำการอนุมัติจริง
+  // เพื่อป้องกันไม่ให้ใครก็ตามที่ไม่ใช่เจ้าหน้าที่ (role admin) กดอนุมัติได้
+  // แม้จะผ่านการเช็คตอนโหลดหน้ามาแล้วก็ตาม
+  if (!isStaff()) {
+    toast("เฉพาะเจ้าหน้าที่เท่านั้นที่สามารถอนุมัติได้");
+    renderTable();
+    return;
+  }
   if (!confirm("อนุมัติผู้ใช้นี้?")) return;
   db.ref("users/" + id).update({ status: "approved" })
     .then(() => {
@@ -329,6 +345,11 @@ function approveUser(id) {
 }
 
 function changeRole(id, role) {
+  if (!isStaff()) {
+    toast("เฉพาะเจ้าหน้าที่เท่านั้นที่สามารถเปลี่ยน Role ได้");
+    renderTable();
+    return;
+  }
   const before = usersCache[id]?.role || "";
   if (before === role) return;
   db.ref("users/" + id).update({ role })
@@ -340,6 +361,11 @@ function changeRole(id, role) {
 }
 
 function deleteUser(id) {
+  if (!isStaff()) {
+    toast("เฉพาะเจ้าหน้าที่เท่านั้นที่สามารถลบผู้ใช้ได้");
+    renderTable();
+    return;
+  }
   const name = usersCache[id]?.name || id;
   if (!confirm(`ลบผู้ใช้ "${name}"?`)) return;
   db.ref("users/" + id).remove()
