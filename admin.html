@@ -6,6 +6,7 @@
 <title>จัดการผู้ใช้งาน — VaxKolok</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
@@ -132,6 +133,16 @@ tbody tr.row-pending:hover{background:#fef3cd}
 /* toast */
 #toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 18px;font-size:13px;color:var(--text);box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(12px);opacity:0;transition:all .22s ease;pointer-events:none;z-index:999;max-width:280px}
 #toast.show{transform:translateY(0);opacity:1}
+
+/* log category pills + export */
+.log-toolbar{padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--surface2)}
+.cat-pills{display:flex;gap:6px;flex-wrap:wrap}
+.cat-pill{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:500;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--font)}
+.cat-pill:hover{border-color:var(--green);color:var(--text)}
+.cat-pill.active{background:var(--green);border-color:var(--green);color:#fff}
+.btn-pdf{background:var(--green);color:#fff;padding:7px 14px;margin-left:auto}
+.btn-pdf:hover{opacity:.88}
+.tl-cat{font-weight:400;color:var(--hint);font-size:11px}
 </style>
 </head>
 <body>
@@ -199,10 +210,23 @@ tbody tr.row-pending:hover{background:#fef3cd}
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="logCard">
     <div class="card-head">
-      ประวัติการใช้งาน
-      <span class="sub">30 รายการล่าสุด</span>
+      ประวัติการทำงานทั้งหมด
+      <span class="sub" id="logCountSub">กำลังโหลด…</span>
+    </div>
+    <div class="log-toolbar">
+      <div class="cat-pills" id="catPills">
+        <button type="button" class="cat-pill active" data-cat="all" onclick="setLogCategory('all',this)">ทั้งหมด</button>
+        <button type="button" class="cat-pill" data-cat="auth" onclick="setLogCategory('auth',this)">เข้า-ออกระบบ</button>
+        <button type="button" class="cat-pill" data-cat="user" onclick="setLogCategory('user',this)">จัดการผู้ใช้งาน</button>
+        <button type="button" class="cat-pill" data-cat="child" onclick="setLogCategory('child',this)">ข้อมูลเด็ก/วัคซีน</button>
+        <button type="button" class="cat-pill" data-cat="import" onclick="setLogCategory('import',this)">นำเข้า Excel</button>
+      </div>
+      <input type="month" id="logMonth" onchange="renderLogs()" title="กรองตามเดือน (เว้นว่าง = ทุกช่วงเวลา)" style="max-width:150px">
+      <button type="button" class="btn btn-pdf" onclick="exportLogsPDF()">
+        <i class="fa-solid fa-file-pdf"></i> บันทึกเป็น PDF
+      </button>
     </div>
     <div class="timeline" id="activityTimeline">
       <div style="text-align:center;color:var(--muted);padding:24px;font-size:13px">กำลังโหลด…</div>
@@ -388,49 +412,208 @@ function saveLog(action, detail = "", before = "", after = "") {
   });
 }
 
-// ─── Activity timeline ────────────────────────────────────
-function loadLogs() {
-  db.ref("loginLogs").orderByChild("timestamp").limitToLast(30).on("value", snap => {
-    const items = Object.values(snap.val() || {}).reverse();
-    if (!items.length) {
-      document.getElementById("activityTimeline").innerHTML =
-        `<div style="text-align:center;color:var(--muted);padding:24px;font-size:13px">ยังไม่มีประวัติ</div>`;
-      return;
-    }
-    document.getElementById("activityTimeline").innerHTML = items.map(l => {
-      // รองรับทั้ง field เก่า (name/loginTime/logoutTime) และใหม่ (user/action/time)
-      const userName = l.user || l.name || "—";
-      let action = l.action;
-      if (!action) {
-        if (l.loginTime)  action = "เข้าสู่ระบบ";
-        else if (l.logoutTime) action = "ออกจากระบบ";
-        else action = "—";
-      }
-      const timeStr = l.time || l.loginTime || l.logoutTime || "";
+// ─── Activity log: รวม loginLogs (เข้า-ออกระบบ/จัดการผู้ใช้) + activityLogs (ข้อมูลเด็ก/วัคซีน) ──
+const catLabel = {
+  all: "ทั้งหมด", auth: "เข้า-ออกระบบ", user: "จัดการผู้ใช้งาน",
+  child: "ข้อมูลเด็ก/วัคซีน", import: "นำเข้า Excel"
+};
+const USER_MGMT_ACTIONS = ["อนุมัติผู้ใช้", "เปลี่ยน Role", "ลบผู้ใช้"];
 
-      let dot = "edit";
-      if (action === "เข้าสู่ระบบ")   dot = "login";
-      if (action === "ออกจากระบบ")    dot = "logout";
-      if (action === "อนุมัติผู้ใช้") dot = "approve";
+let allLogsCache  = [];
+let loginLogsRaw  = null;
+let activityLogsRaw = null;
+let curCategory   = "all";
 
-      const extra = l.after
-        ? ` → ${l.after}`
-        : (l.detail && l.detail !== userName ? ` (${l.detail})` : "");
-
-      return `<div class="tl-row">
-        <div class="tl-dot ${dot}"></div>
-        <div class="tl-body">
-          <div class="tl-who">${userName}</div>
-          <div class="tl-act">${action}${extra}</div>
-        </div>
-        <div class="tl-time">${l.date || ""}<br>${timeStr}</div>
-      </div>`;
-    }).join("");
-  });
+function classifyLog(l) {
+  if (l._src === "login") {
+    return USER_MGMT_ACTIONS.includes(l.action) ? "user" : "auth";
+  }
+  return l.action === "นำเข้า Excel" ? "import" : "child";
 }
+
+function setLogCategory(cat, el) {
+  curCategory = cat;
+  document.querySelectorAll("#catPills .cat-pill").forEach(b => b.classList.remove("active"));
+  el.classList.add("active");
+  renderLogs();
+}
+
+function loadLogs() {
+  db.ref("loginLogs").on("value", snap => {
+    loginLogsRaw = snap.val() || {};
+    mergeAndRenderLogs();
+  }, err => console.error("loginLogs:", err));
+
+  db.ref("activityLogs").on("value", snap => {
+    activityLogsRaw = snap.val() || {};
+    mergeAndRenderLogs();
+  }, err => console.error("activityLogs:", err));
+}
+
+function mergeAndRenderLogs() {
+  if (loginLogsRaw === null || activityLogsRaw === null) return; // รอโหลดครบทั้งสอง node ก่อน
+  const loginItems = Object.values(loginLogsRaw).map(l => ({ ...l, _src: "login" }));
+  const actItems    = Object.values(activityLogsRaw).map(l => ({ ...l, _src: "activity" }));
+  allLogsCache = [...loginItems, ...actItems]
+    .map(l => ({ ...l, _cat: classifyLog(l) }))
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  renderLogs();
+}
+
+function filteredLogs() {
+  const monthVal = document.getElementById("logMonth")?.value; // "YYYY-MM" หรือว่าง
+  let list = allLogsCache;
+  if (curCategory !== "all") list = list.filter(l => l._cat === curCategory);
+  if (monthVal) {
+    const [y, m] = monthVal.split("-").map(Number);
+    const start  = new Date(y, m - 1, 1).getTime();
+    const end    = new Date(y, m, 1).getTime() - 1;
+    list = list.filter(l => (l.timestamp || 0) >= start && (l.timestamp || 0) <= end);
+  }
+  return list;
+}
+
+function logDisplayFields(l) {
+  const userName = l.user || l.name || "—";
+  let action = l.action;
+  if (!action) action = l.loginTime ? "เข้าสู่ระบบ" : (l.logoutTime ? "ออกจากระบบ" : "—");
+  const timeStr = l.time || l.loginTime || l.logoutTime || "-";
+  return { userName, action, timeStr };
+}
+
+function renderLogs() {
+  const list = filteredLogs();
+  const RENDER_CAP = 200;
+
+  document.getElementById("logCountSub").textContent = `${list.length.toLocaleString("th-TH")} รายการ`;
+
+  if (!list.length) {
+    document.getElementById("activityTimeline").innerHTML =
+      `<div style="text-align:center;color:var(--muted);padding:24px;font-size:13px">ไม่พบประวัติในตัวกรองนี้</div>`;
+    return;
+  }
+
+  let html = list.slice(0, RENDER_CAP).map(l => {
+    const { userName, action, timeStr } = logDisplayFields(l);
+
+    let dot = "edit";
+    if (action === "เข้าสู่ระบบ")   dot = "login";
+    if (action === "ออกจากระบบ")    dot = "logout";
+    if (action === "อนุมัติผู้ใช้") dot = "approve";
+
+    const target = l.target ? ` — ${l.target}` : "";
+    const extra  = (l.after && l.after !== "-")
+      ? ` → ${l.after}`
+      : (l.detail && l.detail !== userName ? ` (${l.detail})` : "");
+
+    return `<div class="tl-row">
+      <div class="tl-dot ${dot}"></div>
+      <div class="tl-body">
+        <div class="tl-who">${userName} <span class="tl-cat">· ${catLabel[l._cat] || "-"}</span></div>
+        <div class="tl-act">${action}${target}${extra}</div>
+      </div>
+      <div class="tl-time">${l.date || ""}<br>${timeStr}</div>
+    </div>`;
+  }).join("");
+
+  if (list.length > RENDER_CAP) {
+    html += `<div style="text-align:center;color:var(--muted);padding:12px;font-size:12px">
+      แสดง ${RENDER_CAP} จาก ${list.length.toLocaleString("th-TH")} รายการ — ใช้ตัวกรองเดือน/หมวดหมู่เพื่อดูเพิ่มเติม
+      หรือกด "บันทึกเป็น PDF" เพื่อได้รายงานฉบับเต็ม
+    </div>`;
+  }
+
+  document.getElementById("activityTimeline").innerHTML = html;
+}
+
+// ─── ส่งออกเป็น PDF (ตามหมวด/เดือนที่กำลังกรองอยู่) ─────────
+function escapeHtml(s) {
+  return String(s ?? "-").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function exportLogsPDF() {
+  const list = [...filteredLogs()].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+  if (!list.length) { toast("ไม่มีข้อมูลให้ส่งออกในตัวกรองนี้"); return; }
+
+  const monthVal = document.getElementById("logMonth")?.value;
+  const monthNames = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+    "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  const periodLabel = monthVal
+    ? (() => { const [y, m] = monthVal.split("-").map(Number); return `${monthNames[m-1]} ${y + 543}`; })()
+    : "ทุกช่วงเวลา";
+  const title = `รายงานประวัติการทำงาน — ${catLabel[curCategory]} (${periodLabel})`;
+
+  const counts = { auth: 0, user: 0, child: 0, import: 0 };
+  list.forEach(l => { counts[l._cat] = (counts[l._cat] || 0) + 1; });
+
+  const rows = list.map(l => {
+    const { userName, action, timeStr } = logDisplayFields(l);
+    return `<tr>
+      <td>${escapeHtml(l.date)}</td>
+      <td>${escapeHtml(timeStr)}</td>
+      <td>${escapeHtml(catLabel[l._cat])}</td>
+      <td>${escapeHtml(action)}</td>
+      <td>${escapeHtml(l.target || l.detail)}</td>
+      <td>${escapeHtml(l.before)}</td>
+      <td>${escapeHtml(l.after)}</td>
+      <td>${escapeHtml(userName)}</td>
+    </tr>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8">
+<title>${title}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{font-family:'Sarabun',sans-serif;color:#1a2e1a;margin:26px;}
+  h1{font-size:19px;margin:0 0 3px;}
+  .sub{color:#6b7f6b;font-size:12.5px;margin-bottom:18px;}
+  .stats{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+  .stat{flex:1;min-width:110px;border:1.5px solid #dde5dd;border-radius:10px;padding:11px 14px;}
+  .stat .n{font-size:22px;font-weight:700;}
+  .stat .l{font-size:11.5px;color:#6b7f6b;}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th{background:#f7f9f7;text-align:left;padding:7px 9px;border-bottom:2px solid #dde5dd;font-size:10.5px;text-transform:uppercase;color:#6b7f6b;}
+  td{padding:7px 9px;border-bottom:1px solid #eef2ee;vertical-align:top;}
+  @media print { body{margin:8mm;} }
+</style></head>
+<body>
+  <h1>${title}</h1>
+  <div class="sub">ระบบ VaxKolok — ระบบติดตามวัคซีนเด็ก อ.สุไหงโก-ลก · สร้างรายงานเมื่อ ${escapeHtml(new Date().toLocaleString("th-TH"))} · ทั้งหมด ${list.length.toLocaleString("th-TH")} รายการ</div>
+  <div class="stats">
+    <div class="stat"><div class="n">${counts.auth}</div><div class="l">เข้า-ออกระบบ</div></div>
+    <div class="stat"><div class="n">${counts.user}</div><div class="l">จัดการผู้ใช้งาน</div></div>
+    <div class="stat"><div class="n">${counts.child}</div><div class="l">ข้อมูลเด็ก/วัคซีน</div></div>
+    <div class="stat"><div class="n">${counts.import}</div><div class="l">นำเข้า Excel</div></div>
+  </div>
+  <table>
+    <thead><tr><th>วันที่</th><th>เวลา</th><th>หมวดหมู่</th><th>การกระทำ</th><th>รายการ</th><th>ก่อน</th><th>หลัง</th><th>ผู้ทำรายการ</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <script>window.onload = () => setTimeout(() => window.print(), 400);<\/script>
+</body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w) { toast("เบราว์เซอร์บล็อก pop-up กรุณาอนุญาตเพื่อสร้างรายงาน"); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+document.getElementById("logMonth").max = new Date().toISOString().slice(0, 7);
 
 loadAdmin();
 loadLogs();
+
+// ถ้ามาจากลิงก์ #logCard (ปุ่ม "ประวัติการทำงาน" ในหน้าอื่น) ให้เลื่อนไปที่การ์ดประวัติทันที
+if (location.hash === "#logCard") {
+  window.addEventListener("load", () => {
+    setTimeout(() => document.getElementById("logCard")?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
+  });
+}
 </script>
 </body>
 </html>

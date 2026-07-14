@@ -175,7 +175,7 @@ input.form-control:focus {
   transition:all .15s; display:inline-flex; align-items:center; gap:6px;
 }
 .btn-primary        { background:var(--blue);    color:#fff; border-color:var(--blue); }
-.btn-primary:hover  { background:#1d4ed8; }
+.btn-primary:hover  { background:#149a41; }
 .btn-success        { background:var(--green);   color:#fff; border-color:var(--green); }
 .btn-success:hover  { background:var(--accent-dk); }
 .btn-outline        { background:var(--surface); color:var(--ink-2); border-color:var(--border); }
@@ -329,7 +329,7 @@ table.tbl   { width:100%; border-collapse:collapse; font-size:13px; }
 
 <!-- TOPBAR -->
 <nav class="topbar">
-  <a href="landing.html" class="topbar-brand">
+  <a href="login.html" class="topbar-brand">
     <div class="logo-icon">
       <i class="fa-solid fa-syringe" style="color:#fff;font-size:16px;"></i>
     </div>
@@ -341,8 +341,11 @@ table.tbl   { width:100%; border-collapse:collapse; font-size:13px; }
   <div class="topbar-links">
     <a href="index.html"        class="topbar-link active"><i class="fa-solid fa-house fa-sm"></i> หน้าแรก</a>
     <a href="symptoms.html"     class="topbar-link"><i class="fa-solid fa-heart-pulse fa-sm"></i> ติดตามอาการ</a>
-    <a href="admin.html" id="adminMenu" class="topbar-link"><i class="fa-solid fa-gear fa-sm"></i> Admin</a>
+    <a href="report.html"       class="topbar-link"><i class="fa-solid fa-chart-column fa-sm"></i> รายงานวัคซีน</a>
     <a href="import-excel.html" class="topbar-link"><i class="fa-solid fa-file-import fa-sm"></i> นำเข้าข้อมูล</a>
+    <a id="exportBtn" href="admin.html#logCard" class="topbar-link" style="display:none">
+      <i class="fa-solid fa-clock-rotate-left fa-sm"></i> ประวัติการทำงาน
+    </a>
   </div>
   <div class="dropdown">
     <button class="btn-avatar dropdown-toggle border-0 bg-transparent" data-bs-toggle="dropdown">
@@ -634,6 +637,9 @@ table.tbl   { width:100%; border-collapse:collapse; font-size:13px; }
   <a href="add.html">
     <i class="fa-solid fa-plus"></i><span>เพิ่มข้อมูล</span>
   </a>
+  <a href="report.html">
+    <i class="fa-solid fa-chart-column"></i><span>รายงาน</span>
+  </a>
   <a href="admin.html">
     <i class="fa-solid fa-gear"></i><span>Admin</span>
   </a>
@@ -653,8 +659,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (roleDrop) roleDrop.textContent = roleLabel;
 
   const adminMenu = document.getElementById("adminMenu");
+  const exportBtn = document.getElementById("exportBtn");
   if (role !== "admin") {
     if (adminMenu) adminMenu.style.display = "none";
+  } else {
+    if (exportBtn) exportBtn.style.display = "inline-flex";
   }
 });
 

@@ -179,11 +179,19 @@ function patchBEYear(fp) {
   }
 }
 
+function isoToLocalDate(isoVal) {
+  if (!isoVal) return null;
+  const parts = String(isoVal).split("-").map(Number);
+  if (parts.length !== 3 || parts.some(n => !n && n !== 0)) return null;
+  const [y, m, d] = parts;
+  return new Date(y, m - 1, d);
+}
+
 function initThaiDatepicker(el, isoVal, onChangeCb) {
   const fp = flatpickr(el, {
     locale: "th",
     dateFormat: "d/m/Y",
-    defaultDate: isoVal || null,
+    defaultDate: isoToLocalDate(isoVal),
     allowInput: false,
     onReady(_, __, fp)      { patchBEYear(fp); _setThaiValue(fp); },
     onMonthChange(_, __, fp){ patchBEYear(fp); },
@@ -630,7 +638,9 @@ function updateIndexKPI() {
 
     for (const id in data) {
       const c = data[id] || {};
-      if (!c.name?.trim()) continue;
+      // ใช้เกณฑ์เดียวกับ loadFollow() (ต้องมีทั้งชื่อและเลขบัตร) ไม่งั้นตัวเลข KPI/โดนัท
+      // กับตัวเลขในตารางจะไม่ตรงกัน เพราะนับจำนวนเด็กที่ต่างกัน
+      if (!c.name?.trim() || !c.cid?.trim()) continue;
       if (tambon     !== "all" && c.tambon            !== tambon)     continue;
       if (typeArea   !== "all" && (c.typeArea || "1") !== typeArea)   continue;
       if (hospitalKPI !== "all" && c.hospital         !== hospitalKPI) continue;
@@ -947,8 +957,12 @@ function saveVaccines() {
     if (!dateVal) { dateVal = todayISO(); fp?.setDate(new Date(), true); }
     newVaccines[name] = dateVal;
   });
+  let childInfo   = {};
+  let oldVaccines = {};
   db.ref("children/" + currentId).once("value").then(snap => {
     const child = snap.val() || {};
+    childInfo   = child;
+    oldVaccines = child.vaccines || {};
     return Promise.all([
       db.ref("children/" + currentId).update({ vaccines: newVaccines, updatedAt: new Date().toLocaleString("th-TH") }),
       db.ref("symptoms/" + currentId).update({
@@ -960,6 +974,23 @@ function saveVaccines() {
       })
     ]);
   }).then(() => {
+    // ระบุว่าเป็นวัคซีนตัวไหนบ้างที่ถูกเพิ่ม/แก้วันที่/ลบออก
+    const added = [], changed = [], removed = [];
+    Object.keys(newVaccines).forEach(v => {
+      const label = vaccineLabel[v] || v;
+      if (!oldVaccines[v]) added.push(label);
+      else if (oldVaccines[v] !== newVaccines[v]) changed.push(label);
+    });
+    Object.keys(oldVaccines).forEach(v => {
+      if (!newVaccines[v]) removed.push(vaccineLabel[v] || v);
+    });
+    const parts = [];
+    if (added.length)   parts.push(`เพิ่ม: ${added.join(", ")}`);
+    if (changed.length) parts.push(`แก้วันที่: ${changed.join(", ")}`);
+    if (removed.length) parts.push(`ลบ: ${removed.join(", ")}`);
+    const summary = parts.length ? parts.join(" | ") : "ไม่มีการเปลี่ยนแปลง";
+
+    saveLog("แก้ไขข้อมูล", `${childInfo.name || "-"} (${childInfo.cid || "-"}) — ข้อมูลวัคซีน`, "-", summary);
     const modalEl = document.getElementById("vaccineModal");
     if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).hide();
     try { sendLineFollowUp(currentId); } catch (e) { /* LINE ไม่ได้ตั้งค่า */ }
@@ -973,19 +1004,44 @@ function saveVaccines() {
 // =========================
 function updateStatus(id, status) {
   if (status === "pending") {
-    db.ref("children/" + id + "/vaccines").remove();
-    loadFollow(); loadvaccineChart();
+    db.ref("children/" + id).once("value").then(snap => {
+      const c = snap.val() || {};
+      const vaccineNames = Object.keys(c.vaccines || {}).map(v => vaccineLabel[v] || v).join(", ") || "-";
+      return db.ref("children/" + id + "/vaccines").remove().then(() => {
+        saveLog("แก้ไขข้อมูล", `${c.name || "-"} (${c.cid || "-"}) — สถานะวัคซีน`, `มีวัคซีน: ${vaccineNames}`, "รีเซ็ตเป็นรอฉีด (ล้างข้อมูลวัคซีนทั้งหมด)");
+      });
+    }).then(() => { loadFollow(); loadvaccineChart(); })
+      .catch(err => console.error("updateStatus:", err));
   } else { openVaccineModal(id); }
 }
 
 // =========================
-// autosave
+// autosave / activity log
 // =========================
 let saveTimer = {};
 
-function saveLog(action, field, oldVal, newVal) {
-  // stub — บันทึก log ถ้าต้องการ
-  console.log(`[saveLog] ${action}: ${field} "${oldVal}" → "${newVal}"`);
+// ป้ายชื่อฟิลด์ภาษาไทย ใช้แสดงในรายงานสรุป
+const fieldLabelMap = {
+  hn: "HN", cid: "เลขบัตรประชาชน", name: "ชื่อ-สกุล", tambon: "ตำบล",
+  hospital: "หน่วยบริการ", house: "บ้านเลขที่", birth: "วันเกิด",
+  note: "หมายเหตุ", village: "หมู่/ชุมชน", soi: "ซอย",
+  phone: "เบอร์โทร", typeArea: "ประเภทพื้นที่", vaccines: "ข้อมูลวัคซีน"
+};
+
+// บันทึกประวัติการเพิ่ม/แก้ไข/ลบ ข้อมูลเด็ก ลง Firebase (ใช้ทำรายงานสรุปรายเดือน)
+function saveLog(action, target, oldVal, newVal) {
+  const n = new Date();
+  db.ref("activityLogs").push({
+    user: localStorage.getItem("name") || "-",
+    role: localStorage.getItem("role") || "-",
+    action,
+    target: target || "-",
+    before: (oldVal === undefined || oldVal === null || oldVal === "") ? "-" : oldVal,
+    after:  (newVal === undefined || newVal === null || newVal === "") ? "-" : newVal,
+    date: n.toLocaleDateString("th-TH"),
+    time: n.toLocaleTimeString("th-TH"),
+    timestamp: Date.now()
+  }).catch(err => console.error("saveLog:", err));
 }
 
 function autoSave(id, field, value) {
@@ -996,7 +1052,11 @@ function autoSave(id, field, value) {
       const oldValue = oldData[field] || "-";
       return db.ref("children/" + id).update({
         [field]: value, updatedAt: new Date().toLocaleString("th-TH")
-      }).then(() => { saveLog("แก้ไขข้อมูล", field, oldValue, value); showSaved(); });
+      }).then(() => {
+        const who = `${oldData.name || "-"} (${oldData.cid || "-"}) — ${fieldLabelMap[field] || field}`;
+        saveLog("แก้ไขข้อมูล", who, oldValue, value);
+        showSaved();
+      });
     }).catch(err => console.error("autoSave:", err));
   }, 800);
 }
@@ -1088,6 +1148,8 @@ function addChildFull() {
       status: "รอติดตาม", priority: 99, time: Date.now()
     });
   }).then(() => {
+    const vaccineNames = Object.keys(vaccines).map(v => vaccineLabel[v] || v).join(", ") || "ยังไม่ได้ระบุวัคซีน";
+    saveLog("เพิ่มข้อมูล", `${c.name || "-"} (${c.cid || "-"})`, "-", `เพิ่มข้อมูลใหม่ · วัคซีน: ${vaccineNames}`);
     alert("บันทึกแล้ว"); resetForm(); loadFollow(); loadvaccineChart();
     if (confirm("ไปหน้าติดตามอาการไหม?")) window.location.href = "symptoms.html";
   }).catch(err => { console.error("addChildFull:", err); alert("เกิดข้อผิดพลาด:\n" + err.message); });
@@ -1110,8 +1172,12 @@ function buildVillageDropdown(tambon, selected, id) {
 // =========================
 function deleteChild(id) {
   if (confirm("ลบข้อมูลนี้?")) {
-    db.ref("children/" + id).remove()
-      .then(() => { loadFollow(); loadvaccineChart(); })
+    db.ref("children/" + id).once("value").then(snap => {
+      const c = snap.val() || {};
+      return db.ref("children/" + id).remove().then(() => {
+        saveLog("ลบข้อมูล", `${c.name || "-"} (${c.cid || "-"})`, "มีข้อมูลในระบบ", "ถูกลบออกจากระบบ");
+      });
+    }).then(() => { loadFollow(); loadvaccineChart(); })
       .catch(err => console.error("deleteChild:", err));
   }
 }
@@ -1177,6 +1243,7 @@ async function importExcel() {
         if (hn && hos) hnMap[hn + "_" + hos] = key;
       });
       let updates = {}, addCount = 0, updateCount = 0;
+      const vaccineTypesSeen = new Set();
       rows.forEach(r => {
         const hn  = cleanValue(r.pid);
         const hos = cleanValue(r.hoscode);
@@ -1202,7 +1269,7 @@ async function importExcel() {
         };
         Object.entries(vaccineFields).forEach(([name, field]) => {
           const value = cleanValue(r[field]);
-          if (value) child.vaccines[name] = value;
+          if (value) { child.vaccines[name] = value; vaccineTypesSeen.add(name); }
         });
         if (hnMap[uniqueKey]) {
           const oldChild = oldData[id] || {};
@@ -1217,6 +1284,8 @@ async function importExcel() {
         updates[id] = child;
       });
       await db.ref("children").update(updates);
+      const vaccineNames = [...vaccineTypesSeen].map(v => vaccineLabel[v] || v).join(", ") || "ไม่มีข้อมูลวัคซีนในไฟล์";
+      saveLog("นำเข้า Excel", `${file.name || "ไฟล์ Excel"} — วัคซีนที่พบ: ${vaccineNames}`, `เพิ่มใหม่ ${addCount} รายการ`, `อัปเดต ${updateCount} รายการ`);
       alert(`เพิ่มใหม่ ${addCount} รายการ\nอัปเดต ${updateCount} รายการ`);
       loadFollow(); loadvaccineChart();
     } catch (err) {
@@ -1241,7 +1310,12 @@ function formatVillage(tambon, village) {
 }
 
 function updateVillage(id, value) {
-  db.ref("children/" + id).update({ village: value.replace("หมู่ ",""), updatedAt: new Date().toLocaleString("th-TH") });
+  const newVillage = value.replace("หมู่ ", "");
+  db.ref("children/" + id).once("value").then(snap => {
+    const c = snap.val() || {};
+    return db.ref("children/" + id).update({ village: newVillage, updatedAt: new Date().toLocaleString("th-TH") })
+      .then(() => saveLog("แก้ไขข้อมูล", `${c.name || "-"} (${c.cid || "-"}) — หมู่/ชุมชน`, c.village, newVillage));
+  }).catch(err => console.error("updateVillage:", err));
 }
 
 function reloadRealtime() { if (childRef) childRef.off(); loadFollow(); }
@@ -1256,7 +1330,11 @@ function changeTambon(el) {
 }
 
 function autoSaveVillage(id, value) {
-  db.ref("children/" + id).update({ village: value, updatedAt: new Date().toLocaleString("th-TH") });
+  db.ref("children/" + id).once("value").then(snap => {
+    const c = snap.val() || {};
+    return db.ref("children/" + id).update({ village: value, updatedAt: new Date().toLocaleString("th-TH") })
+      .then(() => saveLog("แก้ไขข้อมูล", `${c.name || "-"} (${c.cid || "-"}) — หมู่/ชุมชน`, c.village, value));
+  }).catch(err => console.error("autoSaveVillage:", err));
 }
 
 // =========================

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>เข้าสู่ระบบ — VaxKolok DHB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -13,23 +13,21 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f0f4fa;
+  --bg:#f5f7fa;
   --surface:#ffffff;
   --surface2:#f5f7fb;
-  --border:#dde3ef;
-  --text:#0f1e3d;
+  --border:#e3e8ef;
+  --text:#0d1b2a;
   --muted:#5a6a8a;
   --hint:#a0aec0;
-  --blue:#1a4fa0;
-  --blue-hover:#163e80;
-  --blue-light:#dbeafe;
-  --orange:#e07b10;
-  --orange-light:#fff3e0;
+  --green:#059669;
+  --green-hover:#047857;
+  --green-light:#ecfdf5;
   --red:#8b1a1a;
   --red-light:#fee2e2;
   --radius:16px;
   --radius-sm:10px;
-  --font:'Sarabun',system-ui,sans-serif;
+  --font:'IBM Plex Sans Thai',system-ui,sans-serif;
 }
 body{
   background:var(--bg);
@@ -50,7 +48,7 @@ body{
   padding:36px 26px 32px;
   width:100%;
   max-width:520px;
-  box-shadow:0 2px 16px rgba(26,79,160,.07);
+  box-shadow:0 2px 16px rgba(5,150,105,.07);
 }
 
 /* logo */
@@ -72,7 +70,7 @@ body{
   line-height:1.2;
   color:var(--text);
 }
-.logo-text h2 span{color:var(--orange)}
+.logo-text h2 span{color:var(--green)}
 .logo-text p{
   font-size:12px;
   color:var(--muted);
@@ -108,7 +106,7 @@ body{
   transition:border-color .15s,background .15s;
   letter-spacing:.5px;
 }
-.field input:focus{border-color:var(--blue);background:#fff}
+.field input:focus{border-color:var(--green);background:#fff}
 .field input::placeholder{color:var(--hint);letter-spacing:0}
 .field .err{font-size:12px;color:var(--red);margin-top:5px;display:none}
 .field.has-err input{border-color:var(--red)}
@@ -151,17 +149,17 @@ body{
   background:#fff;
   border:1.5px solid var(--border);
   border-radius:7px;
-  box-shadow:inset 0 1px 2px rgba(15,30,61,.04);
+  box-shadow:inset 0 1px 2px rgba(13,27,42,.04);
   flex:0 0 auto;
   transition:border-color .15s,box-shadow .15s,color .15s;
 }
 .field .cid-digit.filled{
-  border-color:var(--blue-light);
-  color:var(--blue);
+  border-color:#a7f3d0;
+  color:var(--green);
 }
 .field .cid-digit:focus{
-  border-color:var(--blue);
-  box-shadow:0 0 0 3px var(--blue-light);
+  border-color:var(--green);
+  box-shadow:0 0 0 3px var(--green-light);
 }
 .cid-sep{
   color:var(--muted);
@@ -185,7 +183,7 @@ body{
 /* button */
 .btn-login{
   width:100%;height:50px;
-  background:var(--blue);
+  background:var(--green);
   color:#fff;
   border:none;
   border-radius:var(--radius-sm);
@@ -198,7 +196,7 @@ body{
   display:flex;align-items:center;justify-content:center;gap:8px;
   letter-spacing:.3px;
 }
-.btn-login:hover{background:var(--blue-hover)}
+.btn-login:hover{background:var(--green-hover)}
 .btn-login:active{opacity:.88}
 .btn-login:disabled{opacity:.6;cursor:not-allowed}
 
@@ -225,7 +223,7 @@ body{
   padding-top:18px;
 }
 .reg-row a{
-  color:var(--orange);
+  color:var(--green);
   font-weight:600;
   text-decoration:none;
   margin-left:4px;
@@ -246,46 +244,45 @@ body{
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.err{border-color:#f5c1c1;background:var(--red-light);color:var(--red)}
 
- .btn-login:hover { opacity: 0.88; }
-    .btn-dashboard {
-      background: #fff;
-      color: #3b82f6;
-      border: 1.5px solid #3b82f6;
-      border-radius: 10px;
-      padding: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      width: 100%;
-      margin-top: 10px;
-      transition: background .2s, color .2s;
-      cursor: pointer;
-    }
-    .btn-dashboard:hover {
-      background: #eff6ff;
-    }
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 18px 0 14px;
-      color: #94a3b8;
-      font-size: 13px;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #e2e8f0;
-    }
-    .register-link {
-      text-align: center;
-      margin-top: 18px;
-      font-size: 13px;
-      color: #64748b;
-    }
-    .register-link a { color: #3b82f6; text-decoration: none; font-weight: 600; }
-    .register-link a:hover { text-decoration: underline; }
-    #msg { min-height: 20px; text-align: center; font-size: 13px; margin-top: 8px; }
+.btn-dashboard {
+  background: #fff;
+  color: var(--green);
+  border: 1.5px solid var(--green);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 10px;
+  transition: background .2s, color .2s;
+  cursor: pointer;
+}
+.btn-dashboard:hover {
+  background: var(--green-light);
+}
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 14px;
+  color: var(--hint);
+  font-size: 13px;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.register-link {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.register-link a { color: var(--green); text-decoration: none; font-weight: 600; }
+.register-link a:hover { text-decoration: underline; }
+#msg { min-height: 20px; text-align: center; font-size: 13px; margin-top: 8px; }
 </style>
 </head>
 

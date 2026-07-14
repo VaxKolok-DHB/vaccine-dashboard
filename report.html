@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VaxKolok — รายงานวัคซีนรายเดือน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="app.js"></script>
+<style>
+:root{
+  --ink:#0d1b2a; --ink-2:#3d5166; --ink-3:#7a909f;
+  --canvas:#f5f7fa; --surface:#ffffff; --border:#e3e8ef;
+  --green:#059669; --green-dk:#047857; --green-bg:#ecfdf5;
+  --amber:#d97706; --amber-bg:#fffbeb;
+  --blue:#2563eb; --blue-bg:#eff6ff;
+  --radius:10px; --radius-lg:16px;
+  --font:'IBM Plex Sans Thai',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--canvas);color:var(--ink);min-height:100vh;padding-bottom:5rem;font-size:15px;line-height:1.55}
+
+.topbar{position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 24px;height:60px;background:var(--green);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.topbar-brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.topbar-brand .logo-icon{width:36px;height:36px;background:rgba(255,255,255,.22);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.topbar-brand .logo-name{font-size:20px;font-weight:800;color:#fff;line-height:1.1}
+.topbar-brand .logo-sub{font-size:11px;color:rgba(255,255,255,.8)}
+.topbar-links{display:flex;align-items:center;gap:4px;margin-left:auto}
+.topbar-link{font-size:13px;font-weight:600;color:rgba(255,255,255,.85);text-decoration:none;padding:6px 12px;border-radius:8px;transition:background .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.topbar-link:hover{background:rgba(255,255,255,.15);color:#fff}
+.topbar-link.active{background:rgba(255,255,255,.22);color:#fff}
+.btn-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;cursor:pointer}
+@media(max-width:768px){
+  .topbar{padding:0 14px;gap:8px}
+  .topbar-brand .logo-sub{display:none}
+  .topbar-brand .logo-name{font-size:16px}
+  .topbar-links{display:none}
+}
+
+.wrap{max-width:720px;margin:0 auto;padding:1.25rem 1rem}
+.page-title{font-size:19px;font-weight:800;margin-bottom:2px}
+.page-sub{font-size:13px;color:var(--ink-3);margin-bottom:1.25rem}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem;margin-bottom:1rem}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.controls input[type=month]{flex:1;min-width:160px;font-family:var(--font);font-size:15px;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;font-size:14px;font-weight:600;border:none;border-radius:var(--radius);cursor:pointer;font-family:var(--font);white-space:nowrap;transition:opacity .15s}
+.btn:hover{opacity:.88}
+.btn-primary{background:var(--green);color:#fff}
+.btn-outline{background:var(--surface);color:var(--ink-2);border:1px solid var(--border)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:var(--radius-lg);padding:14px 12px}
+.stat-card.blue{border-left-color:var(--blue)}
+.stat-card.amber{border-left-color:var(--amber)}
+.stat-val{font-size:24px;font-weight:800;line-height:1}
+.stat-lbl{font-size:11px;color:var(--ink-3);margin-top:5px;font-weight:600}
+@media(max-width:480px){.stat-val{font-size:19px}.stats-row{gap:7px}.stat-card{padding:10px 8px}}
+
+.loading,.empty-box,.err-box{text-align:center;padding:2.5rem 1rem;color:var(--ink-3);font-size:14px}
+.err-box{color:#b91c1c}
+
+.vax-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden}
+.vax-card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;gap:10px}
+.vax-card-title{font-size:15px;font-weight:700}
+.vax-card-count{font-size:13px;font-weight:700;color:var(--green-dk);background:var(--green-bg);padding:5px 12px;border-radius:99px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.vax-card-count i{transition:transform .2s;font-size:11px}
+.vax-card.open .vax-card-count i{transform:rotate(180deg)}
+.vax-card-body{display:none;padding:0 16px 14px;border-top:1px solid var(--border)}
+.vax-card.open .vax-card-body{display:block}
+
+.tambon-group{margin-top:12px}
+.tambon-head{font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.village-group{margin-bottom:10px;background:var(--canvas);border-radius:var(--radius);padding:8px 10px}
+.village-head{font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
+.count-chip{font-size:11px;font-weight:600;color:var(--ink-3);background:var(--surface);border:1px solid var(--border);padding:1px 8px;border-radius:99px}
+.name-tbl{width:100%;border-collapse:collapse}
+.name-tbl td{padding:5px 0;font-size:13.5px;border-top:1px dashed var(--border)}
+.name-tbl tr:first-child td{border-top:none}
+.name-tbl td.hn{color:var(--ink-3);font-size:12px;white-space:nowrap}
+.name-tbl td.dt{color:var(--green-dk);font-size:12px;white-space:nowrap;text-align:right}
+
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:60px;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;z-index:999}
+.bottom-nav a{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:var(--ink-2);font-size:10.5px;gap:3px}
+.bottom-nav a i{font-size:18px}
+.bottom-nav a.active{color:var(--green)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="landing.html" class="topbar-brand">
+    <div class="logo-icon">
+      <i class="fa-solid fa-syringe" style="color:#fff;font-size:16px;"></i>
+    </div>
+    <div>
+      <div class="logo-name">VaxKolok</div>
+      <div class="logo-sub">อ.สุไหงโก-ลก · จ.นราธิวาส</div>
+    </div>
+  </a>
+  <div class="topbar-links">
+    <a href="index.html"        class="topbar-link"><i class="fa-solid fa-house fa-sm"></i> หน้าแรก</a>
+    <a href="symptoms.html"     class="topbar-link"><i class="fa-solid fa-heart-pulse fa-sm"></i> ติดตามอาการ</a>
+    <a href="report.html"       class="topbar-link active"><i class="fa-solid fa-chart-column fa-sm"></i> รายงานวัคซีน</a>
+    <a href="import-excel.html" class="topbar-link"><i class="fa-solid fa-file-import fa-sm"></i> นำเข้าข้อมูล</a>
+    <a id="exportBtn" href="admin.html#logCard" class="topbar-link" style="display:none">
+      <i class="fa-solid fa-clock-rotate-left fa-sm"></i> ประวัติการทำงาน
+    </a>
+  </div>
+  <div class="dropdown">
+    <button class="btn-avatar dropdown-toggle border-0 bg-transparent" data-bs-toggle="dropdown">
+      <i class="fa-solid fa-circle-user"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" style="font-size:13px;min-width:200px;border-radius:12px;border-color:#e5e7eb;">
+      <li>
+        <div class="px-3 pt-3 pb-2">
+          <div style="font-weight:700;color:#111827;" id="userNameDrop">—</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:2px;" id="userRoleDrop">—</div>
+        </div>
+      </li>
+      <li><hr class="dropdown-divider m-0"></li>
+      <li>
+        <a class="dropdown-item text-danger" href="#" onclick="logout()" style="padding:10px 16px;">
+          <i class="fa-solid fa-right-from-bracket fa-sm me-1"></i> ออกจากระบบ
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="page-title">รายงานสรุปการฉีดวัคซีนรายเดือน</div>
+  <div class="page-sub">เลือกเดือนเพื่อดูว่าฉีดวัคซีนอะไรไปบ้าง กี่คน ตำบล/หมู่ไหน ชื่ออะไร</div>
+
+  <div class="card">
+    <div class="controls">
+      <input type="month" id="reportMonth">
+      <button class="btn btn-primary" id="loadBtn" onclick="loadReport()">
+        <i class="fa-solid fa-magnifying-glass"></i> แสดงรายงาน
+      </button>
+      <button class="btn btn-outline" id="pdfBtn" onclick="exportReportPDF()" disabled>
+        <i class="fa-solid fa-file-pdf"></i> บันทึกเป็น PDF
+      </button>
+    </div>
+  </div>
+
+  <div id="reportArea">
+    <div class="empty-box"><i class="fa-solid fa-calendar-check" style="font-size:28px;display:block;margin-bottom:8px;color:var(--ink-3)"></i>เลือกเดือนแล้วกด "แสดงรายงาน" เพื่อดูสรุป</div>
+  </div>
+</div>
+
+<nav class="bottom-nav d-md-none">
+  <a href="index.html">
+    <i class="fa-solid fa-house"></i><span>หน้าแรก</span>
+  </a>
+  <a href="symptoms.html">
+    <i class="fa-solid fa-heart-pulse"></i><span>อาการ</span>
+  </a>
+  <a href="add.html">
+    <i class="fa-solid fa-plus"></i><span>เพิ่มข้อมูล</span>
+  </a>
+  <a href="report.html" class="active">
+    <i class="fa-solid fa-chart-column"></i><span>รายงาน</span>
+  </a>
+  <a href="admin.html">
+    <i class="fa-solid fa-gear"></i><span>Admin</span>
+  </a>
+</nav>
+
+<script>
+if (!localStorage.getItem("user")) window.location.href = "login.html";
+
+document.addEventListener("DOMContentLoaded", () => {
+  const name = localStorage.getItem("name") || "ผู้ใช้งาน";
+  const nameDrop = document.getElementById("userNameDrop");
+  if (nameDrop) nameDrop.textContent = name;
+
+  const role      = localStorage.getItem("role");
+  const roleLabel = role === "admin" ? "ผู้ดูแลระบบ" : "เจ้าหน้าที่";
+  const roleDrop  = document.getElementById("userRoleDrop");
+  if (roleDrop) roleDrop.textContent = roleLabel;
+
+  const adminMenu = document.getElementById("adminMenu");
+  const exportBtn = document.getElementById("exportBtn");
+  if (role !== "admin") {
+    if (adminMenu) adminMenu.style.display = "none";
+  } else {
+    if (exportBtn) exportBtn.style.display = "inline-flex";
+  }
+});
+
+const MONTH_NAMES = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+  "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const MONTH_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+
+let lastReport = null; // เก็บผลล่าสุดไว้ใช้ตอนส่งออก PDF
+
+function escapeHtml(s) {
+  return String(s ?? "-").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function thaiDateFmt(iso) {
+  if (!iso) return "-";
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return "-";
+  return `${d} ${MONTH_SHORT[m-1]} ${y+543}`;
+}
+
+function tambonLabelOf(key) {
+  return (typeof tambonMap !== "undefined" ? tambonMap[key] : null) || key || "ไม่ระบุตำบล";
+}
+
+function villageLabelOf(tambonKey, villageVal) {
+  if (!villageVal) return "ไม่ระบุหมู่/ชุมชน";
+  if (tambonKey === "kolok" && typeof kolokCommunity !== "undefined" && kolokCommunity[villageVal]) {
+    return kolokCommunity[villageVal].name;
+  }
+  if (typeof villageData !== "undefined" && villageData[tambonKey]?.[villageVal]) {
+    return `หมู่ ${villageVal} – ${villageData[tambonKey][villageVal].name}`;
+  }
+  return `หมู่ ${villageVal}`;
+}
+
+// (วันที่ในระบบถูกบันทึกไว้หลายรูปแบบ: ISO / วว-ดด-ปปปป(พ.ศ.) / เลข serial ของ Excel —
+//  ใช้ toInputDate() จาก app.js แปลงให้เป็น ISO เดียวกันหมดก่อนเทียบเดือน)
+function loadReport() {
+  const val = document.getElementById("reportMonth").value;
+  if (!val) { alert("กรุณาเลือกเดือน"); return; }
+
+  const btn = document.getElementById("loadBtn");
+  btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...`;
+  document.getElementById("pdfBtn").disabled = true;
+  document.getElementById("reportArea").innerHTML = `<div class="loading">กำลังโหลดข้อมูล…</div>`;
+
+  db.ref("children").once("value")
+    .then(snap => { buildReport(snap.val() || {}, val); })
+    .catch(err => {
+      document.getElementById("reportArea").innerHTML =
+        `<div class="err-box">โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(err.message)}</div>`;
+    })
+    .finally(() => {
+      btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> แสดงรายงาน`;
+    });
+}
+
+function buildReport(data, monthVal) {
+  const [y, m] = monthVal.split("-").map(Number);
+  const start = new Date(y, m - 1, 1);
+  const end   = new Date(y, m, 1); // exclusive
+
+  // groups[vaccineType] = [{ name, hn, tambon, village, date }]
+  const groups = {};
+  let totalDoses = 0;
+  const uniqueChildren = new Set();
+
+  Object.values(data).forEach(c => {
+    if (!c?.name?.trim()) return;
+    const vaccines = c.vaccines || {};
+    Object.entries(vaccines).forEach(([vType, rawDate]) => {
+      const iso = typeof toInputDate === "function" ? toInputDate(rawDate) : rawDate;
+      if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+      const d = new Date(iso + "T00:00:00");
+      if (isNaN(d.getTime()) || d < start || d >= end) return;
+
+      if (!groups[vType]) groups[vType] = [];
+      groups[vType].push({
+        name: c.name, hn: c.hn || "-", cid: c.cid || "-",
+        tambon: c.tambon || "", village: c.village || "", date: iso
+      });
+      totalDoses++;
+      uniqueChildren.add(c.cid || c.hn || c.name);
+    });
+  });
+
+  const knownOrder = typeof vaccineList !== "undefined" ? vaccineList : [];
+  const orderedTypes = knownOrder.filter(v => groups[v]);
+  Object.keys(groups).forEach(v => { if (!orderedTypes.includes(v)) orderedTypes.push(v); });
+
+  lastReport = { monthVal, y, m, totalDoses, uniqueCount: uniqueChildren.size, orderedTypes, groups };
+
+  renderReport();
+  document.getElementById("pdfBtn").disabled = orderedTypes.length === 0;
+}
+
+function renderReport() {
+  if (!lastReport) return;
+  const { y, m, totalDoses, uniqueCount, orderedTypes, groups } = lastReport;
+
+  let html = `
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-val">${totalDoses.toLocaleString("th-TH")}</div>
+        <div class="stat-lbl">โดสที่ฉีด (เดือน${MONTH_NAMES[m-1]})</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-val">${uniqueCount.toLocaleString("th-TH")}</div>
+        <div class="stat-lbl">เด็กที่ได้รับวัคซีน</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-val">${orderedTypes.length}</div>
+        <div class="stat-lbl">ชนิดวัคซีนที่ฉีด</div>
+      </div>
+    </div>`;
+
+  if (!orderedTypes.length) {
+    html += `<div class="empty-box"><i class="fa-solid fa-inbox" style="font-size:28px;display:block;margin-bottom:8px"></i>ไม่มีการฉีดวัคซีนในเดือน${MONTH_NAMES[m-1]} ${y+543}</div>`;
+    document.getElementById("reportArea").innerHTML = html;
+    return;
+  }
+
+  orderedTypes.forEach(vType => {
+    const records = [...groups[vType]].sort((a, b) => a.date.localeCompare(b.date));
+    const label = (typeof vaccineLabel !== "undefined" ? vaccineLabel[vType] : null) || vType;
+
+    // group by ตำบล -> หมู่/ชุมชน
+    const byTambon = {};
+    records.forEach(r => {
+      const tKey = r.tambon || "";
+      const tLabel = tambonLabelOf(tKey);
+      const vLabel = villageLabelOf(tKey, r.village);
+      if (!byTambon[tLabel]) byTambon[tLabel] = {};
+      if (!byTambon[tLabel][vLabel]) byTambon[tLabel][vLabel] = [];
+      byTambon[tLabel][vLabel].push(r);
+    });
+
+    let detailHtml = "";
+    Object.entries(byTambon).forEach(([tLabel, villages]) => {
+      detailHtml += `<div class="tambon-group"><div class="tambon-head"><i class="fa-solid fa-map-pin" style="font-size:10px"></i> ${escapeHtml(tLabel)}</div>`;
+      Object.entries(villages).forEach(([vLabel, recs]) => {
+        detailHtml += `<div class="village-group">
+          <div class="village-head"><span>${escapeHtml(vLabel)}</span><span class="count-chip">${recs.length} คน</span></div>
+          <table class="name-tbl"><tbody>
+            ${recs.map(r => `<tr><td>${escapeHtml(r.name)}</td><td class="hn">HN ${escapeHtml(r.hn)}</td><td class="dt">${thaiDateFmt(r.date)}</td></tr>`).join("")}
+          </tbody></table>
+        </div>`;
+      });
+      detailHtml += `</div>`;
+    });
+
+    html += `<div class="vax-card">
+      <div class="vax-card-head" onclick="this.parentElement.classList.toggle('open')">
+        <div class="vax-card-title">${escapeHtml(label)}</div>
+        <div class="vax-card-count">${records.length} คน <i class="fa-solid fa-chevron-down"></i></div>
+      </div>
+      <div class="vax-card-body">${detailHtml}</div>
+    </div>`;
+  });
+
+  document.getElementById("reportArea").innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+// ส่งออกรายงานเป็น PDF (กดเมื่อต้องการเท่านั้น)
+// ═══════════════════════════════════════════════
+function exportReportPDF() {
+  if (!lastReport || !lastReport.orderedTypes.length) { alert("ไม่มีข้อมูลให้ส่งออกในเดือนนี้"); return; }
+  const { y, m, totalDoses, uniqueCount, orderedTypes, groups } = lastReport;
+  const title = `รายงานสรุปการฉีดวัคซีน เดือน${MONTH_NAMES[m-1]} ${y+543}`;
+
+  let sections = "";
+  orderedTypes.forEach(vType => {
+    const records = [...groups[vType]].sort((a, b) => a.date.localeCompare(b.date));
+    const label = (typeof vaccineLabel !== "undefined" ? vaccineLabel[vType] : null) || vType;
+
+    const byTambon = {};
+    records.forEach(r => {
+      const tLabel = tambonLabelOf(r.tambon);
+      const vLabel = villageLabelOf(r.tambon, r.village);
+      if (!byTambon[tLabel]) byTambon[tLabel] = {};
+      if (!byTambon[tLabel][vLabel]) byTambon[tLabel][vLabel] = [];
+      byTambon[tLabel][vLabel].push(r);
+    });
+
+    let rows = "";
+    Object.entries(byTambon).forEach(([tLabel, villages]) => {
+      Object.entries(villages).forEach(([vLabel, recs]) => {
+        recs.forEach((r, i) => {
+          rows += `<tr>
+            ${i === 0 ? `<td rowspan="${recs.length}">${escapeHtml(tLabel)}</td><td rowspan="${recs.length}">${escapeHtml(vLabel)}</td>` : ""}
+            <td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.hn)}</td><td>${thaiDateFmt(r.date)}</td>
+          </tr>`;
+        });
+      });
+    });
+
+    sections += `
+      <div class="vsec">
+        <div class="vsec-head">${escapeHtml(label)} <span>${records.length} คน</span></div>
+        <table>
+          <thead><tr><th>ตำบล</th><th>หมู่/ชุมชน</th><th>ชื่อ-สกุล</th><th>HN</th><th>วันที่ฉีด</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  });
+
+  const html = `<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8">
+<title>${title}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:#0d1b2a;margin:26px;}
+  h1{font-size:19px;margin:0 0 3px;}
+  .sub{color:#7a909f;font-size:12.5px;margin-bottom:18px;}
+  .stats{display:flex;gap:10px;margin-bottom:22px;}
+  .stat{flex:1;border:1.5px solid #e3e8ef;border-radius:10px;padding:12px 16px;}
+  .stat .n{font-size:24px;font-weight:800;color:#059669}
+  .stat .l{font-size:12px;color:#7a909f;}
+  .vsec{margin-bottom:20px;page-break-inside:avoid}
+  .vsec-head{font-size:14px;font-weight:700;background:#ecfdf5;color:#047857;padding:8px 12px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th{background:#f5f7fa;text-align:left;padding:6px 8px;border-bottom:2px solid #e3e8ef;font-size:10.5px;text-transform:uppercase;color:#7a909f;}
+  td{padding:6px 8px;border-bottom:1px solid #eef1f5;vertical-align:top;}
+  @media print { body{margin:8mm;} .vsec{page-break-inside:avoid} }
+</style></head>
+<body>
+  <h1>${title}</h1>
+  <div class="sub">ระบบ VaxKolok — ระบบติดตามวัคซีนเด็ก อ.สุไหงโก-ลก · สร้างรายงานเมื่อ ${escapeHtml(new Date().toLocaleString("th-TH"))}</div>
+  <div class="stats">
+    <div class="stat"><div class="n">${totalDoses}</div><div class="l">โดสที่ฉีดทั้งหมด</div></div>
+    <div class="stat"><div class="n">${uniqueCount}</div><div class="l">เด็กที่ได้รับวัคซีน</div></div>
+    <div class="stat"><div class="n">${orderedTypes.length}</div><div class="l">ชนิดวัคซีน</div></div>
+  </div>
+  ${sections}
+  <script>window.onload = () => setTimeout(() => window.print(), 400);<\/script>
+</body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w) { alert("เบราว์เซอร์บล็อก pop-up กรุณาอนุญาตเพื่อสร้างรายงาน"); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// ตั้งค่าเริ่มต้นเป็นเดือนปัจจุบัน แล้วโหลดรายงานทันที
+(function() {
+  const ym = new Date().toISOString().slice(0, 7);
+  const input = document.getElementById("reportMonth");
+  input.value = ym;
+  input.max   = ym;
+  loadReport();
+})();
+
+</script>
+</body>
+</html>
