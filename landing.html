@@ -6,6 +6,7 @@
 <title>เข้าสู่ระบบ — VaxKolok DHB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -244,6 +245,19 @@ body{
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.err{border-color:#f5c1c1;background:var(--red-light);color:var(--red)}
 
+/* destination chooser — แสดงหลังล็อกอินสำเร็จ ให้เลือกว่าจะเข้าหน้าไหน */
+.dest-overlay{display:none;position:fixed;inset:0;background:rgba(13,27,42,.45);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.dest-overlay.show{display:flex;}
+.dest-box{background:#fff;border-radius:var(--radius);padding:28px 24px;max-width:420px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.2);}
+.dest-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.dest-sub{font-size:13px;color:var(--muted);margin-bottom:20px;}
+.dest-opt{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:var(--font);text-align:left;margin-bottom:10px;transition:border-color .15s,background .15s;}
+.dest-opt:last-child{margin-bottom:0;}
+.dest-opt:hover{border-color:var(--green);background:var(--green-light);}
+.dest-opt-icon{width:38px;height:38px;border-radius:10px;background:var(--green-light);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--green);flex-shrink:0;}
+.dest-opt-title{font-size:14px;font-weight:700;color:var(--text);}
+.dest-opt-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+
 .btn-dashboard {
   background: #fff;
   color: var(--green);
@@ -338,6 +352,28 @@ body{
 
 </div>
 
+<!-- destination chooser — โผล่หลังล็อกอินสำเร็จ ให้เลือกว่าจะเข้าหน้าไหน -->
+<div id="destOverlay" class="dest-overlay">
+  <div class="dest-box">
+    <div class="dest-title">เข้าสู่ระบบสำเร็จ</div>
+    <div class="dest-sub">เลือกหน้าที่ต้องการเข้าใช้งาน</div>
+    <button class="dest-opt" onclick="window.location.href='index.html'">
+      <div class="dest-opt-icon"><i class="fa-solid fa-syringe"></i></div>
+      <div>
+        <div class="dest-opt-title">ระบบติดตามวัคซีนเด็ก 0-5 ปี</div>
+        <div class="dest-opt-sub">แดชบอร์ดติดตามวัคซีน 0-5 ปี · แรกเกิด – ก่อนวัยเรียน</div>
+      </div>
+    </button>
+    <button class="dest-opt" onclick="window.location.href='primary.html'">
+      <div class="dest-opt-icon"><i class="fa-solid fa-school"></i></div>
+      <div>
+        <div class="dest-opt-title">ระบบติดตามวัคซีนเด็กประถมศึกษา</div>
+        <div class="dest-opt-sub">ป.1 – ป.6 · DTP5, OPV5, dT, HPV</div>
+      </div>
+    </button>
+  </div>
+</div>
+
 <!-- id="msg" ซ่อนไว้ให้ app.js ใช้ได้ปกติ -->
 <p id="msg" style="display:none"></p>
 
@@ -348,6 +384,12 @@ body{
   function goDashboard() {
     window.location.href = 'dashboard.html';
   }
+  // เรียกจาก app.js หลังล็อกอินสำเร็จ — แสดงหน้าต่างเลือกปลายทางแทนการเด้งไป index.html ตรงๆ
+  window.onLoginSuccess = function () {
+    const btn = document.getElementById("loginBtn");
+    if (btn) { btn.disabled = false; btn.classList.remove("loading"); }
+    document.getElementById("destOverlay").classList.add("show");
+  };
 </script>
 <script>
 function clearErr() {

@@ -260,7 +260,12 @@ function login() {
       date: new Date().toLocaleDateString("th-TH"),
       loginTime: new Date().toLocaleTimeString("th-TH")
     });
-    window.location.href = "index.html";
+    // ถ้าหน้านี้ (เช่น landing.html) มีตัวเลือกปลายทางหลังล็อกอิน ให้ใช้ตัวนั้นแทนการเด้งไป index.html ตรงๆ
+    if (typeof window.onLoginSuccess === "function") {
+      window.onLoginSuccess();
+    } else {
+      window.location.href = "index.html";
+    }
   });
 }
 
