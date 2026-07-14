@@ -74,6 +74,15 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 .result-found .result-sub{color:#059669}.result-notfound .result-sub{color:#3b82f6}
 .result-meta{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
 .meta-chip{font-size:12px;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.7);color:var(--ink-2);border:1px solid rgba(0,0,0,.08)}
+.dup-warning{background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--radius-lg);padding:.85rem 1rem;margin-bottom:.75rem;display:flex;align-items:flex-start;gap:8px}
+.dup-warning-icon{font-size:18px;flex-shrink:0;color:var(--amber)}
+.dup-warning-text{font-size:13px;color:#92400e}
+.match-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.1rem;margin-bottom:.75rem;cursor:pointer;transition:border-color .15s,background .15s}
+.match-card:hover{border-color:var(--green);background:var(--green-bg)}
+.match-card:active{background:#d1fae5}
+.match-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+.match-card-name{font-size:15px;font-weight:700;color:var(--ink)}
+.match-card-arrow{flex-shrink:0;color:var(--green);font-size:18px}
 .divider-text{text-align:center;font-size:12px;color:var(--ink-3);margin:1.25rem 0;position:relative}
 .divider-text::before,.divider-text::after{content:"";position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
 .divider-text::before{left:0}.divider-text::after{right:0}
@@ -140,6 +149,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
     <a href="index.html"        class="topbar-link"><i class="fa-solid fa-house fa-sm"></i> หน้าแรก</a>
     <a href="symptoms.html"     class="topbar-link"><i class="fa-solid fa-heart-pulse fa-sm"></i> ติดตามอาการ</a>
     <a href="report.html"       class="topbar-link"><i class="fa-solid fa-chart-column fa-sm"></i> รายงานวัคซีน</a>
+    <a href="admin.html" id="adminMenu" class="topbar-link"><i class="fa-solid fa-gear fa-sm"></i> Admin</a>
     <a href="import-excel.html" class="topbar-link"><i class="fa-solid fa-file-import fa-sm"></i> นำเข้าข้อมูล</a>
     <a id="exportBtn" href="admin.html#logCard" class="topbar-link" style="display:none">
       <i class="fa-solid fa-clock-rotate-left fa-sm"></i> ประวัติการทำงาน
@@ -219,7 +229,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
       <p class="card-title">ข้อมูลพื้นฐาน</p>
       <div class="field">
         <label>ชื่อ - นามสกุล <span class="req">*</span></label>
-        <input type="text" id="childName" placeholder="เช่น ทดสอบ ระบบ">
+        <input type="text" id="childName" placeholder="เช่น ซูไรดา มะแซ">
         <div class="err" id="errName">กรุณากรอกชื่อ-นามสกุล</div>
       </div>
       <div class="field">
@@ -558,6 +568,35 @@ function toggleEditVax(key){
   el.style.display=el.style.display==="none"?"block":"none";
 }
 
+let matchMap={}; // เก็บรายการทั้งหมดที่ HN ตรงกัน ไว้ให้เลือกกรณีซ้ำ
+
+function matchCardHTML(key,d){
+  const age=calcAge(toISO(d.birth));
+  const vCount=d.vaccines?Object.keys(d.vaccines).length:0;
+  const tambonTH=TAMBON_LABEL[d.tambon]||d.tambon||"—";
+  const hospName=getHospitalName(d.hospital||"");
+  return `<div class="match-card" onclick="selectMatch('${key}')">
+    <div class="match-card-head">
+      <div class="match-card-name">${d.name||"—"}</div>
+      <i class="ti ti-chevron-right match-card-arrow"></i>
+    </div>
+    <div class="result-meta">
+      <span class="meta-chip">HN: ${d.hn||"—"}</span>
+      <span class="meta-chip">อายุ ${Math.floor(age/12)} ปี ${age%12} เดือน</span>
+      <span class="meta-chip"><i class="ti ti-vaccine"></i> ${vCount} เข็ม</span>
+      <span class="meta-chip"><i class="ti ti-map-pin"></i> ${tambonTH}</span>
+      <span class="meta-chip"><i class="ti ti-building-hospital"></i> ${hospName}</span>
+      <span class="meta-chip">เลขบัตร ปชช.: ${d.cid?("..."+String(d.cid).slice(-4)):"—"}</span>
+    </div>
+  </div>`;
+}
+
+function selectMatch(key){
+  foundKey=key;foundData=matchMap[key];
+  if(!foundData) return;
+  continueWithData();
+}
+
 async function searchByHN(){
   const hn=document.getElementById("searchHN").value.trim();
   if(!hn){showErr("errSearchHN",true);return;}
@@ -567,36 +606,41 @@ async function searchByHN(){
   try{
     const snap=await db.ref("children").orderByChild("hn").equalTo(hn).once("value");
     const data=snap.val();
+    const entries=data?Object.entries(data):[];
     const rEl=document.getElementById("searchResult");
     const aEl=document.getElementById("searchActions");
     const sEl=document.getElementById("skipSection");
     rEl.style.display="block";aEl.style.display="block";sEl.style.display="none";
-    if(data){
-      foundKey=Object.keys(data)[0];foundData=data[foundKey];
-      const age=calcAge(toISO(foundData.birth));
-      const vCount=foundData.vaccines?Object.keys(foundData.vaccines).length:0;
-      const tambonTH=TAMBON_LABEL[foundData.tambon]||foundData.tambon||"—";
-      const hospName=getHospitalName(foundData.hospital||"");
+
+    if(entries.length===1){
+      // พบรายการเดียว — กดที่การ์ดเพื่อไปต่อได้เลย ไม่ต้องมีปุ่มซ้ำด้านล่าง
+      foundKey=entries[0][0];foundData=entries[0][1];
+      matchMap={[foundKey]:foundData}; // ต้องใส่ไว้ด้วย ไม่งั้นกดที่การ์ดแล้ว selectMatch() จะหา foundData ไม่เจอ
       rEl.innerHTML=`<div class="result-card result-found">
         <div class="result-title"><i class="ti ti-circle-check" style="color:#065f46"></i> พบข้อมูลในระบบแล้ว</div>
-        <div class="result-sub">${foundData.name||"—"}</div>
-        <div class="result-meta">
-          <span class="meta-chip">HN: ${foundData.hn||"—"}</span>
-          <span class="meta-chip">อายุ ${Math.floor(age/12)} ปี ${age%12} เดือน</span>
-          <span class="meta-chip"><i class="ti ti-vaccine"></i> ${vCount} เข็ม</span>
-          <span class="meta-chip"><i class="ti ti-map-pin"></i> ${tambonTH}</span>
-          <span class="meta-chip"><i class="ti ti-building-hospital"></i> ${hospName}</span>
-        </div>
-      </div>`;
-      document.getElementById("btnContinue").innerHTML=`<i class="ti ti-vaccine"></i> <span id="btnContinueLabel">เพิ่ม/แก้ไขวัคซีน</span>`;
+      </div>${matchCardHTML(foundKey,foundData)}`;
+      document.getElementById("btnContinue").style.display="none";
+      document.getElementById("btnAddNew").style.display="block";
+      document.getElementById("orDivider").style.display="block";
+    } else if(entries.length>1){
+      // ✅ พบ HN ซ้ำหลายรายการ — แสดงทั้งหมดให้เลือกว่าจะแก้ไขรายการไหน
+      foundKey=null;foundData=null;matchMap={};
+      entries.forEach(([key,d])=>{matchMap[key]=d;});
+      rEl.innerHTML=`<div class="dup-warning">
+        <div class="dup-warning-icon"><i class="ti ti-alert-triangle"></i></div>
+        <div class="dup-warning-text"><strong>พบ HN "${hn}" ซ้ำกัน ${entries.length} รายการ</strong><br>กรุณาตรวจสอบและเลือกรายการที่ต้องการแก้ไขให้ถูกต้อง</div>
+      </div>` + entries.map(([key,d])=>matchCardHTML(key,d)).join("");
+      // ซ่อนปุ่ม "ดำเนินการต่อ" หลัก เพราะต้องเลือกจากปุ่มในการ์ดแต่ละใบแทน
+      document.getElementById("btnContinue").style.display="none";
       document.getElementById("btnAddNew").style.display="block";
       document.getElementById("orDivider").style.display="block";
     } else {
-      foundKey=null;foundData=null;
+      foundKey=null;foundData=null;matchMap={};
       rEl.innerHTML=`<div class="result-card result-notfound">
         <div class="result-title"><i class="ti ti-info-circle" style="color:#1e40af"></i> ไม่พบ HN นี้ในระบบ</div>
         <div class="result-sub">HN "${hn}" ยังไม่มีในฐานข้อมูล — สามารถเพิ่มข้อมูลใหม่ได้เลย</div>
       </div>`;
+      document.getElementById("btnContinue").style.display="flex";
       document.getElementById("btnContinue").innerHTML=`<i class="ti ti-user-plus"></i> <span id="btnContinueLabel">เพิ่มข้อมูลใหม่ (HN นี้)</span>`;
       document.getElementById("btnAddNew").style.display="none";
       document.getElementById("orDivider").style.display="none";
