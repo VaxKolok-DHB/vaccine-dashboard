@@ -72,17 +72,17 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 .result-found .result-title{color:#065f46}.result-notfound .result-title{color:#1e40af}
 .result-sub{font-size:13px}
 .result-found .result-sub{color:#059669}.result-notfound .result-sub{color:#3b82f6}
-.result-meta{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
-.meta-chip{font-size:12px;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.7);color:var(--ink-2);border:1px solid rgba(0,0,0,.08)}
+.result-meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
+.meta-chip{font-size:11.5px;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.7);color:var(--ink-2);border:1px solid rgba(0,0,0,.08);white-space:nowrap}
 .dup-warning{background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--radius-lg);padding:.85rem 1rem;margin-bottom:.75rem;display:flex;align-items:flex-start;gap:8px}
 .dup-warning-icon{font-size:18px;flex-shrink:0;color:var(--amber)}
 .dup-warning-text{font-size:13px;color:#92400e}
-.match-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.1rem;margin-bottom:.75rem;cursor:pointer;transition:border-color .15s,background .15s}
+.match-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:.7rem .9rem;margin-bottom:.5rem;cursor:pointer;transition:border-color .15s,background .15s}
 .match-card:hover{border-color:var(--green);background:var(--green-bg)}
 .match-card:active{background:#d1fae5}
-.match-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
-.match-card-name{font-size:15px;font-weight:700;color:var(--ink)}
-.match-card-arrow{flex-shrink:0;color:var(--green);font-size:18px}
+.match-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:8px}
+.match-card-name{font-size:14px;font-weight:700;color:var(--ink)}
+.match-card-arrow{flex-shrink:0;color:var(--green);font-size:16px}
 .divider-text{text-align:center;font-size:12px;color:var(--ink-3);margin:1.25rem 0;position:relative}
 .divider-text::before,.divider-text::after{content:"";position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
 .divider-text::before{left:0}.divider-text::after{right:0}
@@ -112,6 +112,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 .save-vax-btn{width:100%;margin-top:8px;padding:9px;background:var(--red);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
 .edit-date-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--ink-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;flex-shrink:0}
 .edit-date-btn:hover{background:var(--green-bg);color:var(--green-dk);border-color:#6ee7b7}
+.del-vax-btn:hover{background:#fee2e2;color:#b91c1c;border-color:#fca5a5}
 .chip-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem}
 .chip{font-size:12px;color:var(--ink-3);background:var(--surface);border:1px solid var(--border);padding:4px 12px;border-radius:99px}
 .summary-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0}
@@ -149,6 +150,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
     <a href="index.html"        class="topbar-link"><i class="fa-solid fa-house fa-sm"></i> หน้าแรก</a>
     <a href="symptoms.html"     class="topbar-link"><i class="fa-solid fa-heart-pulse fa-sm"></i> ติดตามอาการ</a>
     <a href="report.html"       class="topbar-link"><i class="fa-solid fa-chart-column fa-sm"></i> รายงานวัคซีน</a>
+    <a href="admin.html" id="adminMenu" class="topbar-link"><i class="fa-solid fa-gear fa-sm"></i> Admin</a>
     <a href="import-excel.html" class="topbar-link"><i class="fa-solid fa-file-import fa-sm"></i> นำเข้าข้อมูล</a>
     <a id="exportBtn" href="admin.html#logCard" class="topbar-link" style="display:none">
       <i class="fa-solid fa-clock-rotate-left fa-sm"></i> ประวัติการทำงาน
@@ -228,7 +230,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
       <p class="card-title">ข้อมูลพื้นฐาน</p>
       <div class="field">
         <label>ชื่อ - นามสกุล <span class="req">*</span></label>
-        <input type="text" id="childName" placeholder="เช่น ด.ช ทดสอบ ระบบ">
+        <input type="text" id="childName" placeholder="เช่น ซูไรดา มะแซ">
         <div class="err" id="errName">กรุณากรอกชื่อ-นามสกุล</div>
       </div>
       <div class="field">
@@ -749,7 +751,8 @@ function renderPage2(){
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:6px">
-        ${done?`<button class="edit-date-btn" onclick="toggleEditVax('${key}')" title="แก้ไขวันที่ฉีด"><i class="ti ti-pencil"></i></button>`:""}
+        ${done?`<button class="edit-date-btn" onclick="toggleEditVax('${key}')" title="แก้ไขวันที่ฉีด"><i class="ti ti-pencil"></i></button>
+        <button class="edit-date-btn del-vax-btn" onclick="deleteVax('${key}')" title="ลบรายการนี้ (กรอกผิด)"><i class="ti ti-trash"></i></button>`:""}
         <span class="badge ${done?"badge-done":"badge-pending"}">${done?"ครบ":"ค้างอยู่"}</span>
       </div>
     </div>${done?buildThaiDateInputEdit(key,saved):buildThaiDateInput(key)}`;
@@ -769,6 +772,14 @@ function saveVax(key){
   const yearCE=parseInt(y)-543;
   const iso=`${yearCE}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
   state.vaccines[vaxName]=iso;renderPage2();
+}
+
+function deleteVax(key){
+  const vaxName=VACCINES.find(v=>v.name.replace(/[\s-]/g,"_")===key)?.name||key;
+  const label=VAX_LABEL[vaxName]||vaxName;
+  if(!confirm(`ต้องการลบรายการฉีด "${label}" ใช่หรือไม่?\n(ใช้สำหรับกรณีกรอกข้อมูลผิดวัคซีน รายการนี้จะกลับไปเป็น "ค้างอยู่")`))return;
+  delete state.vaccines[vaxName];
+  renderPage2();
 }
 
 function goPage3(){
@@ -816,15 +827,19 @@ async function submitData(){
 
     // ระบุว่าวัคซีนตัวไหนถูกเพิ่มใหม่ / แก้วันที่ ในการบันทึกครั้งนี้ (เทียบกับก่อนเปิดหน้า)
     const original=state.originalVaccines||{};
-    const addedVax=[],changedVax=[];
+    const addedVax=[],changedVax=[],removedVax=[];
     Object.entries(state.vaccines).forEach(([k,iso])=>{
       const label=VAX_LABEL[k]||k;
       if(!original[k]) addedVax.push(label);
       else if(original[k]!==iso) changedVax.push(label);
     });
+    Object.keys(original).forEach(k=>{
+      if(!state.vaccines[k]) removedVax.push(VAX_LABEL[k]||k);
+    });
     const vaxParts=[];
     if(addedVax.length)   vaxParts.push(`เพิ่ม: ${addedVax.join(", ")}`);
     if(changedVax.length) vaxParts.push(`แก้วันที่: ${changedVax.join(", ")}`);
+    if(removedVax.length) vaxParts.push(`ลบ (กรอกผิด): ${removedVax.join(", ")}`);
     const vaxSummary=vaxParts.length?vaxParts.join(" | "):"ไม่มีวัคซีนเปลี่ยนแปลง";
 
     if(foundKey){
