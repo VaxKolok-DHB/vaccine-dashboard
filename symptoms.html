@@ -400,16 +400,15 @@ let activeTambon = "all";   // ตำบลที่เลือกอยู่
 const staffModal = new bootstrap.Modal(document.getElementById("staffModal"));
 
 // ── Config ────────────────────────────────────
+// ✅ ลดรอบประเมินเหลือ 3 ครั้ง: 30 นาที / 3 วัน / 7 วัน (ให้ตรงกับ server.js)
 const FOLLOW_DELAYS = {
   1: 30 * 60 * 1000,
-  2:  6 * 60 * 60 * 1000,
-  3: 24 * 60 * 60 * 1000,
-  4:  3 * 24 * 60 * 60 * 1000,
-  5:  7 * 24 * 60 * 60 * 1000,
+  2:  3 * 24 * 60 * 60 * 1000,
+  3:  7 * 24 * 60 * 60 * 1000,
 };
 const REMINDER_DELAY = 30 * 60 * 1000;
 const MAX_NORMAL     = 5;
-const MAX_STEP       = 5;
+const MAX_STEP       = 3;
 
 const TAMBON_NAME = {
   all:     "ทุกตำบล",
