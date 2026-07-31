@@ -179,22 +179,22 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 
 <div class="wrap">
 
-  <!-- PAGE 0: ค้นหา HN -->
+  <!-- PAGE 0: ค้นหา HN / ชื่อ -->
   <div class="page active" id="p0">
     <div class="search-hero">
       <div class="search-hero-icon"><i class="ti ti-search" style="font-size:48px;color:var(--green)"></i></div>
       <div class="search-hero-title">ค้นหาก่อนเพิ่มข้อมูล</div>
-      <div class="search-hero-sub">กรอก HN เพื่อตรวจสอบว่ามีข้อมูลในระบบแล้วหรือยัง</div>
+      <div class="search-hero-sub">กรอก HN หรือชื่อเด็ก เพื่อตรวจสอบว่ามีข้อมูลในระบบแล้วหรือยัง</div>
     </div>
     <div class="card">
-      <p class="card-title">ค้นหาด้วย HN</p>
+      <p class="card-title">ค้นหาด้วย HN หรือชื่อ</p>
       <div class="search-box">
-        <input type="text" id="searchHN" placeholder="กรอก HN เช่น 12345" onkeydown="if(event.key==='Enter') searchByHN()">
+        <input type="text" id="searchHN" placeholder="กรอก HN หรือชื่อเด็ก" onkeydown="if(event.key==='Enter') searchByHN()">
         <button class="search-btn" id="searchBtn" onclick="searchByHN()">
           <i class="ti ti-search"></i> ค้นหา
         </button>
       </div>
-      <div class="err" id="errSearchHN">กรุณากรอก HN</div>
+      <div class="err" id="errSearchHN">กรุณากรอก HN หรือชื่อเด็ก</div>
     </div>
     <div id="searchResult" style="display:none"></div>
     <div id="searchActions" style="display:none">
@@ -569,7 +569,7 @@ function toggleEditVax(key){
   el.style.display=el.style.display==="none"?"block":"none";
 }
 
-let matchMap={}; // เก็บรายการทั้งหมดที่ HN ตรงกัน ไว้ให้เลือกกรณีซ้ำ
+let matchMap={}; // เก็บรายการทั้งหมดที่ตรงกัน ไว้ให้เลือกกรณีซ้ำ
 
 function matchCardHTML(key,d){
   const age=calcAge(toISO(d.birth));
@@ -598,16 +598,27 @@ function selectMatch(key){
   continueWithData();
 }
 
+// ✅ ค้นหาด้วย HN (ถ้ากรอกเป็นตัวเลขล้วน) หรือค้นหาด้วยชื่อ (ถ้ากรอกเป็นข้อความ)
+// Firebase RTDB ไม่รองรับ "contains" search ในตัว จึงดึงรายการทั้งหมดมากรองฝั่ง client เมื่อค้นด้วยชื่อ
 async function searchByHN(){
-  const hn=document.getElementById("searchHN").value.trim();
-  if(!hn){showErr("errSearchHN",true);return;}
+  const q=document.getElementById("searchHN").value.trim();
+  if(!q){showErr("errSearchHN",true);return;}
   showErr("errSearchHN",false);
   const btn=document.getElementById("searchBtn");
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span> ค้นหา...`;
   try{
-    const snap=await db.ref("children").orderByChild("hn").equalTo(hn).once("value");
-    const data=snap.val();
-    const entries=data?Object.entries(data):[];
+    const isHN=/^\d+$/.test(q);
+    let entries=[];
+    if(isHN){
+      const snap=await db.ref("children").orderByChild("hn").equalTo(q).once("value");
+      const data=snap.val();
+      entries=data?Object.entries(data):[];
+    } else {
+      const snap=await db.ref("children").once("value");
+      const data=snap.val()||{};
+      const kw=q.toLowerCase();
+      entries=Object.entries(data).filter(([,d])=>String(d.name||"").toLowerCase().includes(kw));
+    }
     const rEl=document.getElementById("searchResult");
     const aEl=document.getElementById("searchActions");
     const sEl=document.getElementById("skipSection");
@@ -624,12 +635,12 @@ async function searchByHN(){
       document.getElementById("btnAddNew").style.display="block";
       document.getElementById("orDivider").style.display="block";
     } else if(entries.length>1){
-      // ✅ พบ HN ซ้ำหลายรายการ — แสดงทั้งหมดให้เลือกว่าจะแก้ไขรายการไหน
+      // ✅ พบตรงกันหลายรายการ (HN ซ้ำ หรือชื่อพ้อง) — แสดงทั้งหมดให้เลือกว่าจะแก้ไขรายการไหน
       foundKey=null;foundData=null;matchMap={};
       entries.forEach(([key,d])=>{matchMap[key]=d;});
       rEl.innerHTML=`<div class="dup-warning">
         <div class="dup-warning-icon"><i class="ti ti-alert-triangle"></i></div>
-        <div class="dup-warning-text"><strong>พบ HN "${hn}" ซ้ำกัน ${entries.length} รายการ</strong><br>กรุณาตรวจสอบและเลือกรายการที่ต้องการแก้ไขให้ถูกต้อง</div>
+        <div class="dup-warning-text"><strong>พบข้อมูลตรงกัน ${entries.length} รายการ</strong><br>กรุณาตรวจสอบและเลือกรายการที่ต้องการแก้ไขให้ถูกต้อง</div>
       </div>` + entries.map(([key,d])=>matchCardHTML(key,d)).join("");
       // ซ่อนปุ่ม "ดำเนินการต่อ" หลัก เพราะต้องเลือกจากปุ่มในการ์ดแต่ละใบแทน
       document.getElementById("btnContinue").style.display="none";
@@ -638,11 +649,11 @@ async function searchByHN(){
     } else {
       foundKey=null;foundData=null;matchMap={};
       rEl.innerHTML=`<div class="result-card result-notfound">
-        <div class="result-title"><i class="ti ti-info-circle" style="color:#1e40af"></i> ไม่พบ HN นี้ในระบบ</div>
-        <div class="result-sub">HN "${hn}" ยังไม่มีในฐานข้อมูล — สามารถเพิ่มข้อมูลใหม่ได้เลย</div>
+        <div class="result-title"><i class="ti ti-info-circle" style="color:#1e40af"></i> ไม่พบข้อมูลนี้ในระบบ</div>
+        <div class="result-sub">${isHN?`HN "${q}"`:`ชื่อ "${q}"`} ยังไม่มีในฐานข้อมูล — สามารถเพิ่มข้อมูลใหม่ได้เลย</div>
       </div>`;
       document.getElementById("btnContinue").style.display="flex";
-      document.getElementById("btnContinue").innerHTML=`<i class="ti ti-user-plus"></i> <span id="btnContinueLabel">เพิ่มข้อมูลใหม่ (HN นี้)</span>`;
+      document.getElementById("btnContinue").innerHTML=`<i class="ti ti-user-plus"></i> <span id="btnContinueLabel">เพิ่มข้อมูลใหม่</span>`;
       document.getElementById("btnAddNew").style.display="none";
       document.getElementById("orDivider").style.display="none";
     }
@@ -651,9 +662,10 @@ async function searchByHN(){
 }
 
 function continueWithData(){
-  const hn=document.getElementById("searchHN").value.trim();
+  const q=document.getElementById("searchHN").value.trim();
+  const isHN=/^\d+$/.test(q);
   if(foundData){
-    state.name=foundData.name||"";state.hn=foundData.hn||hn;state.cid=foundData.cid||"";
+    state.name=foundData.name||"";state.hn=foundData.hn||(isHN?q:"");state.cid=foundData.cid||"";
     state.birth=toISO(foundData.birth)||"";state.tambon=foundData.tambon||"";
     state.tambonLabel=TAMBON_LABEL[foundData.tambon]||foundData.tambon||"";
     state.village=foundData.village||"";state.hospital=foundData.hospital||"";
@@ -665,12 +677,12 @@ function continueWithData(){
     document.getElementById("existingBanner").style.display="flex";
     document.getElementById("existingBannerSub").textContent=`${state.name} · HN ${state.hn} · มีวัคซีนแล้ว ${Object.keys(state.vaccines).length} เข็ม`;
     renderPage2();showPage(2);
-  } else {startFresh(hn);}
+  } else {startFresh(isHN?q:"");}
 }
 
 function startFresh(hn=""){
   foundKey=null;foundData=null;clearPage1();
-  const val=hn||document.getElementById("searchHN").value.trim()||"";
+  const val=hn||"";
   document.getElementById("childHN").value=val;
   if(val) document.getElementById("hnFromSearch").style.display="inline-flex";
   document.getElementById("existingBanner").style.display="none";
