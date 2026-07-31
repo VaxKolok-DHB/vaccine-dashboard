@@ -407,7 +407,7 @@ const FOLLOW_DELAYS = {
   3:  7 * 24 * 60 * 60 * 1000,
 };
 const REMINDER_DELAY = 30 * 60 * 1000;
-const MAX_NORMAL     = 5;
+const MAX_NORMAL     = 3; // ✅ ลดให้เท่ากับ MAX_STEP (ให้ตรงกับ server.js)
 const MAX_STEP       = 3;
 
 const TAMBON_NAME = {
@@ -535,8 +535,9 @@ function statusBadge(status) {
 }
 
 function progressColor(n) {
-  if (n >= 4) return "#22c55e";
-  if (n >= 2) return "#f59e0b";
+  // ✅ อิงตาม MAX_NORMAL แทนเลขตายตัว เพื่อไม่ให้ค้าง (แดง/เหลือง) เมื่อปรับ MAX_NORMAL ในอนาคต
+  if (n >= MAX_NORMAL) return "#22c55e";
+  if (n >= Math.ceil(MAX_NORMAL / 2)) return "#f59e0b";
   return "#ef4444";
 }
 
