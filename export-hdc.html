@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ส่งออกข้อมูล 43 แฟ้ม (EPI) สำหรับ HDC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+body { background:#f5f7fa; padding:0 0 20px; font-family:'IBM Plex Sans Thai',sans-serif; }
+
+.nav-topbar{position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 24px;height:60px;background:#059669;box-shadow:0 2px 8px rgba(0,0,0,.15);margin-bottom:20px}
+.topbar-brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.topbar-brand .logo-icon{width:36px;height:36px;background:rgba(255,255,255,.22);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.topbar-brand .logo-name{font-size:20px;font-weight:800;color:#fff;line-height:1.1}
+.topbar-brand .logo-sub{font-size:11px;color:rgba(255,255,255,.8)}
+.topbar-links{display:flex;align-items:center;gap:4px;margin-left:auto}
+.topbar-link{font-size:13px;font-weight:600;color:rgba(255,255,255,.85);text-decoration:none;padding:6px 12px;border-radius:8px;transition:background .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.topbar-link:hover{background:rgba(255,255,255,.15);color:#fff}
+.topbar-link.active{background:rgba(255,255,255,.22);color:#fff}
+.btn-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;cursor:pointer}
+.page-wrap{padding:20px}
+@media(max-width:768px){
+  .nav-topbar{padding:0 14px;gap:8px}
+  .topbar-brand .logo-sub{display:none}
+  .topbar-brand .logo-name{font-size:16px}
+  .topbar-links{display:none}
+  .page-wrap{padding-bottom:70px}
+}
+
+.card-box{background:#fff;border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card-title{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card-sub{font-size:12.5px;color:#6b7280;margin-bottom:14px}
+
+.warn-banner{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:14px;padding:16px 18px;margin-bottom:18px}
+.warn-banner .wt{font-size:14.5px;font-weight:700;color:#991b1b;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.warn-banner ol{margin:0;padding-left:20px;font-size:13.5px;color:#7f1d1d;line-height:1.7}
+.warn-banner li{margin-bottom:2px}
+
+.cm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.cm-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:8px 10px}
+.cm-row.uncertain{background:#fffbeb;border-color:#fbbf24}
+.cm-label{font-size:13px;color:#334155;flex:1;font-weight:600}
+.cm-code{color:#94a3b8;font-weight:400;font-size:11.5px}
+.cm-input{width:110px;border:1px solid #d1d5db;border-radius:8px;padding:5px 8px;font-size:13px}
+.cm-input:focus{outline:2px solid #6ee7b7;border-color:#059669}
+.cm-note{flex-basis:100%;font-size:11px;color:#92400e;line-height:1.5;margin-top:2px}
+.src-banner{background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:12.5px;color:#065f46;line-height:1.6}
+
+.field-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.field-col label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px}
+.field-col select,.field-col input{border:1px solid #d1d5db;border-radius:9px;padding:7px 10px;font-size:13.5px}
+
+.hosp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:10px}
+.hosp-item{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:8px 10px;font-size:13px}
+.hosp-item input{width:16px;height:16px;accent-color:#059669;cursor:pointer}
+.hosp-code{color:#94a3b8;font-size:11.5px}
+
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat-box{background:#f8fafc;border-radius:12px;padding:12px 14px;text-align:center}
+.stat-box.green{background:#ecfdf5}
+.stat-box.red{background:#fef2f2}
+.stat-num{font-size:24px;font-weight:800;color:#1e293b}
+.stat-box.green .stat-num{color:#047857}
+.stat-box.red .stat-num{color:#b91c1c}
+.stat-label{font-size:11.5px;color:#64748b;margin-top:2px}
+
+.table-wrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:#f8fafc;color:#475569;font-weight:700;text-align:left;padding:8px 10px;border-bottom:1px solid #e5e7eb;white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid #f1f5f9;color:#334155;white-space:nowrap}
+
+.hidden{display:none !important}
+
+.btn-primary-x{background:#059669;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-weight:700;font-size:14px;cursor:pointer}
+.btn-primary-x:hover{background:#047857}
+.btn-primary-x:disabled{background:#a7f3d0;cursor:not-allowed}
+.btn-outline-x{background:#fff;color:#059669;border:1.5px solid #059669;border-radius:10px;padding:9px 18px;font-weight:700;font-size:14px;cursor:pointer}
+
+.status-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;background:#f1f5f9;color:#475569}
+</style>
+</head>
+<body>
+
+<nav class="nav-topbar">
+  <a href="landing.html" class="topbar-brand">
+    <div class="logo-icon"><i class="fa-solid fa-syringe" style="color:#fff;font-size:16px;"></i></div>
+    <div>
+      <div class="logo-name">VaxKolok</div>
+      <div class="logo-sub">อ.สุไหงโก-ลก · จ.นราธิวาส</div>
+    </div>
+  </a>
+  <div class="topbar-links">
+    <a href="index.html"        class="topbar-link"><i class="fa-solid fa-house fa-sm"></i> หน้าแรก</a>
+    <a href="symptoms.html"     class="topbar-link"><i class="fa-solid fa-heart-pulse fa-sm"></i> ติดตามอาการ</a>
+    <a href="report.html"       class="topbar-link"><i class="fa-solid fa-chart-column fa-sm"></i> รายงานวัคซีน</a>
+    <a href="import-excel.html" class="topbar-link"><i class="fa-solid fa-file-import fa-sm"></i> นำเข้าข้อมูล</a>
+    <a href="export-hdc.html"   class="topbar-link active"><i class="fa-solid fa-cloud-arrow-up fa-sm"></i> ส่งออก HDC</a>
+    <a id="exportBtn" href="admin.html#logCard" class="topbar-link" style="display:none">
+      <i class="fa-solid fa-clock-rotate-left fa-sm"></i> ประวัติการทำงาน
+    </a>
+  </div>
+  <div class="dropdown">
+    <button class="btn-avatar dropdown-toggle border-0 bg-transparent" data-bs-toggle="dropdown">
+      <i class="fa-solid fa-circle-user"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" style="font-size:13px;min-width:200px;border-radius:12px;border-color:#e5e7eb;">
+      <li><div class="px-3 pt-3 pb-2">
+        <div style="font-weight:700;color:#111827;" id="userNameDrop">—</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px;" id="userRoleDrop">—</div>
+      </div></li>
+      <li><hr class="dropdown-divider m-0"></li>
+      <li><a class="dropdown-item text-danger" href="#" onclick="logout()" style="padding:10px 16px;">
+        <i class="fa-solid fa-right-from-bracket fa-sm me-1"></i> ออกจากระบบ
+      </a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container-fluid page-wrap" style="max-width:1080px">
+
+  <div style="background:#fff;border-radius:16px;padding:16px 20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-left:5px solid #059669;">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="background:#059669;border-radius:10px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ti-cloud-upload" style="font-size:22px;color:#fff"></i>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#6b7280;font-weight:500;letter-spacing:.05em;text-transform:uppercase">ส่งออกข้อมูลวัคซีนเด็ก · รูปแบบมาตรฐาน 43 แฟ้ม (แฟ้ม EPI)</div>
+        <div style="font-size:18px;font-weight:700;color:#1e293b">ส่งออกสำหรับ HDC (Health Data Center)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warn-banner">
+    <div class="wt"><i class="ti ti-alert-triangle"></i> อ่านก่อนใช้งานจริง — ป้องกันข้อมูลผิดเข้า HDC</div>
+    <ol>
+      <li>เครื่องมือนี้ไม่รู้รหัสวัคซีนมาตรฐานของ HDC เอง ต้อง <strong>กรอกเองในตารางด้านล่าง</strong> ให้ครบทุกตัวก่อน ไม่มีการเดาให้</li>
+      <li>ฟิลด์ PID จะใช้ <strong>เลข HN ที่บันทึกใน VaxKolok เป็นค่าเริ่มต้น</strong> — กรุณายืนยันกับเจ้าหน้าที่ที่คีย์ JHCIS ว่า HN นี้ตรงกับ PID (ทะเบียนบุคคล) ในเครื่อง JHCIS จริง ถ้าไม่ตรงกัน ข้อมูลจะหาเด็กไม่เจอในระบบ HDC</li>
+      <li>ก่อนอัปโหลดจริงทุกครั้ง ให้ทดลองอัปโหลดไฟล์กับข้อมูลชุดเล็ก (1-2 รายการ) ก่อน เพื่อให้ระบบ HDC ตรวจสอบฟอร์แมตให้อีกชั้นหนึ่ง</li>
+      <li>เลขลำดับ (SEQ) ในไฟล์นี้ระบบสร้างขึ้นใหม่ต่อสถานพยาบาล ยังไม่ได้เทียบกับ SEQ ที่ JHCIS อาจเคยใช้ไปแล้ว หากมีการบันทึกซ้ำซ้อนระหว่าง JHCIS และ VaxKolok ให้ตรวจสอบกับเจ้าหน้าที่ก่อน</li>
+    </ol>
+  </div>
+
+  <div class="card-box">
+    <div class="card-title"><i class="ti ti-settings" style="color:#059669"></i> ตั้งค่ารหัสวัคซีนมาตรฐาน (HDC)</div>
+    <div class="card-sub">กรอกรหัสวัคซีนตามมาตรฐานที่กองยุทธศาสตร์และแผนงานกำหนด ค่าที่กรอกจะถูกจำไว้ในเครื่องนี้อัตโนมัติ (อ้างอิงจาก 66-vaccine-4.xls) <span class="status-pill" id="codeMapStatus">—</span></div>
+    <div class="cm-grid" id="codeMapWrap"></div>
+  </div>
+
+  <div class="card-box">
+    <div class="card-title"><i class="ti ti-building-hospital" style="color:#059669"></i> เลือกสถานพยาบาลที่จะส่งออก</div>
+    <div class="card-sub">ระบบจะสร้างไฟล์แยกต่างหาก 1 ไฟล์ต่อ 1 สถานพยาบาล (ตาม HOSPCODE) ตามที่ HDC ต้องการ</div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12.5px"><input type="checkbox" id="hospAll" onchange="toggleAllHosp(this.checked)" style="accent-color:#059669;margin-right:6px"> เลือกทั้งหมด</label>
+    </div>
+    <div class="hosp-grid" id="hospGrid"></div>
+  </div>
+
+  <div class="card-box">
+    <div class="card-title"><i class="ti ti-adjustments" style="color:#059669"></i> ตัวเลือกการส่งออก</div>
+    <div class="field-row">
+      <div class="field-col">
+        <label>ใช้เป็นเลข PID จาก</label>
+        <select id="pidSource">
+          <option value="hn">เลข HN (ค่าเริ่มต้น)</option>
+          <option value="cid">เลขบัตรประชาชน (CID)</option>
+        </select>
+      </div>
+      <div class="field-col">
+        <label>วันที่ฉีดตั้งแต่ (ไม่บังคับ)</label>
+        <input type="date" id="fromDate">
+      </div>
+      <div class="field-col">
+        <label>ถึงวันที่ (ไม่บังคับ)</label>
+        <input type="date" id="toDate">
+      </div>
+      <div class="field-col">
+        <label>รหัสผู้ให้บริการ (PROVIDER, ไม่บังคับ)</label>
+        <input type="text" id="providerCode" placeholder="เว้นว่างได้ถ้าไม่ทราบ" style="width:180px">
+      </div>
+    </div>
+    <button class="btn-primary-x" onclick="runValidate()"><i class="ti ti-checkbox"></i> ตรวจสอบข้อมูล</button>
+    <span id="loadingNote" style="font-size:12.5px;color:#94a3b8;margin-left:10px"></span>
+  </div>
+
+  <div class="card-box hidden" id="resultSection">
+    <div class="card-title"><i class="ti ti-report-analytics" style="color:#059669"></i> ผลการตรวจสอบ</div>
+    <div class="stats-row" id="resultStats"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:13.5px;font-weight:700;color:#334155">ตัวอย่างข้อมูลที่พร้อมส่งออก</div>
+      <span style="font-size:12px;color:#94a3b8" id="previewCount"></span>
+    </div>
+    <div class="table-wrap" style="margin-bottom:18px">
+      <table>
+        <thead><tr>
+          <th>#</th><th>HOSPCODE</th><th>PID</th><th>ชื่อเด็ก</th><th>วัคซีน</th><th>รหัส (HDC)</th><th>DATE_SERV</th><th>SEQ</th>
+        </tr></thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+    </div>
+
+    <div id="skipWrap" class="hidden">
+      <div style="font-size:13.5px;font-weight:700;color:#b91c1c;margin-bottom:8px">
+        <i class="ti ti-alert-circle"></i> รายการที่ถูกข้าม (<span id="skipCount">0</span> รายการ) — แก้ไขสาเหตุด้านล่างแล้วกดตรวจสอบใหม่
+      </div>
+      <div class="table-wrap" style="margin-bottom:18px;max-height:320px;overflow-y:auto">
+        <table>
+          <thead><tr><th>HN</th><th>ชื่อเด็ก</th><th>วัคซีน</th><th>สาเหตุที่ข้าม</th></tr></thead>
+          <tbody id="skipBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <button class="btn-primary-x" id="downloadBtn" disabled onclick="downloadFiles()">
+      <i class="ti ti-download"></i> ดาวน์โหลดไฟล์ EPI (.txt)
+    </button>
+    <div style="font-size:12px;color:#94a3b8;margin-top:8px">
+      ไฟล์จะตั้งชื่อรูปแบบ <code>HOSPCODE_EPI_YYYYMMDD.txt</code> แยกไฟล์ตามสถานพยาบาลที่เลือก — โปรดทดสอบอัปโหลดกับระบบ HDC จริงก่อนใช้งานเต็มรูปแบบ
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+if (!localStorage.getItem("user")) window.location.href = "login.html";
+
+// ── Firebase ──────────────────────────────────
+const firebaseConfig = {
+  apiKey:      "HnOSpjSHma268VX3glsVJ9idzj9Uc1jjcqkJ7P11",
+  authDomain:  "vaccine-dashboard-bc687.firebaseapp.com",
+  databaseURL: "https://vaccine-dashboard-bc687-default-rtdb.firebaseio.com/",
+  projectId:   "vaccine-dashboard-bc687"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ── Nav topbar: ชื่อ/สิทธิ์ผู้ใช้ + ออกจากระบบ ─────────────
+document.addEventListener("DOMContentLoaded", () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const nameEl = document.getElementById("userNameDrop");
+    const roleEl = document.getElementById("userRoleDrop");
+    if (nameEl) nameEl.textContent = user.name || user.username || "ผู้ใช้งาน";
+    if (roleEl) roleEl.textContent = user.role || "เจ้าหน้าที่";
+  } catch (e) {}
+});
+function logout() { localStorage.removeItem("user"); window.location.href = "login.html"; }
+
+// ── รหัสวัคซีนภายในของ VaxKolok (ตรงกับ add.html) ─────────
+const VAX_CODES = ["BCG","HBV1","DTP1","IPV1","Rota1","DTP2","IPV2","Rota2","DTP3","OPV3","Rota3","MMR1","JE1","DTP4","OPV4","MMR2","JE2","DTP5","OPV5","HPV1","HPV2","dT"];
+const VAX_LABEL = { BCG:"BCG",HBV1:"HBV1",DTP1:"DTP-HB-Hib1",DTP2:"DTP-HB-Hib2",DTP3:"DTP-HB-Hib3",DTP4:"DTP4",DTP5:"DTP5",IPV1:"IPV1",IPV2:"IPV2",OPV3:"OPV3",OPV4:"OPV4",OPV5:"OPV5",Rota1:"Rota1",Rota2:"Rota2",Rota3:"Rota3",MMR1:"MMR1",MMR2:"MMR2",JE1:"JE1",JE2:"JE2",HPV1:"HPV เข็ม 1",HPV2:"HPV เข็ม 2",dT:"dT (ป.6)" };
+
+// ── สถานพยาบาลในอำเภอสุไหงโก-ลก (HOSPCODE ยืนยันจากผู้ใช้งานจริง) ─
+const HOSPITAL_LIST = [
+  {code:"77729", name:"ศูนย์แพทย์ใกล้ใจ 1",     tambon:"สุไหงโก-ลก"},
+  {code:"77728", name:"ศูนย์แพทย์ใกล้ใจ 2",     tambon:"สุไหงโก-ลก"},
+  {code:"10169", name:"รพ.สต.มูโนะ",           tambon:"มูโนะ"},
+  {code:"10170", name:"รพ.สต.ปูโยะ",           tambon:"ปูโยะ"},
+  {code:"10168", name:"รพ.สต.ปาเสมัส",         tambon:"ปาเสมัส"},
+  {code:"10658", name:"รพ.สต.บ้านกวาลอซีรา",   tambon:"ปาเสมัส"},
+];
+
+const CODE_MAP_KEY = "hdc_vaccine_code_map";
+
+// ── รหัสวัคซีนอ้างอิงจากไฟล์ทางการ 66-vaccine-4.xls (รหัสวัคซีนในแผนงาน EPI ปีงบ 2565) ──
+// ที่มา: จับคู่ตามชื่อ/ช่วงอายุที่ตรงกับ VAX_LABEL และ minMonths ใน add.html
+const SUGGESTED_CODE_MAP = {
+  BCG:"10", HBV1:"41", DTP1:"D21", DTP2:"D22", DTP3:"D23",
+  IPV1:"I11", IPV2:"I12", Rota1:"R21", Rota2:"R22", Rota3:"R23",
+  OPV3:"83", MMR1:"61", JE1:"J11", DTP4:"34", OPV4:"84",
+  MMR2:"073", JE2:"J12", DTP5:"35", OPV5:"85", HPV1:"310", HPV2:"320", dT:"106",
+};
+
+// ── ตั้งค่ารหัสวัคซีน ─────────────────────────────────────
+function getCodeMap() {
+  try { return JSON.parse(localStorage.getItem(CODE_MAP_KEY) || "{}"); } catch (e) { return {}; }
+}
+function saveCodeMap(map) { localStorage.setItem(CODE_MAP_KEY, JSON.stringify(map)); }
+
+// เติมค่าที่ยังว่างด้วยรหัสที่จับคู่มาจากไฟล์ทางการ (ไม่ทับค่าที่ผู้ใช้เคยกรอกไว้เอง)
+function seedSuggestedCodesIfEmpty() {
+  const map = getCodeMap();
+  let changed = false;
+  VAX_CODES.forEach(code => {
+    if (!map[code] && SUGGESTED_CODE_MAP[code]) { map[code] = SUGGESTED_CODE_MAP[code]; changed = true; }
+  });
+  if (changed) saveCodeMap(map);
+}
+
+function buildCodeMapUI() {
+  seedSuggestedCodesIfEmpty();
+  const map = getCodeMap();
+  const wrap = document.getElementById("codeMapWrap");
+  wrap.innerHTML = VAX_CODES.map(code => `
+    <div class="cm-row">
+      <div class="cm-label">${VAX_LABEL[code]||code} <span class="cm-code">(${code})</span></div>
+      <input type="text" class="cm-input" data-code="${code}" placeholder="กรอกรหัสมาตรฐาน"
+        value="${(map[code]||"").replace(/"/g,'&quot;')}" oninput="onCodeMapInput('${code}', this.value)">
+    </div>`).join("");
+  updateCodeMapStatus();
+}
+function onCodeMapInput(code, val) {
+  const map = getCodeMap();
+  map[code] = val.trim();
+  saveCodeMap(map);
+  updateCodeMapStatus();
+}
+function updateCodeMapStatus() {
+  const map = getCodeMap();
+  const filled = VAX_CODES.filter(c => map[c]).length;
+  const el = document.getElementById("codeMapStatus");
+  el.textContent = `ตั้งค่าแล้ว ${filled} / ${VAX_CODES.length} รายการ`;
+  el.style.background = filled === VAX_CODES.length ? "#dcfce7" : "#fef9c3";
+  el.style.color = filled === VAX_CODES.length ? "#166534" : "#854d0e";
+}
+
+// ── เลือกสถานพยาบาล ──────────────────────────────────────
+function buildHospGrid() {
+  document.getElementById("hospGrid").innerHTML = HOSPITAL_LIST.map(h => `
+    <label class="hosp-item">
+      <input type="checkbox" id="hosp-${h.code}">
+      <span>${h.name}<br><span class="hosp-code">${h.code} · ต.${h.tambon}</span></span>
+    </label>`).join("");
+}
+function toggleAllHosp(checked) {
+  HOSPITAL_LIST.forEach(h => { document.getElementById("hosp-"+h.code).checked = checked; });
+}
+function getSelectedHospcodes() {
+  return HOSPITAL_LIST.filter(h => document.getElementById("hosp-"+h.code).checked).map(h => h.code);
+}
+
+// ── แปลงวันที่ "d/m/พ.ศ." (ที่เก็บใน children/*/vaccines) → DATE_SERV (YYYYMMDD ค.ศ.) ─
+function thaiVaxDateToServDate(thaiStr) {
+  if (!thaiStr) return null;
+  const parts = String(thaiStr).split("/");
+  if (parts.length !== 3) return null;
+  const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10), yBE = parseInt(parts[2], 10);
+  if (!d || !m || !yBE) return null;
+  const yCE = yBE - 543;
+  if (yCE < 1980 || yCE > 2100) return null;
+  const p2 = n => String(n).padStart(2, "0");
+  return `${yCE}${p2(m)}${p2(d)}`;
+}
+function nowDUpdate() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+// ── โหลดข้อมูลเด็กทั้งหมด ────────────────────────────────
+let allChildren = [];
+async function loadChildren() {
+  const snap = await db.ref("children").once("value");
+  const out = [];
+  snap.forEach(c => out.push({ key: c.key, ...c.val() }));
+  return out;
+}
+
+// ── ตรวจสอบ + เตรียมข้อมูลส่งออก ────────────────────────
+let validRows = [];
+let skippedRows = [];
+
+async function runValidate() {
+  const selHosp = getSelectedHospcodes();
+  if (!selHosp.length) { alert("เลือกสถานพยาบาลอย่างน้อย 1 แห่งก่อนครับ"); return; }
+
+  const note = document.getElementById("loadingNote");
+  note.textContent = "กำลังโหลดข้อมูล...";
+
+  if (!allChildren.length) allChildren = await loadChildren();
+  note.textContent = "";
+
+  const codeMap = getCodeMap();
+  const pidSource = document.getElementById("pidSource").value;
+  const fromDate = document.getElementById("fromDate").value;
+  const toDate = document.getElementById("toDate").value;
+  const providerCode = document.getElementById("providerCode").value.trim();
+  const fromServ = fromDate ? fromDate.replace(/-/g, "") : null;
+  const toServ = toDate ? toDate.replace(/-/g, "") : null;
+
+  validRows = [];
+  skippedRows = [];
+  const seqCounter = {};
+
+  allChildren.forEach(child => {
+    const hosp = String(child.hospital || "").trim();
+    if (!selHosp.includes(hosp)) return; // ไม่ใช่สถานพยาบาลที่เลือก — ไม่นับเป็น error แค่กรองออก
+
+    const pid = (pidSource === "cid" ? child.cid : child.hn) || "";
+    const vaccines = child.vaccines || {};
+
+    Object.entries(vaccines).forEach(([code, thaiDate]) => {
+      const label = VAX_LABEL[code] || code;
+      const base = { hn: child.hn || "", name: child.name || "", label };
+
+      if (!/^\d{5}$/.test(hosp)) {
+        skippedRows.push({ ...base, reason: `HOSPCODE ไม่ถูกต้อง (${hosp || "ว่าง"})` }); return;
+      }
+      if (!String(pid).trim()) {
+        skippedRows.push({ ...base, reason: `ไม่มี${pidSource==="cid"?"เลขบัตรประชาชน":"HN"}สำหรับใช้เป็น PID` }); return;
+      }
+      const dateServ = thaiVaxDateToServDate(thaiDate);
+      if (!dateServ) {
+        skippedRows.push({ ...base, reason: `วันที่ฉีดไม่ถูกต้อง (${thaiDate || "ว่าง"})` }); return;
+      }
+      if (fromServ && dateServ < fromServ) return;
+      if (toServ && dateServ > toServ) return;
+
+      const mapped = codeMap[code];
+      if (!mapped) {
+        skippedRows.push({ ...base, reason: `ยังไม่ได้ตั้งค่ารหัสวัคซีนมาตรฐานสำหรับ ${label}` }); return;
+      }
+
+      seqCounter[hosp] = (seqCounter[hosp] || 0) + 1;
+      validRows.push({
+        HOSPCODE: hosp, PID: String(pid).trim(), DATE_SERV: dateServ, VACCINE: mapped,
+        SEQ: String(seqCounter[hosp]), PROVIDER: providerCode, D_UPDATE: nowDUpdate(),
+        _hn: child.hn || "", _name: child.name || "", _label: label,
+      });
+    });
+  });
+
+  renderResults();
+}
+
+function renderResults() {
+  document.getElementById("resultSection").classList.remove("hidden");
+  document.getElementById("resultStats").innerHTML = `
+    <div class="stat-box green"><div class="stat-num">${validRows.length}</div><div class="stat-label">พร้อมส่งออก</div></div>
+    <div class="stat-box red"><div class="stat-num">${skippedRows.length}</div><div class="stat-label">ข้าม (ต้องแก้ไข)</div></div>
+  `;
+
+  document.getElementById("previewBody").innerHTML = validRows.slice(0, 50).map((r, i) => `
+    <tr><td>${i+1}</td><td>${r.HOSPCODE}</td><td>${r.PID}</td><td>${r._name||"—"}</td>
+    <td>${r._label}</td><td>${r.VACCINE}</td><td>${r.DATE_SERV}</td><td>${r.SEQ}</td></tr>
+  `).join("") || `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:16px">— ไม่มีข้อมูลที่พร้อมส่งออกตามเงื่อนไขที่เลือก —</td></tr>`;
+  document.getElementById("previewCount").textContent = `แสดง ${Math.min(validRows.length,50)} จาก ${validRows.length} รายการ`;
+
+  const skipWrap = document.getElementById("skipWrap");
+  if (skippedRows.length) {
+    document.getElementById("skipCount").textContent = skippedRows.length;
+    document.getElementById("skipBody").innerHTML = skippedRows.slice(0, 300).map(r => `
+      <tr><td>${r.hn||"—"}</td><td>${r.name||"—"}</td><td>${r.label}</td><td style="color:#b91c1c">${r.reason}</td></tr>
+    `).join("");
+    skipWrap.classList.remove("hidden");
+  } else {
+    skipWrap.classList.add("hidden");
+  }
+
+  document.getElementById("downloadBtn").disabled = validRows.length === 0;
+}
+
+// ── สร้างไฟล์ .txt แยกตาม HOSPCODE แล้วดาวน์โหลด ────────
+function downloadFiles() {
+  if (!validRows.length) return;
+  const byHosp = {};
+  validRows.forEach(r => { (byHosp[r.HOSPCODE] = byHosp[r.HOSPCODE] || []).push(r); });
+
+  const today = new Date();
+  const p2 = n => String(n).padStart(2, "0");
+  const todayStr = `${today.getFullYear()}${p2(today.getMonth()+1)}${p2(today.getDate())}`;
+
+  Object.keys(byHosp).forEach((hosp, i) => {
+    const rows = byHosp[hosp];
+    const lines = rows.map(r => [r.HOSPCODE, r.PID, r.DATE_SERV, r.VACCINE, r.SEQ, r.PROVIDER, r.D_UPDATE].join(","));
+    const content = lines.join("\r\n");
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const filename = `${hosp}_EPI_${todayStr}.txt`;
+    setTimeout(() => {
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }, i * 400);
+  });
+}
+
+// ── init ──────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  buildCodeMapUI();
+  buildHospGrid();
+});
+</script>
+</body>
+</html>
