@@ -171,17 +171,7 @@ tr:hover td{background:#f8fafb}
   <!-- STEP 1: Upload -->
   <div id="step1">
     <div class="card" style="margin-bottom:1rem">
-      <p class="card-title">เลือกประเภทข้อมูลที่จะนำเข้า</p>
-      <div style="display:flex;gap:16px;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-          <input type="radio" name="importMode" value="general" checked onchange="setImportMode('general')" style="width:16px;height:16px;accent-color:var(--green)">
-          ข้อมูลเด็ก (ทั่วไป)
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-          <input type="radio" name="importMode" value="vaccine" onchange="setImportMode('vaccine')" style="width:16px;height:16px;accent-color:var(--green)">
-          ประวัติวัคซีน (จาก JHCIS/HOSxP)
-        </label>
-      </div>
+      <p class="card-title">นำเข้าข้อมูลเด็ก</p>
       <div style="font-size:12px;color:var(--ink-3);margin-top:8px" id="modeHint">
         ไฟล์ 1 แถวต่อเด็ก 1 คน พร้อมคอลัมน์ HN, ชื่อ-นามสกุล, วันเกิด, ตำบล ฯลฯ — ใช้เพิ่มเด็กใหม่หรืออัปเดตข้อมูลที่อยู่
       </div>
