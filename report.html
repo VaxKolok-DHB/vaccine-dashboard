@@ -80,11 +80,12 @@ body{font-family:var(--font);background:var(--canvas);color:var(--ink);min-heigh
 .village-group{margin-bottom:10px;background:var(--canvas);border-radius:var(--radius);padding:8px 10px}
 .village-head{font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
 .count-chip{font-size:11px;font-weight:600;color:var(--ink-3);background:var(--surface);border:1px solid var(--border);padding:1px 8px;border-radius:99px}
-.name-tbl{width:100%;border-collapse:collapse}
-.name-tbl td{padding:5px 0;font-size:13.5px;border-top:1px dashed var(--border)}
+.name-tbl{width:100%;border-collapse:collapse;table-layout:fixed}
+.name-tbl td{padding:5px 0;font-size:13.5px;border-top:1px dashed var(--border);overflow:hidden}
 .name-tbl tr:first-child td{border-top:none}
-.name-tbl td.hn{color:var(--ink-3);font-size:12px;white-space:nowrap}
-.name-tbl td.dt{color:var(--green-dk);font-size:12px;white-space:nowrap;text-align:right}
+.name-tbl td.nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.name-tbl td.hn{width:96px;color:var(--ink-3);font-size:12px;white-space:nowrap}
+.name-tbl td.dt{width:96px;color:var(--green-dk);font-size:12px;white-space:nowrap;text-align:right}
 
 .bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:60px;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;z-index:999}
 .bottom-nav a{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:var(--ink-2);font-size:10.5px;gap:3px}
@@ -338,7 +339,7 @@ function renderReport() {
         detailHtml += `<div class="village-group">
           <div class="village-head"><span>${escapeHtml(vLabel)}</span><span class="count-chip">${recs.length} คน</span></div>
           <table class="name-tbl"><tbody>
-            ${recs.map(r => `<tr><td>${escapeHtml(r.name)}</td><td class="hn">HN ${escapeHtml(r.hn)}</td><td class="dt">${thaiDateFmt(r.date)}</td></tr>`).join("")}
+            ${recs.map(r => `<tr><td class="nm">${escapeHtml(r.name)}</td><td class="hn">HN ${escapeHtml(r.hn)}</td><td class="dt">${thaiDateFmt(r.date)}</td></tr>`).join("")}
           </tbody></table>
         </div>`;
       });
@@ -384,8 +385,9 @@ function exportReportPDF() {
       Object.entries(villages).forEach(([vLabel, recs]) => {
         recs.forEach((r, i) => {
           rows += `<tr>
-            ${i === 0 ? `<td rowspan="${recs.length}">${escapeHtml(tLabel)}</td><td rowspan="${recs.length}">${escapeHtml(vLabel)}</td>` : ""}
-            <td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.hn)}</td><td>${thaiDateFmt(r.date)}</td>
+            <td>${escapeHtml(r.hn)}</td><td>${escapeHtml(r.name)}</td>
+            ${i === 0 ? `<td rowspan="${recs.length}">${escapeHtml(vLabel)}</td><td rowspan="${recs.length}">${escapeHtml(tLabel)}</td>` : ""}
+            <td>${thaiDateFmt(r.date)}</td>
           </tr>`;
         });
       });
@@ -395,7 +397,7 @@ function exportReportPDF() {
       <div class="vsec">
         <div class="vsec-head">${escapeHtml(label)} <span>${records.length} คน</span></div>
         <table>
-          <thead><tr><th>ตำบล</th><th>หมู่/ชุมชน</th><th>ชื่อ-สกุล</th><th>HN</th><th>วันที่ฉีด</th></tr></thead>
+          <thead><tr><th>HN</th><th>ชื่อ-สกุล</th><th>หมู่/ชุมชน</th><th>ตำบล</th><th>วันที่ฉีด</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
