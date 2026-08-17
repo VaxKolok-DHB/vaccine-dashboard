@@ -74,6 +74,12 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 .result-found .result-sub{color:#059669}.result-notfound .result-sub{color:#3b82f6}
 .result-meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
 .meta-chip{font-size:11.5px;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.7);color:var(--ink-2);border:1px solid rgba(0,0,0,.08);white-space:nowrap}
+.match-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(0,0,0,.08)}
+.match-info-item{display:flex;flex-direction:column;gap:2px;min-width:0}
+.match-info-label{font-size:11px;color:var(--ink-3)}
+.match-info-val{font-size:14px;color:var(--ink);font-weight:600;word-break:break-word}
+.match-select-btn{margin-top:12px;width:100%;padding:9px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);font-size:13.5px;font-weight:600;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+.match-select-btn:hover{background:var(--green-dk)}
 .dup-warning{background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--radius-lg);padding:.85rem 1rem;margin-bottom:.75rem;display:flex;align-items:flex-start;gap:8px}
 .dup-warning-icon{font-size:18px;flex-shrink:0;color:var(--amber)}
 .dup-warning-text{font-size:13px;color:#92400e}
@@ -179,22 +185,22 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,
 
 <div class="wrap">
 
-  <!-- PAGE 0: ค้นหา HN / ชื่อ -->
+  <!-- PAGE 0: ค้นหา HN / เลขบัตรประชาชน / ชื่อ -->
   <div class="page active" id="p0">
     <div class="search-hero">
       <div class="search-hero-icon"><i class="ti ti-search" style="font-size:48px;color:var(--green)"></i></div>
       <div class="search-hero-title">ค้นหาก่อนเพิ่มข้อมูล</div>
-      <div class="search-hero-sub">กรอก HN หรือชื่อเด็ก เพื่อตรวจสอบว่ามีข้อมูลในระบบแล้วหรือยัง</div>
+      <div class="search-hero-sub">กรอก HN, เลขบัตรประชาชน หรือชื่อเด็ก เพื่อตรวจสอบว่ามีข้อมูลในระบบแล้วหรือยัง</div>
     </div>
     <div class="card">
-      <p class="card-title">ค้นหาด้วย HN หรือชื่อ</p>
+      <p class="card-title">ค้นหาด้วย HN, เลขบัตรประชาชน หรือชื่อ</p>
       <div class="search-box">
-        <input type="text" id="searchHN" placeholder="กรอก HN หรือชื่อเด็ก" onkeydown="if(event.key==='Enter') searchByHN()">
+        <input type="text" id="searchHN" placeholder="กรอก HN, เลขบัตร ปชช. 13 หลัก หรือชื่อเด็ก" onkeydown="if(event.key==='Enter') searchByHN()">
         <button class="search-btn" id="searchBtn" onclick="searchByHN()">
           <i class="ti ti-search"></i> ค้นหา
         </button>
       </div>
-      <div class="err" id="errSearchHN">กรุณากรอก HN หรือชื่อเด็ก</div>
+      <div class="err" id="errSearchHN">กรุณากรอก HN, เลขบัตรประชาชน หรือชื่อเด็ก</div>
     </div>
     <div id="searchResult" style="display:none"></div>
     <div id="searchActions" style="display:none">
@@ -593,14 +599,17 @@ function matchCardHTML(key,d){
       <div class="match-card-name">${d.name||"—"}</div>
       <i class="ti ti-chevron-right match-card-arrow"></i>
     </div>
-    <div class="result-meta">
-      <span class="meta-chip">HN: ${d.hn||"—"}</span>
-      <span class="meta-chip">อายุ ${Math.floor(age/12)} ปี ${age%12} เดือน</span>
-      <span class="meta-chip"><i class="ti ti-vaccine"></i> ${vCount} เข็ม</span>
-      <span class="meta-chip"><i class="ti ti-map-pin"></i> ${tambonTH}</span>
-      <span class="meta-chip"><i class="ti ti-building-hospital"></i> ${hospName}</span>
-      <span class="meta-chip">เลขบัตร ปชช.: ${d.cid?("..."+String(d.cid).slice(-4)):"—"}</span>
+    <div class="match-info-grid">
+      <div class="match-info-item"><span class="match-info-label">HN</span><span class="match-info-val">${d.hn||"—"}</span></div>
+      <div class="match-info-item"><span class="match-info-label">เลขบัตรประชาชน</span><span class="match-info-val">${d.cid||"—"}</span></div>
+      <div class="match-info-item"><span class="match-info-label">อายุ</span><span class="match-info-val">${Math.floor(age/12)} ปี ${age%12} เดือน</span></div>
+      <div class="match-info-item"><span class="match-info-label">วัคซีนแล้ว</span><span class="match-info-val">${vCount} เข็ม</span></div>
+      <div class="match-info-item"><span class="match-info-label">ตำบล</span><span class="match-info-val">${tambonTH}</span></div>
+      <div class="match-info-item"><span class="match-info-label">หน่วยบริการ</span><span class="match-info-val">${hospName}</span></div>
     </div>
+    <button type="button" class="match-select-btn" onclick="event.stopPropagation();selectMatch('${key}')">
+      <i class="ti ti-arrow-right"></i> เลือกรายการนี้
+    </button>
   </div>`;
 }
 
@@ -610,8 +619,14 @@ function selectMatch(key){
   continueWithData();
 }
 
-// ✅ ค้นหาด้วย HN (ถ้ากรอกเป็นตัวเลขล้วน) หรือค้นหาด้วยชื่อ (ถ้ากรอกเป็นข้อความ)
+// ✅ ค้นหาด้วย HN, เลขบัตรประชาชน (13 หลัก) หรือชื่อ
+// เลขบัตรประชาชนไทยมีความยาวคงที่ 13 หลักเสมอ ใช้แยกจาก HN (สั้นกว่า) ได้ชัดเจน
 // Firebase RTDB ไม่รองรับ "contains" search ในตัว จึงดึงรายการทั้งหมดมากรองฝั่ง client เมื่อค้นด้วยชื่อ
+function detectQueryType(q){
+  if(/^\d{13}$/.test(q)) return "cid";
+  if(/^\d+$/.test(q)) return "hn";
+  return "name";
+}
 async function searchByHN(){
   const q=document.getElementById("searchHN").value.trim();
   if(!q){showErr("errSearchHN",true);return;}
@@ -619,10 +634,14 @@ async function searchByHN(){
   const btn=document.getElementById("searchBtn");
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span> ค้นหา...`;
   try{
-    const isHN=/^\d+$/.test(q);
+    const qType=detectQueryType(q); // "hn" | "cid" | "name"
     let entries=[];
-    if(isHN){
+    if(qType==="hn"){
       const snap=await db.ref("children").orderByChild("hn").equalTo(q).once("value");
+      const data=snap.val();
+      entries=data?Object.entries(data):[];
+    } else if(qType==="cid"){
+      const snap=await db.ref("children").orderByChild("cid").equalTo(q).once("value");
       const data=snap.val();
       entries=data?Object.entries(data):[];
     } else {
@@ -660,9 +679,10 @@ async function searchByHN(){
       document.getElementById("orDivider").style.display="block";
     } else {
       foundKey=null;foundData=null;matchMap={};
+      const qLabel = qType==="cid" ? `เลขบัตรประชาชน "${q}"` : qType==="hn" ? `HN "${q}"` : `ชื่อ "${q}"`;
       rEl.innerHTML=`<div class="result-card result-notfound">
         <div class="result-title"><i class="ti ti-info-circle" style="color:#1e40af"></i> ไม่พบข้อมูลนี้ในระบบ</div>
-        <div class="result-sub">${isHN?`HN "${q}"`:`ชื่อ "${q}"`} ยังไม่มีในฐานข้อมูล — สามารถเพิ่มข้อมูลใหม่ได้เลย</div>
+        <div class="result-sub">${qLabel} ยังไม่มีในฐานข้อมูล — สามารถเพิ่มข้อมูลใหม่ได้เลย</div>
       </div>`;
       document.getElementById("btnContinue").style.display="flex";
       document.getElementById("btnContinue").innerHTML=`<i class="ti ti-user-plus"></i> <span id="btnContinueLabel">เพิ่มข้อมูลใหม่</span>`;
@@ -675,9 +695,11 @@ async function searchByHN(){
 
 function continueWithData(){
   const q=document.getElementById("searchHN").value.trim();
-  const isHN=/^\d+$/.test(q);
+  const qType=detectQueryType(q);
   if(foundData){
-    state.name=foundData.name||"";state.hn=foundData.hn||(isHN?q:"");state.cid=foundData.cid||"";
+    state.name=foundData.name||"";
+    state.hn=foundData.hn||(qType==="hn"?q:"");
+    state.cid=foundData.cid||(qType==="cid"?q:"");
     state.birth=toISO(foundData.birth)||"";state.tambon=foundData.tambon||"";
     state.tambonLabel=TAMBON_LABEL[foundData.tambon]||foundData.tambon||"";
     state.village=foundData.village||"";state.hospital=foundData.hospital||"";
@@ -689,14 +711,17 @@ function continueWithData(){
     document.getElementById("existingBanner").style.display="flex";
     document.getElementById("existingBannerSub").textContent=`${state.name} · HN ${state.hn} · มีวัคซีนแล้ว ${Object.keys(state.vaccines).length} เข็ม`;
     renderPage2();showPage(2);
-  } else {startFresh(isHN?q:"");}
+  } else {
+    // ไม่พบข้อมูลเดิม — เติมเฉพาะช่องที่ตรงกับสิ่งที่พิมพ์ค้นหา (HN หรือเลขบัตรประชาชน) ไม่ปนกัน
+    startFresh(qType==="hn"?q:"", qType==="cid"?q:"");
+  }
 }
 
-function startFresh(hn=""){
+function startFresh(hn="",cid=""){
   foundKey=null;foundData=null;clearPage1();
-  const val=hn||"";
-  document.getElementById("childHN").value=val;
-  if(val) document.getElementById("hnFromSearch").style.display="inline-flex";
+  document.getElementById("childHN").value=hn||"";
+  document.getElementById("childCID").value=cid||"";
+  if(hn||cid) document.getElementById("hnFromSearch").style.display="inline-flex";
   document.getElementById("existingBanner").style.display="none";
   showPage(1);
 }
