@@ -283,6 +283,11 @@ body { background:#f5f7fa; padding:0 0 20px; font-family:'IBM Plex Sans Thai',sa
       <i class="ti ti-map-pin"></i> ปาเสมัส
       <span class="tab-count" id="cnt-pasemas">0</span>
     </div>
+    <!-- ✅ กวาลอ = รพ.สต.บ้านกวาลอซีรา (รหัส 10658) เป็นพื้นที่ที่ 5 แยกจากปาเสมัส (4 ตำบล + กวาลอ) -->
+    <div class="tambon-tab" data-tambon="kwalo" onclick="selectTambon('kwalo',this)">
+      <i class="ti ti-map-pin"></i> กวาลอ
+      <span class="tab-count" id="cnt-kwalo">0</span>
+    </div>
   </div>
 
   <div class="toolbar">
@@ -396,7 +401,31 @@ function logout() {
 // ── State ─────────────────────────────────────
 let allData = {};
 let pendingKey = null, pendingAction = null;
-let activeTambon = "all";   // ตำบลที่เลือกอยู่
+let activeTambon = "all";   // ตำบลที่เลือกอยู่ (หรือ "kwalo" = กวาลอ)
+let childMeta = {};         // children/{id} -> { hospital, village } ใช้จับคู่กับ symptoms ด้วย key เดียวกัน
+const KWALO_HOSPITAL = "10658"; // รพ.สต.บ้านกวาลอซีรา (ตรงกับ app.js)
+
+// พื้นที่ของเคส: มี 5 พื้นที่ (4 ตำบล + กวาลอ) แยกกันไม่ซ้อน
+// รพ.สต.บ้านกวาลอซีรา (10658) ที่อยู่ในตำบลปาเสมัส นับเป็น "กวาลอ" ไม่นับซ้ำในปาเสมัส
+function areaOf(key, s) {
+  const hos = String((childMeta[key] && childMeta[key].hospital) || s.hospital || "");
+  if (hos === KWALO_HOSPITAL) return "kwalo";
+  return s.tambon || "";
+}
+
+// เด็กรายนี้อยู่ในพื้นที่ที่เลือกอยู่หรือไม่
+function inArea(key, s) {
+  return activeTambon === "all" || areaOf(key, s) === activeTambon;
+}
+
+function loadChildMeta(cb) {
+  db.ref("children").once("value", snap => {
+    const d = snap.val() || {};
+    childMeta = {};
+    Object.keys(d).forEach(k => { childMeta[k] = { hospital: d[k].hospital || "", village: d[k].village || "" }; });
+    if (cb) cb();
+  });
+}
 const staffModal = new bootstrap.Modal(document.getElementById("staffModal"));
 
 // ── Config ────────────────────────────────────
@@ -415,7 +444,8 @@ const TAMBON_NAME = {
   kolok:   "สุไหงโก-ลก",
   munoh:   "มูโนะ",
   puyoh:   "ปูโยะ",
-  pasemas: "ปาเสมัส"
+  pasemas: "ปาเสมัส",
+  kwalo:   "กวาลอ"      // ✅ เพิ่มใหม่
 };
 
 // ── แท็บตำบล ──────────────────────────────────
@@ -427,10 +457,11 @@ function selectTambon(tambon, el) {
 }
 
 function updateTabCounts() {
-  const counts = { all:0, kolok:0, munoh:0, puyoh:0, pasemas:0 };
-  Object.values(allData).forEach(s => {
+  const counts = { all:0, kolok:0, munoh:0, puyoh:0, pasemas:0, kwalo:0 };  // ✅ เพิ่ม kwalo
+  Object.entries(allData).forEach(([key, s]) => {
     counts.all++;
-    if (s.tambon && counts[s.tambon] !== undefined) counts[s.tambon]++;
+    const a = areaOf(key, s);
+    if (counts[a] !== undefined) counts[a]++;
   });
   Object.entries(counts).forEach(([t, n]) => {
     const el = document.getElementById("cnt-" + t);
@@ -670,11 +701,11 @@ function render() {
   updateTabCounts();
 
   // กรองตาม active tambon + keyword + level
-  let entries = Object.entries(allData).filter(([, s]) => {
+  let entries = Object.entries(allData).filter(([key, s]) => {
     const hn   = String(s.hn  ||"").toLowerCase();
     const name = String(s.name||"").toLowerCase();
     if (kw && !hn.includes(kw) && !name.includes(kw)) return false;
-    if (activeTambon !== "all" && s.tambon !== activeTambon) return false;
+    if (!inArea(key, s)) return false;
     if (fl === "ปกติ"       && !(s.level||"").includes("🟢"))                      return false;
     if (fl === "เฝ้าระวัง"  && !(s.level||"").includes("🟠"))                      return false;
     if (fl === "ด่วน"       && !(s.level||"").includes("🔴") && s.status!=="ด่วน") return false;
@@ -698,8 +729,8 @@ function render() {
 
   // ── Stats (ตามตำบลที่เลือก) ──
   let total=0, normal=0, warn=0, crit=0, closed=0, noResp=0;
-  Object.values(allData).forEach(s => {
-    if (activeTambon !== "all" && s.tambon !== activeTambon) return;
+  Object.entries(allData).forEach(([key, s]) => {
+    if (!inArea(key, s)) return;
     total++;
     if (s.status === "ปิดเคส")                                    closed++;
     else if (s.noResponseAlert)                                    noResp++;
@@ -726,11 +757,11 @@ function render() {
 
   // โหมด "ทุกตำบล" → แยก section ตำบล
   if (activeTambon === "all") {
-    const TAMBON_ORDER = ["kolok","munoh","puyoh","pasemas",""];
-    const TAMBON_ICON  = { kolok:"ti-building-community", munoh:"ti-map-pin", puyoh:"ti-map-pin", pasemas:"ti-map-pin" };
+    const TAMBON_ORDER = ["kolok","munoh","puyoh","pasemas","kwalo",""];
+    const TAMBON_ICON  = { kolok:"ti-building-community", munoh:"ti-map-pin", puyoh:"ti-map-pin", pasemas:"ti-map-pin", kwalo:"ti-map-pin" };
     const grouped = {};
     entries.forEach(([key, s]) => {
-      const t = s.tambon || "";
+      const t = areaOf(key, s);
       if (!grouped[t]) grouped[t] = [];
       grouped[t].push([key, s]);
     });
@@ -738,7 +769,7 @@ function render() {
     TAMBON_ORDER.forEach(t => {
       if (!grouped[t] || !grouped[t].length) return;
       const label = TAMBON_NAME[t] || (t ? t : "ไม่ระบุตำบล");
-      const icon  = TAMBON_ICON[t] || "📍";
+      const icon  = TAMBON_ICON[t] || "ti-map-pin";
       html += `<div class="tambon-section-header">
         <i class="ti ${icon}" style="font-size:16px;color:#1d4ed8"></i>
         <span>${label}</span>
@@ -842,6 +873,8 @@ document.getElementById("staffName").addEventListener("keydown", e => {
 });
 
 // ── Firebase listener ─────────────────────────
+loadChildMeta(render);   // โหลด hospital/village ของเด็ก แล้ว render ซ้ำ
+
 db.ref("symptoms").on("value", snap => {
   allData = snap.val() || {};
   render();
@@ -850,6 +883,7 @@ db.ref("symptoms").on("value", snap => {
 });
 
 function manualRefresh() {
+  loadChildMeta();
   db.ref("symptoms").once("value", snap => {
     allData = snap.val() || {};
     render();
