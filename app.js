@@ -1,2066 +1,932 @@
-// =========================
-// Firebase
-// =========================
-const firebaseConfig = {
-  apiKey: "HnOSpjSHma268VX3glsVJ9idzj9Uc1jjcqkJ7P11",
-  authDomain: "vaccine-dashboard-bc687.firebaseapp.com",
-  databaseURL: "https://vaccine-dashboard-bc687-default-rtdb.firebaseio.com/",
-  projectId: "vaccine-dashboard-bc687",
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VaxKolok — เพิ่มข้อมูลเด็ก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+:root{--ink:#0d1b2a;--ink-2:#3d5166;--ink-3:#7a909f;--canvas:#f5f7fa;--surface:#ffffff;--border:#e3e8ef;--green:#0e9f6e;--green-bg:#ecfdf5;--green-dk:#057a55;--red:#e02424;--red-bg:#fef2f2;--amber:#d97706;--amber-bg:#fffbeb;--blue:#2563eb;--blue-bg:#eff6ff;--radius:10px;--radius-lg:16px;--font:'IBM Plex Sans Thai',system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--canvas);color:var(--ink);min-height:100vh;padding-bottom:5rem}
+.topbar{position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 24px;height:60px;background:#059669;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.topbar-brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.topbar-brand .logo-icon{width:36px;height:36px;background:rgba(255,255,255,.22);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.topbar-brand .logo-name{font-size:20px;font-weight:800;color:#fff;line-height:1.1}
+.topbar-brand .logo-sub{font-size:11px;color:rgba(255,255,255,.8)}
+.topbar-links{display:flex;align-items:center;gap:4px;margin-left:auto}
+.topbar-link{font-size:13px;font-weight:600;color:rgba(255,255,255,.85);text-decoration:none;padding:6px 12px;border-radius:8px;transition:background .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.topbar-link:hover{background:rgba(255,255,255,.15);color:#fff}
+.topbar-link.active{background:rgba(255,255,255,.22);color:#fff}
+.btn-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;cursor:pointer}
+@media(max-width:768px){
+  .topbar{padding:0 14px;gap:8px}
+  .topbar-brand .logo-sub{display:none}
+  .topbar-brand .logo-name{font-size:16px}
+  .topbar-links{display:none}
+}
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:60px;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;z-index:999}
+.bottom-nav a{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:var(--ink-2);font-size:10.5px;gap:3px}
+.bottom-nav a i{font-size:18px}
+.bottom-nav a.active{color:var(--green-dk)}
+.wrap{max-width:460px;margin:0 auto;padding:1.5rem 1rem}
+.progress-row{display:flex;gap:6px;margin-bottom:1.5rem}
+.bar{flex:1;height:4px;border-radius:99px;background:var(--border);transition:background .3s}
+.bar.done{background:var(--green)}
+.page-label{font-size:12px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1.25rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:12px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
+.field{margin-bottom:14px}.field:last-child{margin-bottom:0}
+label{display:block;font-size:13px;color:var(--ink-2);margin-bottom:5px;font-weight:500}
+.req{color:var(--red)}
+input[type=text],input[type=tel],select{width:100%;font-family:var(--font);font-size:15px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(14,159,110,.12)}
+.date3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.tambon-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tambon-btn{padding:10px 8px;border-radius:var(--radius);border:1px solid var(--border);background:var(--canvas);color:var(--ink-2);font-family:var(--font);font-size:14px;cursor:pointer;text-align:center;transition:all .15s}
+.tambon-btn.selected{border:2px solid var(--green);background:var(--green-bg);color:var(--green-dk);font-weight:600}
+.btn-primary{width:100%;padding:13px;font-size:15px;font-weight:600;background:var(--green);color:#fff;border:none;border-radius:var(--radius-lg);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;font-family:var(--font)}
+.btn-primary:hover{background:var(--green-dk)}.btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+.btn-secondary{width:100%;padding:11px;font-size:14px;background:var(--surface);color:var(--ink-2);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;margin-top:8px;font-family:var(--font);transition:background .15s}
+.err{font-size:12px;color:var(--red);margin-top:4px;display:none}
+.search-hero{text-align:center;padding:2rem 0 1rem}
+.search-hero-icon{font-size:48px;margin-bottom:.75rem}
+.search-hero-title{font-size:20px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.search-hero-sub{font-size:14px;color:var(--ink-2);margin-bottom:1.5rem}
+.search-box{display:flex;gap:8px;margin-bottom:1rem}
+.search-box input{flex:1;font-size:18px;font-weight:600;letter-spacing:.05em}
+.search-btn{padding:10px 18px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.search-btn:disabled{background:#9ca3af;cursor:not-allowed}
+.result-card{border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;border:2px solid transparent}
+.result-found{background:var(--green-bg);border-color:#6ee7b7}
+.result-notfound{background:var(--blue-bg);border-color:#93c5fd}
+.result-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.result-found .result-title{color:#065f46}.result-notfound .result-title{color:#1e40af}
+.result-sub{font-size:13px}
+.result-found .result-sub{color:#059669}.result-notfound .result-sub{color:#3b82f6}
+.result-meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
+.meta-chip{font-size:11.5px;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.7);color:var(--ink-2);border:1px solid rgba(0,0,0,.08);white-space:nowrap}
+.match-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(0,0,0,.08)}
+.match-info-item{display:flex;flex-direction:column;gap:2px;min-width:0}
+.match-info-label{font-size:11px;color:var(--ink-3)}
+.match-info-val{font-size:14px;color:var(--ink);font-weight:600;word-break:break-word}
+.match-select-btn{margin-top:12px;width:100%;padding:9px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);font-size:13.5px;font-weight:600;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+.match-select-btn:hover{background:var(--green-dk)}
+.dup-warning{background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--radius-lg);padding:.85rem 1rem;margin-bottom:.75rem;display:flex;align-items:flex-start;gap:8px}
+.dup-warning-icon{font-size:18px;flex-shrink:0;color:var(--amber)}
+.dup-warning-text{font-size:13px;color:#92400e}
+.match-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:.7rem .9rem;margin-bottom:.5rem;cursor:pointer;transition:border-color .15s,background .15s}
+.match-card:hover{border-color:var(--green);background:var(--green-bg)}
+.match-card:active{background:#d1fae5}
+.match-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:8px}
+.match-card-name{font-size:14px;font-weight:700;color:var(--ink)}
+.match-card-arrow{flex-shrink:0;color:var(--green);font-size:16px}
+.divider-text{text-align:center;font-size:12px;color:var(--ink-3);margin:1.25rem 0;position:relative}
+.divider-text::before,.divider-text::after{content:"";position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+.divider-text::before{left:0}.divider-text::after{right:0}
+.existing-banner{background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px}
+.existing-banner-icon{font-size:22px;flex-shrink:0}
+.existing-banner-title{font-size:14px;font-weight:700;color:#92400e;margin-bottom:3px}
+.existing-banner-sub{font-size:13px;color:#b45309}
+.prefill-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:var(--amber-bg);color:#92400e;border:1px solid #fde68a;border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+.child-banner{background:var(--green-bg);border:1px solid #a7f3d0;border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:12px}
+.avatar{width:42px;height:42px;border-radius:50%;background:#6ee7b7;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.section-label{font-size:12px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin:.75rem 0 .5rem}
+.vax-item{border-radius:var(--radius);padding:12px 14px;margin-bottom:8px}
+.vax-done{background:var(--green-bg);border:1px solid #a7f3d0}
+.vax-pending{background:var(--red-bg);border:1.5px solid #fca5a5}
+.vax-row{display:flex;align-items:center;justify-content:space-between}
+.vax-left{display:flex;align-items:center;gap:10px}
+.vax-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.vax-icon.done{background:var(--green);color:#fff}.vax-icon.pending{background:#fca5a5;color:#7f1d1d}
+.vax-name{font-size:15px;font-weight:600}
+.vax-done .vax-name{color:#065f46}.vax-pending .vax-name{color:#7f1d1d}
+.vax-sub{font-size:12px;margin-top:1px}
+.vax-done .vax-sub{color:#059669}.vax-pending .vax-sub{color:#b91c1c}
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px}
+.badge-done{background:#a7f3d0;color:#065f46}.badge-pending{background:#fecaca;color:#7f1d1d}
+.vax-date-pick{margin-top:10px}
+.vax-date-pick .date3 select{font-size:13px;padding:8px 6px}
+.save-vax-btn{width:100%;margin-top:8px;padding:9px;background:var(--red);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.edit-date-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--ink-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;flex-shrink:0}
+.edit-date-btn:hover{background:var(--green-bg);color:var(--green-dk);border-color:#6ee7b7}
+.del-vax-btn:hover{background:#fee2e2;color:#b91c1c;border-color:#fca5a5}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem}
+.chip{font-size:12px;color:var(--ink-3);background:var(--surface);border:1px solid var(--border);padding:4px 12px;border-radius:99px}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0}
+.summary-row+.summary-row{border-top:1px solid var(--border)}
+.s-label{font-size:13px;color:var(--ink-3)}.s-val{font-size:14px;color:var(--ink);font-weight:500}
+.confirm-vax-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--green-bg);border-radius:var(--radius);margin-bottom:6px}
+.confirm-vax-left{display:flex;align-items:center;gap:8px;font-size:14px;color:#065f46}
+.confirm-vax-date{font-size:13px;color:var(--green)}
+.next-banner{background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.25rem}
+.next-banner-title{font-size:14px;font-weight:600;color:#92400e;margin-bottom:4px}
+.next-banner-body{font-size:13px;color:#b45309}
+.success-screen{text-align:center;padding:4rem 1rem 2rem}
+.success-icon{font-size:56px;margin-bottom:1rem}
+.success-title{font-size:22px;font-weight:700;color:#065f46;margin-bottom:6px}
+.success-sub{font-size:14px;color:var(--ink-2);margin-bottom:2rem}
+.success-actions{display:flex;flex-direction:column;gap:10px}
+.page{display:none}.page.active{display:block}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:-3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
 
-// =========================
-// ตำบล
-// =========================
-const tambonMap = {
-  all: "ทั้งหมด",
-  kolok: "สุไหงโก-ลก",
-  munoh: "มูโนะ",
-  pasemas: "ปาเสมัส",
-  puyoh: "ปูโยะ"
-};
+<nav class="topbar">
+  <a href="login.html" class="topbar-brand">
+    <div class="logo-icon">
+      <i class="fa-solid fa-syringe" style="color:#fff;font-size:16px;"></i>
+    </div>
+    <div>
+      <div class="logo-name">VaxKolok</div>
+      <div class="logo-sub">อ.สุไหงโก-ลก · จ.นราธิวาส</div>
+    </div>
+  </a>
+  <div class="topbar-links">
+    <a href="index.html"        class="topbar-link"><i class="fa-solid fa-house fa-sm"></i> หน้าแรก</a>
+    <a href="symptoms.html"     class="topbar-link"><i class="fa-solid fa-heart-pulse fa-sm"></i> ติดตามอาการ</a>
+    <a href="report.html"       class="topbar-link"><i class="fa-solid fa-chart-column fa-sm"></i> รายงานวัคซีน</a>
+    <a href="admin.html" id="adminMenu" class="topbar-link"><i class="fa-solid fa-gear fa-sm"></i> Admin</a>
+    <a href="import-excel.html" class="topbar-link"><i class="fa-solid fa-file-import fa-sm"></i> นำเข้าข้อมูล</a>
+    <a id="exportBtn" href="admin.html#logCard" class="topbar-link" style="display:none">
+      <i class="fa-solid fa-clock-rotate-left fa-sm"></i> ประวัติการทำงาน
+    </a>
+  </div>
+  <div class="dropdown">
+    <button class="btn-avatar dropdown-toggle border-0 bg-transparent" data-bs-toggle="dropdown">
+      <i class="fa-solid fa-circle-user"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" style="font-size:13px;min-width:200px;border-radius:12px;border-color:#e5e7eb;">
+      <li>
+        <div class="px-3 pt-3 pb-2">
+          <div style="font-weight:700;color:#111827;" id="userNameDrop">—</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:2px;" id="userRoleDrop">—</div>
+        </div>
+      </li>
+      <li><hr class="dropdown-divider m-0"></li>
+      <li>
+        <a class="dropdown-item text-danger" href="#" onclick="logout()" style="padding:10px 16px;">
+          <i class="fa-solid fa-right-from-bracket fa-sm me-1"></i> ออกจากระบบ
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
 
-// =========================
-// รายการวัคซีน
-// =========================
-const vaccineList = [
-  "BCG", "HBV1", "HBV2",
-  "IPV1", "IPV2",
-  "DTP1", "DTP2", "DTP3", "DTP4", "DTP5",
-  "OPV1", "OPV2", "OPV3", "OPV4", "OPV5",
-  "MMR1", "MMR2",
-  "JE1", "JE2",
-  "Rota1", "Rota2", "Rota3"
+<div class="wrap">
+
+  <!-- PAGE 0: ค้นหา HN / เลขบัตรประชาชน / ชื่อ -->
+  <div class="page active" id="p0">
+    <div class="search-hero">
+      <div class="search-hero-icon"><i class="ti ti-search" style="font-size:48px;color:var(--green)"></i></div>
+      <div class="search-hero-title">ค้นหาก่อนเพิ่มข้อมูล</div>
+      <div class="search-hero-sub">กรอก HN, เลขบัตรประชาชน หรือชื่อเด็ก เพื่อตรวจสอบว่ามีข้อมูลในระบบแล้วหรือยัง</div>
+    </div>
+    <div class="card">
+      <p class="card-title">ค้นหาด้วย HN, เลขบัตรประชาชน หรือชื่อ</p>
+      <div class="search-box">
+        <input type="text" id="searchHN" placeholder="กรอก HN, เลขบัตร ปชช. 13 หลัก หรือชื่อเด็ก" onkeydown="if(event.key==='Enter') searchByHN()">
+        <button class="search-btn" id="searchBtn" onclick="searchByHN()">
+          <i class="ti ti-search"></i> ค้นหา
+        </button>
+      </div>
+      <div class="err" id="errSearchHN">กรุณากรอก HN, เลขบัตรประชาชน หรือชื่อเด็ก</div>
+    </div>
+    <div id="searchResult" style="display:none"></div>
+    <div id="searchActions" style="display:none">
+      <button class="btn-primary" id="btnContinue" onclick="continueWithData()">
+        <i class="ti ti-arrow-right"></i> <span id="btnContinueLabel">ดำเนินการต่อ</span>
+      </button>
+      <div class="divider-text" id="orDivider">หรือ</div>
+      <button class="btn-secondary" id="btnAddNew" onclick="startFresh()" style="margin-top:0">
+        <i class="ti ti-user-plus"></i> เพิ่มเด็กใหม่ (HN อื่น)
+      </button>
+    </div>
+    <div id="skipSection" style="margin-top:1rem">
+      <button class="btn-secondary" onclick="startFresh()" style="margin-top:0">
+        ข้ามการค้นหา — เพิ่มเด็กใหม่เลย
+      </button>
+    </div>
+  </div>
+
+  <!-- PAGE 1: ข้อมูลเด็ก -->
+  <div class="page" id="p1">
+    <p class="page-label">ขั้นตอนที่ 1 จาก 3 — ข้อมูลเด็ก</p>
+    <div class="progress-row">
+      <div class="bar done"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+    <div id="existingBanner" class="existing-banner" style="display:none">
+      <div class="existing-banner-icon"><i class="ti ti-alert-triangle" style="color:var(--amber)"></i></div>
+      <div>
+        <div class="existing-banner-title">พบข้อมูลในระบบแล้ว</div>
+        <div class="existing-banner-sub" id="existingBannerSub">ข้อมูลบางส่วนถูกเติมให้อัตโนมัติ</div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="card-title">ข้อมูลพื้นฐาน</p>
+      <div class="field">
+        <label>ชื่อ - นามสกุล <span class="req">*</span></label>
+        <input type="text" id="childName" placeholder="เช่น ซูไรดา มะแซ">
+        <div class="err" id="errName">กรุณากรอกชื่อ-นามสกุล</div>
+      </div>
+      <div class="field">
+        <label>HN <span class="req">*</span> <span id="hnFromSearch" class="prefill-badge" style="display:none"><i class="ti ti-check"></i> จากการค้นหา</span></label>
+        <input type="text" id="childHN" placeholder="เช่น 12345">
+        <div class="err" id="errHN">กรุณากรอก HN</div>
+      </div>
+      <div class="field">
+        <label>เลขบัตรประชาชน</label>
+        <input type="text" id="childCID" placeholder="1 3 _ _ _ _ _ _ _ _ _ _ _" maxlength="13">
+      </div>
+      <div class="field">
+        <label>วันเกิด <span class="req">*</span></label>
+        <div class="date3">
+          <select id="bDay"><option value="">วัน</option></select>
+          <select id="bMonth"><option value="">เดือน</option></select>
+          <select id="bYear"><option value="">ปี (พ.ศ.)</option></select>
+        </div>
+        <div class="err" id="errBirth">กรุณาเลือกวันเกิด</div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="card-title">ที่อยู่</p>
+      <div class="field">
+        <label>ตำบล <span class="req">*</span></label>
+        <div class="tambon-grid" id="tambonGrid">
+          <button class="tambon-btn" data-val="puyoh" data-label="ปูโยะ">ปูโยะ</button>
+          <button class="tambon-btn" data-val="munoh" data-label="มูโนะ">มูโนะ</button>
+          <button class="tambon-btn" data-val="pasemas" data-label="ปาเสมัส">ปาเสมัส</button>
+          <button class="tambon-btn" data-val="kolok" data-label="โก-ลก">โก-ลก</button>
+        </div>
+        <div class="err" id="errTambon">กรุณาเลือกตำบล</div>
+      </div>
+      <div class="field">
+        <label>หมู่บ้าน / ชุมชน <span class="req">*</span></label>
+        <select id="village"><option value="">-- เลือกหมู่บ้าน --</option></select>
+        <div class="err" id="errVillage">กรุณาเลือกหมู่บ้าน</div>
+      </div>
+      <div class="field">
+        <label>บ้านเลขที่</label>
+        <input type="text" id="house" placeholder="เช่น 12/3">
+      </div>
+      <div class="field">
+        <label>หน่วยบริการ <span class="req">*</span></label>
+        <select id="hospital"><option value="">-- เลือก รพ.สต. --</option></select>
+        <div class="err" id="errHospital">กรุณาเลือกหน่วยบริการ</div>
+      </div>
+      <div class="field">
+        <label>เบอร์โทรผู้ดูแล</label>
+        <input type="tel" id="phone" placeholder="08X-XXX-XXXX">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="goPage2()">ถัดไป <i class="ti ti-arrow-right"></i></button>
+    <button class="btn-secondary" onclick="showPage(0)">← กลับค้นหา HN</button>
+  </div>
+
+  <!-- PAGE 2: วัคซีน -->
+  <div class="page" id="p2">
+    <p class="page-label">ขั้นตอนที่ 2 จาก 3 — บันทึกวัคซีน</p>
+    <div class="progress-row">
+      <div class="bar done"></div><div class="bar done"></div><div class="bar"></div>
+    </div>
+    <div class="child-banner">
+      <div class="avatar"><i class="ti ti-user" style="font-size:20px;color:#065f46"></i></div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:#065f46" id="bannerName">—</div>
+        <div style="font-size:13px;color:#059669" id="bannerAge">—</div>
+      </div>
+    </div>
+    <p class="section-label">วัคซีนตามช่วงอายุ</p>
+    <div id="vaxList"></div>
+    <div id="notYetSection" style="display:none">
+      <p class="section-label" style="margin-top:.5rem">วัคซีนที่ยังไม่ถึงวัย</p>
+      <div class="chip-wrap" id="notYetList"></div>
+    </div>
+    <button class="btn-primary" onclick="goPage3()"><i class="ti ti-device-floppy"></i> บันทึกและตรวจสอบ</button>
+    <button class="btn-secondary" onclick="showPage(1)">← กลับแก้ไขข้อมูลเด็ก</button>
+  </div>
+
+  <!-- PAGE 3: ยืนยัน -->
+  <div class="page" id="p3">
+    <p class="page-label">ขั้นตอนที่ 3 จาก 3 — ตรวจสอบและยืนยัน</p>
+    <div class="progress-row">
+      <div class="bar done"></div><div class="bar done"></div><div class="bar done"></div>
+    </div>
+    <div class="child-banner" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="avatar"><i class="ti ti-user" style="font-size:20px;color:#065f46"></i></div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#065f46" id="sumName">—</div>
+          <div style="font-size:13px;color:#059669" id="sumAge">—</div>
+        </div>
+      </div>
+      <button onclick="showPage(1)" style="font-size:12px;color:var(--green);background:none;border:1px solid #6ee7b7;border-radius:var(--radius);padding:5px 12px;cursor:pointer;font-family:var(--font)">แก้ไข</button>
+    </div>
+    <div class="card">
+      <p class="card-title">ข้อมูลที่อยู่</p>
+      <div class="summary-row"><span class="s-label">ตำบล</span><span class="s-val" id="sumTambon">—</span></div>
+      <div class="summary-row"><span class="s-label">หมู่บ้าน</span><span class="s-val" id="sumVillage">—</span></div>
+      <div class="summary-row"><span class="s-label">บ้านเลขที่</span><span class="s-val" id="sumHouse">—</span></div>
+      <div class="summary-row"><span class="s-label">หน่วยบริการ</span><span class="s-val" id="sumHospital">—</span></div>
+      <div class="summary-row"><span class="s-label">เบอร์ผู้ดูแล</span><span class="s-val" id="sumPhone">—</span></div>
+      <div class="summary-row"><span class="s-label">HN</span><span class="s-val" id="sumHN">—</span></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <p class="card-title" style="margin:0">วัคซีนที่บันทึกวันนี้</p>
+        <button onclick="showPage(2)" style="font-size:12px;color:var(--green);background:none;border:1px solid #6ee7b7;border-radius:var(--radius);padding:5px 12px;cursor:pointer;font-family:var(--font)">แก้ไข</button>
+      </div>
+      <div id="sumVaxList"></div>
+      <p id="sumNoVax" style="font-size:13px;color:var(--ink-3);display:none">ไม่มีวัคซีนที่บันทึกใหม่</p>
+    </div>
+    <div id="nextVaxBanner" class="next-banner" style="display:none">
+      <div class="next-banner-title"><i class="ti ti-clock" style="color:var(--amber)"></i> วัคซีนนัดครั้งถัดไป</div>
+      <div class="next-banner-body" id="nextVaxText">—</div>
+    </div>
+    <button class="btn-primary" id="confirmBtn" onclick="submitData()"><i class="ti ti-circle-check"></i> ยืนยันบันทึกข้อมูล</button>
+    <button class="btn-secondary" onclick="showPage(2)">← กลับแก้ไขวัคซีน</button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="page" id="pSuccess">
+    <div class="success-screen">
+      <div class="success-icon"><i class="ti ti-circle-check" style="font-size:56px;color:var(--green)"></i></div>
+      <div class="success-title">บันทึกข้อมูลสำเร็จ</div>
+      <div class="success-sub" id="successMsg">ข้อมูลถูกบันทึกเรียบร้อยแล้ว</div>
+      <div class="success-actions">
+        <button class="btn-primary" onclick="resetAll()"><i class="ti ti-plus"></i> เพิ่มเด็กคนต่อไป</button>
+        <a href="index.html" style="text-decoration:none">
+          <button class="btn-secondary" style="margin-top:0"><i class="ti ti-layout-dashboard"></i> กลับ Dashboard</button>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<nav class="bottom-nav d-md-none">
+  <a href="index.html">
+    <i class="fa-solid fa-house"></i><span>หน้าแรก</span>
+  </a>
+  <a href="symptoms.html">
+    <i class="fa-solid fa-heart-pulse"></i><span>อาการ</span>
+  </a>
+  <a href="add.html" class="active">
+    <i class="fa-solid fa-plus"></i><span>เพิ่มข้อมูล</span>
+  </a>
+  <a href="report.html">
+    <i class="fa-solid fa-chart-column"></i><span>รายงาน</span>
+  </a>
+  <a href="admin.html">
+    <i class="fa-solid fa-gear"></i><span>Admin</span>
+  </a>
+</nav>
+
+<script src="app.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const name = localStorage.getItem("name") || "ผู้ใช้งาน";
+  const nameDrop = document.getElementById("userNameDrop");
+  if (nameDrop) nameDrop.textContent = name;
+
+  const role      = localStorage.getItem("role");
+  const roleLabel = role === "admin" ? "ผู้ดูแลระบบ" : "เจ้าหน้าที่";
+  const roleDrop  = document.getElementById("userRoleDrop");
+  if (roleDrop) roleDrop.textContent = roleLabel;
+
+  const adminMenu = document.getElementById("adminMenu");
+  const exportBtn = document.getElementById("exportBtn");
+  if (role !== "admin") {
+    if (adminMenu) adminMenu.style.display = "none";
+  } else {
+    if (exportBtn) exportBtn.style.display = "inline-flex";
+  }
+});
+</script>
+<script>
+const VACCINES=[
+  {name:"BCG",minMonths:0},{name:"HBV1",minMonths:0},
+  {name:"DTP1",minMonths:2},{name:"IPV1",minMonths:2},{name:"Rota1",minMonths:2},
+  {name:"DTP2",minMonths:4},{name:"IPV2",minMonths:4},{name:"Rota2",minMonths:4},
+  {name:"DTP3",minMonths:6},{name:"OPV3",minMonths:6},{name:"Rota3",minMonths:6},
+  {name:"MMR1",minMonths:9},{name:"JE1",minMonths:9},
+  {name:"DTP4",minMonths:18},{name:"OPV4",minMonths:18},{name:"MMR2",minMonths:18},
+  {name:"JE2",minMonths:30},
+  {name:"DTP5",minMonths:72},{name:"OPV5",minMonths:72},
+  {name:"HPV1",minMonths:132},{name:"HPV2",minMonths:132},{name:"dT",minMonths:144},
 ];
-
-const vaccineLabel = {
-  "BCG":"BCG","HBV1":"HBV1","HBV2":"HBV2",
-  "IPV1":"IPV1","IPV2":"IPV2",
-  "DTP1":"DTP-HB-Hib1","DTP2":"DTP-HB-Hib2","DTP3":"DTP-HB-Hib3","DTP4":"DTP4","DTP5":"DTP5",
-  "OPV1":"OPV1","OPV2":"OPV2","OPV3":"OPV3","OPV4":"OPV4","OPV5":"OPV5",
-  "MMR1":"MMR1","MMR2":"MMR2",
-  "JE1":"JE1","JE2":"JE2",
-  "Rota1":"Rota1","Rota2":"Rota2","Rota3":"Rota3"
+const VAX_LABEL={BCG:"BCG",HBV1:"HBV1",HBV2:"HBV2",DTP1:"DTP-HB-Hib1",DTP2:"DTP-HB-Hib2",DTP3:"DTP-HB-Hib3",DTP4:"DTP4",DTP5:"DTP5",IPV1:"IPV1",IPV2:"IPV2",OPV3:"OPV3",OPV4:"OPV4",OPV5:"OPV5",Rota1:"Rota1",Rota2:"Rota2",Rota3:"Rota3",MMR1:"MMR1",MMR2:"MMR2",JE1:"JE1",JE2:"JE2",HPV1:"HPV เข็ม 1",HPV2:"HPV เข็ม 2",dT:"dT (ป.6)"};
+const MONTHS_TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const MONTHS_FULL=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const TAMBON_DATA={
+  puyoh:{label:"ปูโยะ",villages:[{val:"1",name:"หมู่ 1 - บ้านลาแล"},{val:"2",name:"หมู่ 2 - บ้านปูโยะ"},{val:"3",name:"หมู่ 3 - บ้านฆอแย"},{val:"4",name:"หมู่ 4 - บ้านน้ำตก"},{val:"5",name:"หมู่ 5 - บ้านตอออ"},{val:"6",name:"หมู่ 6 - บ้านกูยิ"}],hospitals:[{val:"10170",name:"รพ.สต.ปูโยะ"}]},
+  munoh:{label:"มูโนะ",villages:[{val:"1",name:"หมู่ 1 - บ้านมูโนะ"},{val:"2",name:"หมู่ 2 - บ้านลูโบะลือซง"},{val:"3",name:"หมู่ 3 - บ้านปาดังยอ"},{val:"4",name:"หมู่ 4 - บ้านปูโปะ"},{val:"5",name:"หมู่ 5 - บ้านบูเก๊ะ"}],hospitals:[{val:"10169",name:"รพ.สต.มูโนะ"}]},
+  pasemas:{label:"ปาเสมัส",villages:[{val:"1",name:"หมู่ 1 - บ้านซรายอ"},{val:"2",name:"หมู่ 2 - บ้านตือระ"},{val:"3",name:"หมู่ 3 - บ้านปาเสมัส"},{val:"4",name:"หมู่ 4 - บ้านน้ำตก"},{val:"5",name:"หมู่ 5 - บ้านกวาลอซีรา"},{val:"6",name:"หมู่ 6 - บ้านซรายอออก"},{val:"7",name:"หมู่ 7 - บ้านกูแบอีแก"},{val:"8",name:"หมู่ 8 - บ้านศาลาใหม่"}],hospitals:[{val:"10168",name:"รพ.สต.ปาเสมัส"},{val:"10658",name:"รพ.สต.บ้านกวาลอซีรา"}]},
+kolok:{label:"สุไหงโก-ลก",villages:[
+    {val:"1",name:"ชุมชนกูโบร์"},{val:"2",name:"ชุมชนโต๊ะลือเบ"},{val:"3",name:"ชุมชนตันหยงมะลิ"},
+    {val:"4",name:"ชุมชนโก-ลกวิลเลจ"},{val:"5",name:"ชุมชนบือเร็ง"},{val:"6",name:"ชุมชนกือดามารู"},
+    {val:"7",name:"ชุมชนกือบงกาแม"},{val:"8",name:"ชุมชนหัวสะพาน"},{val:"9",name:"ชุมชนเสาสัญญาณ"},
+    {val:"10",name:"ชุมชนดงงูเห่า"},{val:"11",name:"ชุมชนหลังด่าน"},{val:"12",name:"ชุมชนมัสยิดกลาง"},
+    {val:"13",name:"ชุมชนจือแรตูลี"},{val:"14",name:"ชุมชนสันติสุข"},{val:"15",name:"ชุมชนบาโงปริเม็ง"},
+    {val:"16",name:"ชุมชนบาโงเปาะเล็ง"},{val:"17",name:"ชุมชนโปฮงยามู"},{val:"18",name:"ชุมชนอริศรา"},
+    {val:"19",name:"ชุมชนเจริญสุข"},{val:"20",name:"ชุมชนหัวกุญแจ"},{val:"21",name:"ชุมชนสวนมะพร้าว"},
+    {val:"22",name:"ชุมชนท่ากอไผ่"},{val:"23",name:"ชุมชนท่าประปา"},{val:"24",name:"ชุมชนท่าโรงเลื่อย"},
+    {val:"25",name:"ชุมชนหลังล้อแม็ก"},{val:"26",name:"ชุมชนศรีอามาน"},{val:"27",name:"ชุมชนทรายทอง"},
+    {val:"28",name:"ชุมชนบือเร็งใน"},{val:"29",name:"ชุมชนซรีจาฮายา"},{val:"30",name:"ชุมชนเจริญทรัพย์"},
+    {val:"31",name:"ชุมชนเจริญเขต"}
+  ],hospitals:[{val:"77729",name:"ศูนย์แพทย์ใกล้ใจ 1"},{val:"77728",name:"ศูนย์แพทย์ใกล้ใจ 2"}]}
 };
+const TAMBON_LABEL={kolok:"สุไหงโก-ลก",munoh:"มูโนะ",puyoh:"ปูโยะ",pasemas:"ปาเสมัส"};
 
-// เกณฑ์อายุเริ่มฉีด (หน่วย: เดือน)
-const vaccineAgeSchedule = {
-  BCG:0, HBV1:0,
-  DTP1:2, IPV1:2, OPV1:2, Rota1:2,
-  DTP2:4, IPV2:4, OPV2:4, Rota2:4,
-  DTP3:6, OPV3:6, Rota3:6,
-  MMR1:9, JE1:9,
-  DTP4:18, OPV4:18,
-  MMR2:30, JE2:30,
-  DTP5:72, OPV5:72
-};
+let state={name:"",hn:"",cid:"",birth:"",tambon:"",tambonLabel:"",village:"",hospital:"",hospitalName:"",house:"",phone:"",vaccines:{},originalVaccines:{},ageMonths:0};
+let foundKey=null,foundData=null;
 
-// =========================
-// หน่วยบริการ
-// =========================
-const hospitalData = {
-  kolok: [
-    { id: "77729", name: "ศูนย์แพทย์ใกล้ใจ1 (เทศบาล)" },
-    { id: "77728", name: "ศูนย์แพทย์ใกล้ใจ2 (เจริญเขต)" }
-  ],
-  munoh: [
-    { id: "10169", name: "รพ.สต.มูโนะ" }
-  ],
-  puyoh: [
-    { id: "10170", name: "รพ.สต.ปูโยะ" }
-  ],
-  pasemas: [
-    { id: "10168", name: "รพ.สต.ปาเสมัส" },
-    { id: "10658", name: "รพ.สต.บ้านกวาลอซีรา" }
-  ]
-};
+if(!localStorage.getItem("user")) window.location.href="login.html";
 
-function getHospitalName(id) {
-  for (const list of Object.values(hospitalData)) {
-    const h = list.find(x => x.id === id);
-    if (h) return h.name;
-  }
-  return "-";
+// ====== บันทึก activity log (เข้าหมวด "ข้อมูลเด็ก/วัคซีน" ในหน้า admin) ======
+function actLog(action, target, before, after) {
+  const n = new Date();
+  db.ref("activityLogs").push({
+    user: localStorage.getItem("name") || "—",
+    role: localStorage.getItem("role") || "user",
+    action,
+    target: target || "-",
+    before: before || "-",
+    after: after || "-",
+    date: n.toLocaleDateString("th-TH"),
+    time: n.toLocaleTimeString("th-TH"),
+    timestamp: Date.now(),
+  }).catch(err => {
+    // ถ้าบันทึกประวัติไม่ได้ (เช่น Firebase Rules ไม่อนุญาต) ให้เห็นสาเหตุชัดเจน
+    // แทนที่จะเงียบแล้วไม่มีใครรู้ว่า log หาย
+    console.error("actLog เขียน activityLogs ไม่สำเร็จ:", err);
+    alert("บันทึกข้อมูลเด็กสำเร็จ แต่บันทึกประวัติ (log) ไม่สำเร็จ:\n" + err.message);
+  });
 }
 
-// =========================
-// หมู่/ชุมชน
-// =========================
-const villageData = {
-  pasemas: {
-    "1": { name: "บ้านซรายอ",      leader: "ฮารีมคาน" },
-    "2": { name: "บ้านตือระ",       leader: "นาซูฮา"   },
-    "3": { name: "บ้านกวาลอซีรา",     leader: "ณรงค์"    },
-    "4": { name: "บ้านมือบา",       leader: "มาฮาโซ"   },
-    "5": { name: "บ้านน้ำตก",       leader: "มะรอดี"   },
-    "6": { name: "บ้านซรายอออก",    leader: "ปฏิวัติ"  },
-    "7": { name: "บ้านกวาลอซีราออก",    leader: "อัสมี"    },
-    "8": { name: "บ้านลูโบ๊ะซามา",    leader: "รุสวา"    }
-  },
-  munoh: {
-    "1": { name: "บ้านมูโนะ",       leader: "สาลีมี"   },
-    "2": { name: "บ้านลูโบะลือซง",  leader: "นาทวี"    },
-    "3": { name: "บ้านปาดังยอ",     leader: "มุสตอปา"  },
-    "4": { name: "บ้านปูโปะ",       leader: "ประเสริฐ" },
-    "5": { name: "บ้านบูเก๊ะ",      leader: "อามาซะ"   }
-  },
-  puyoh: {
-    "1": { name: "บ้านลาแล",        leader: "เฉลิมพล"  },
-    "2": { name: "บ้านปูโยะ",       leader: "อาหามะ"   },
-    "3": { name: "บ้านโต๊ะเวาะ",        leader: "ไซมี"     },
-    "4": { name: "บ้านกูแบอีแก",       leader: "นรวีร์"   },
-    "5": { name: "บ้านโต๊ะแดง",        leader: "สมนึก"    },
-    "6": { name: "บ้านโคกสือแด",        leader: "มะยูนุ"   }
-  }
-};
+// Init birthdate dropdowns
+(function(){
+  const d=document.getElementById("bDay");
+  for(let i=1;i<=31;i++) d.innerHTML+=`<option value="${i}">${i}</option>`;
+  const m=document.getElementById("bMonth");
+  MONTHS_FULL.forEach((v,i)=>m.innerHTML+=`<option value="${i+1}">${v}</option>`);
+  const y=document.getElementById("bYear");
+  const now=new Date().getFullYear()+543;
+  for(let i=now;i>=now-15;i--) y.innerHTML+=`<option value="${i}">${i}</option>`;
+})();
 
-const kolokCommunity = {
-  "1":{ name:"ชุมชนกูโบร์" },"2":{ name:"ชุมชนโต๊ะลือเบ" },"3":{ name:"ชุมชนตันหยงมะลิ" },
-  "4":{ name:"ชุมชนโก-ลกวิลเลจ" },"5":{ name:"ชุมชนบือเร็ง" },"6":{ name:"ชุมชนกือดำบำรู" },
-  "7":{ name:"ชุมชนกือบงกำแม" },"8":{ name:"ชุมชนหัวสะพาน" },"9":{ name:"ชุมชนเสาสัญญาณ" },
-  "10":{ name:"ชุมชนดงงูเห่า" },"11":{ name:"ชุมชนหลังด่าน" },"12":{ name:"ชุมชนมัสยิดกลาง" },
-  "13":{ name:"ชุมชนจือแลตูลี" },"14":{ name:"ชุมชนสันติสุข" },"15":{ name:"ชุมชนปาโงปิเมง" },
-  "16":{ name:"ชุมชนปาโงเปาะเล็ง" },"17":{ name:"ชุมชนโปฮงยามู" },"18":{ name:"ชุมชนอริศรา" },
-  "19":{ name:"ชุมชนเจริญสุข" },"20":{ name:"ชุมชนหัวกุญแจ" },"21":{ name:"ชุมชนสวนมะพร้าว" },
-  "22":{ name:"ชุมชนท่ากอไผ่" },"23":{ name:"ชุมชนท่าประปา" },"24":{ name:"ชุมชนท่าโรงเลื่อย" },
-  "25":{ name:"ชุมชนหลังล้อแม็ก" },"26":{ name:"ชุมชนศรีอามาน" },"27":{ name:"ชุมชนทรายทอง" },
-  "28":{ name:"ชุมชนบือเร็งใน" },"29":{ name:"ชุมชนซรีจาฮายา" },"30":{ name:"ชุมชนเจริญทรัพย์" },
-  "31":{ name:"ชุมชนเจริญเขต" }
-};
+document.getElementById("tambonGrid").addEventListener("click",e=>{
+  const btn=e.target.closest(".tambon-btn");
+  if(!btn) return;
+  document.querySelectorAll(".tambon-btn").forEach(b=>b.classList.remove("selected"));
+  btn.classList.add("selected");
+  state.tambon=btn.dataset.val;
+  state.tambonLabel=btn.dataset.label;
+  document.getElementById("errTambon").style.display="none";
+  buildVH(state.tambon);
+});
 
-// =========================
-// วันที่ Helper
-// =========================
-function toThaiDateDisplay(isoDate) {
-  if (!isoDate) return "";
-  const [y, m, d] = isoDate.split("-");
-  return `${d}/${m}/${parseInt(y) + 543}`;
+function buildVH(tambon,selV="",selH=""){
+  const td=TAMBON_DATA[tambon];
+  const vEl=document.getElementById("village");
+  vEl.innerHTML=`<option value="">-- เลือกหมู่บ้าน --</option>`;
+  (td?.villages||[]).forEach(v=>vEl.innerHTML+=`<option value="${v.val}" ${v.val===selV?"selected":""}>${v.name}</option>`);
+  const hEl=document.getElementById("hospital");
+  hEl.innerHTML=`<option value="">-- เลือก รพ.สต. --</option>`;
+  (td?.hospitals||[]).forEach(h=>hEl.innerHTML+=`<option value="${h.val}" ${h.val===selH?"selected":""}>${h.name}</option>`);
 }
 
-function toInputDate(val) {
-  if (!val) return "";
-  val = String(val).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-  if (val.includes("/")) {
-    const parts = val.split("/");
-    if (parts.length === 3) {
-      let [d, m, y] = parts.map(Number);
-      if (y >= 2500) y -= 543;
-      return `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-    }
+function calcAge(iso){
+  const [y,m,d]=iso.split("-").map(Number);
+  const b=new Date(y,m-1,d),n=new Date();
+  let mo=(n.getFullYear()-b.getFullYear())*12+(n.getMonth()-b.getMonth());
+  if(n.getDate()<b.getDate()) mo--;
+  return Math.max(0,mo);
+}
+function thaiDate(iso){
+  if(!iso) return "—";
+  const [y,m,d]=iso.split("-").map(Number);
+  return `${d} ${MONTHS_TH[m-1]} ${y+543}`;
+}
+function showErr(id,show){document.getElementById(id).style.display=show?"block":"none";}
+function toISO(val){
+  if(!val) return "";
+  val=String(val).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+  if(val.includes("/")){
+    const [d,m,y]=val.split("/").map(Number);
+    const yr=y>2500?y-543:y;
+    return `${yr}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
   }
-  if (!isNaN(val) && Number(val) > 40000) {
-    return new Date((Number(val) - 25569) * 86400 * 1000).toISOString().split("T")[0];
-  }
+  return "";
+}
+function showPage(n){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById({0:"p0",1:"p1",2:"p2",3:"p3",4:"pSuccess"}[n]).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function getHospitalName(val){
+  for(const td of Object.values(TAMBON_DATA)){const h=td.hospitals.find(x=>x.val===val);if(h)return h.name;}
   return val;
 }
 
-function todayISO() {
-  return new Date().toISOString().split("T")[0];
+function buildThaiDateInput(key){
+  const nowBE=new Date().getFullYear()+543;
+  let dayOpts='<option value="">วัน</option>';
+  for(let i=1;i<=31;i++) dayOpts+=`<option value="${i}">${i}</option>`;
+  let monOpts='<option value="">เดือน</option>';
+  MONTHS_FULL.forEach((name,i)=>monOpts+=`<option value="${i+1}">${name}</option>`);
+  let yrOpts='<option value="">ปี (พ.ศ.)</option>';
+  for(let y=nowBE;y>=nowBE-10;y--) yrOpts+=`<option value="${y}">${y}</option>`;
+  return `<div class="vax-date-pick">
+    <div class="date3">
+      <select id="vd_${key}">${dayOpts}</select>
+      <select id="vm_${key}">${monOpts}</select>
+      <select id="vy_${key}">${yrOpts}</select>
+    </div>
+    <button class="save-vax-btn" onclick="saveVax('${key}')">บันทึกวันที่ฉีด</button>
+  </div>`;
 }
 
-// =========================
-// Flatpickr พ.ศ.
-// =========================
-function patchBEYear(fp) {
-  const container = fp.calendarContainer;
-  if (!container) return;
-  const dopatch = () => {
-    const yearEl = container.querySelector(".cur-year");
-    if (!yearEl) return;
-    const ce = parseInt(yearEl.value || yearEl.textContent || "0");
-    if (ce > 0 && ce < 2500) yearEl.value = ce + 543;
-  };
-  dopatch();
-  if (!fp._beObserver) {
-    fp._beObserver = new MutationObserver(dopatch);
-    fp._beObserver.observe(container, { childList: true, subtree: true, characterData: true });
-  }
+function buildThaiDateInputEdit(key,iso){
+  const nowBE=new Date().getFullYear()+543;
+  const [y,m,d]=iso.split("-").map(Number);
+  const selY=y+543,selM=m,selD=d;
+  let dayOpts='<option value="">วัน</option>';
+  for(let i=1;i<=31;i++) dayOpts+=`<option value="${i}" ${i===selD?"selected":""}>${i}</option>`;
+  let monOpts='<option value="">เดือน</option>';
+  MONTHS_FULL.forEach((name,i)=>monOpts+=`<option value="${i+1}" ${(i+1)===selM?"selected":""}>${name}</option>`);
+  let yrOpts='<option value="">ปี (พ.ศ.)</option>';
+  for(let yy=nowBE;yy>=nowBE-10;yy--) yrOpts+=`<option value="${yy}" ${yy===selY?"selected":""}>${yy}</option>`;
+  return `<div class="vax-date-pick" id="editWrap_${key}" style="display:none">
+    <div class="date3">
+      <select id="vd_${key}">${dayOpts}</select>
+      <select id="vm_${key}">${monOpts}</select>
+      <select id="vy_${key}">${yrOpts}</select>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="save-vax-btn" style="background:var(--green);flex:1" onclick="saveVax('${key}')"><i class="ti ti-device-floppy"></i> บันทึกการแก้ไข</button>
+      <button class="save-vax-btn" style="background:var(--ink-3);flex:1" onclick="toggleEditVax('${key}')">ยกเลิก</button>
+    </div>
+  </div>`;
 }
 
-function isoToLocalDate(isoVal) {
-  if (!isoVal) return null;
-  const parts = String(isoVal).split("-").map(Number);
-  if (parts.length !== 3 || parts.some(n => !n && n !== 0)) return null;
-  const [y, m, d] = parts;
-  return new Date(y, m - 1, d);
+function toggleEditVax(key){
+  const el=document.getElementById("editWrap_"+key);
+  if(!el) return;
+  el.style.display=el.style.display==="none"?"block":"none";
 }
 
-function initThaiDatepicker(el, isoVal, onChangeCb) {
-  const fp = flatpickr(el, {
-    locale: "th",
-    dateFormat: "d/m/Y",
-    defaultDate: isoToLocalDate(isoVal),
-    allowInput: false,
-    onReady(_, __, fp)      { patchBEYear(fp); _setThaiValue(fp); },
-    onMonthChange(_, __, fp){ patchBEYear(fp); },
-    onYearChange(_, __, fp) { patchBEYear(fp); },
-    onChange(dates, _, fp) {
-      if (!dates[0]) return;
-      _setThaiValue(fp);
-      const isoSave = flatpickr.formatDate(dates[0], "Y-m-d");
-      if (onChangeCb) onChangeCb(isoSave);
-    }
-  });
-  _setThaiValue(fp);
-  return fp;
+let matchMap={}; // เก็บรายการทั้งหมดที่ตรงกัน ไว้ให้เลือกกรณีซ้ำ
+
+function matchCardHTML(key,d){
+  const age=calcAge(toISO(d.birth));
+  const vCount=d.vaccines?Object.keys(d.vaccines).length:0;
+  const tambonTH=TAMBON_LABEL[d.tambon]||d.tambon||"—";
+  const hospName=getHospitalName(d.hospital||"");
+  return `<div class="match-card" onclick="selectMatch('${key}')">
+    <div class="match-card-head">
+      <div class="match-card-name">${d.name||"—"}</div>
+      <i class="ti ti-chevron-right match-card-arrow"></i>
+    </div>
+    <div class="match-info-grid">
+      <div class="match-info-item"><span class="match-info-label">HN</span><span class="match-info-val">${d.hn||"—"}</span></div>
+      <div class="match-info-item"><span class="match-info-label">เลขบัตรประชาชน</span><span class="match-info-val">${d.cid||"—"}</span></div>
+      <div class="match-info-item"><span class="match-info-label">อายุ</span><span class="match-info-val">${Math.floor(age/12)} ปี ${age%12} เดือน</span></div>
+      <div class="match-info-item"><span class="match-info-label">วัคซีนแล้ว</span><span class="match-info-val">${vCount} เข็ม</span></div>
+      <div class="match-info-item"><span class="match-info-label">ตำบล</span><span class="match-info-val">${tambonTH}</span></div>
+      <div class="match-info-item"><span class="match-info-label">หน่วยบริการ</span><span class="match-info-val">${hospName}</span></div>
+    </div>
+    <button type="button" class="match-select-btn" onclick="event.stopPropagation();selectMatch('${key}')">
+      <i class="ti ti-arrow-right"></i> เลือกรายการนี้
+    </button>
+  </div>`;
 }
 
-function _setThaiValue(fp) {
-  if (!fp.selectedDates[0]) return;
-  const dt = fp.selectedDates[0];
-  const d  = String(dt.getDate()).padStart(2, "0");
-  const m  = String(dt.getMonth() + 1).padStart(2, "0");
-  const y  = dt.getFullYear() + 543;
-  fp.input.value = `${d}/${m}/${y}`;
+function selectMatch(key){
+  foundKey=key;foundData=matchMap[key];
+  if(!foundData) return;
+  continueWithData();
 }
 
-// =========================
-// Hospital filter
-// =========================
-function updateHospitalFilter() {
-  const tambonEl = document.getElementById("tambonFilter");
-  const hospitalSelect = document.getElementById("hospitalFilter");
-  if (!tambonEl || !hospitalSelect) return;
-  const tambon = tambonEl.value;
-  hospitalSelect.innerHTML = `<option value="all">ทุกหน่วยบริการ</option>`;
-  hospitalSelect.value = "all";
-  if (!hospitalData[tambon]) return;
-  hospitalData[tambon].forEach(h => {
-    hospitalSelect.innerHTML += `<option value="${h.id}">${h.name}</option>`;
-  });
+// ✅ ค้นหาด้วย HN, เลขบัตรประชาชน (13 หลัก) หรือชื่อ
+// เลขบัตรประชาชนไทยมีความยาวคงที่ 13 หลักเสมอ ใช้แยกจาก HN (สั้นกว่า) ได้ชัดเจน
+// Firebase RTDB ไม่รองรับ "contains" search ในตัว จึงดึงรายการทั้งหมดมากรองฝั่ง client เมื่อค้นด้วยชื่อ
+function detectQueryType(q){
+  if(/^\d{13}$/.test(q)) return "cid";
+  if(/^\d+$/.test(q)) return "hn";
+  return "name";
 }
-
-// =========================
-// ล็อกอิน
-// =========================
-function login() {
-  let cid = document.getElementById("cid").value.replace(/\D/g, '');
-  const msg = document.getElementById("msg");
-  msg.innerText = "";
-  if (cid.length !== 13) { msg.innerText = "กรอกเลขบัตรให้ครบ 13 หลัก"; return; }
-  db.ref("users").once("value", snap => {
-    const data = snap.val() || {};
-    let foundUser = null;
-    for (let id in data) {
-      const dbCid = (data[id].cid || "").replace(/\D/g, '');
-      if (dbCid === cid) { foundUser = { id, ...data[id] }; break; }
-    }
-    if (!foundUser)                          { msg.innerText = "ไม่พบผู้ใช้"; return; }
-    if (foundUser.status === "rejected")     { msg.innerText = "บัญชีถูกปฏิเสธ"; return; }
-    if (foundUser.status !== "approved")     { msg.innerText = "รอผู้ดูแลอนุมัติ"; return; }
-    const fullName = foundUser.name + " " + (foundUser.lastname || "");
-    localStorage.setItem("user",     foundUser.cid);
-    localStorage.setItem("name",     fullName);
-    localStorage.setItem("username", fullName);
-    localStorage.setItem("role",     foundUser.role || "user");
-    db.ref("loginLogs").push({
-      cid: foundUser.cid, name: fullName, role: foundUser.role || "user",
-      date: new Date().toLocaleDateString("th-TH"),
-      loginTime: new Date().toLocaleTimeString("th-TH")
-    });
-    // ถ้าหน้านี้ (เช่น landing.html) มีตัวเลือกปลายทางหลังล็อกอิน ให้ใช้ตัวนั้นแทนการเด้งไป index.html ตรงๆ
-    if (typeof window.onLoginSuccess === "function") {
-      window.onLoginSuccess();
+async function searchByHN(){
+  const q=document.getElementById("searchHN").value.trim();
+  if(!q){showErr("errSearchHN",true);return;}
+  showErr("errSearchHN",false);
+  const btn=document.getElementById("searchBtn");
+  btn.disabled=true;btn.innerHTML=`<span class="spinner"></span> ค้นหา...`;
+  try{
+    const qType=detectQueryType(q); // "hn" | "cid" | "name"
+    let entries=[];
+    if(qType==="hn"){
+      const snap=await db.ref("children").orderByChild("hn").equalTo(q).once("value");
+      const data=snap.val();
+      entries=data?Object.entries(data):[];
+    } else if(qType==="cid"){
+      const snap=await db.ref("children").orderByChild("cid").equalTo(q).once("value");
+      const data=snap.val();
+      entries=data?Object.entries(data):[];
     } else {
-      window.location.href = "index.html";
+      const snap=await db.ref("children").once("value");
+      const data=snap.val()||{};
+      const kw=q.toLowerCase();
+      entries=Object.entries(data).filter(([,d])=>String(d.name||"").toLowerCase().includes(kw));
     }
-  });
-}
+    const rEl=document.getElementById("searchResult");
+    const aEl=document.getElementById("searchActions");
+    const sEl=document.getElementById("skipSection");
+    rEl.style.display="block";aEl.style.display="block";sEl.style.display="none";
 
-function loadKPI()  { /* stub */ }
-function goTambon() { /* stub */ }
-
-// =========================
-// สมัคร
-// =========================
-function register() {
-  const name     = document.getElementById("name").value.trim();
-  const lastname = document.getElementById("lastname").value.trim();
-  const cid      = document.getElementById("cid").value.trim();
-  const email    = document.getElementById("email").value.trim();
-  const phone    = document.getElementById("phone").value.trim();
-  const position = getPosition();
-  const msg      = document.getElementById("msg");
-  msg.style.color = "red";
-  if (!name || !lastname || !cid) { msg.innerText = "กรุณากรอกข้อมูลให้ครบ"; return; }
-  if (cid.length !== 13)          { msg.innerText = "เลขบัตรต้อง 13 หลัก";    return; }
-  if (!position)                  { msg.innerText = "กรุณาเลือกหรือระบุตำแหน่งงาน"; return; }
-  db.ref("users/" + cid).once("value", snap => {
-    if (snap.exists()) { msg.innerText = "มีผู้ใช้นี้แล้ว"; return; }
-    db.ref("users/" + cid).set({
-      cid, name, lastname, email, phone, position,
-      role: "user", status: "pending", createdAt: new Date().toISOString()
-    }).then(() => {
-      msg.style.color = "green";
-      msg.innerText = "สมัครสำเร็จ รอผู้ดูแลอนุมัติ";
-      setTimeout(() => { window.location.href = "login.html"; }, 1500);
-    });
-  });
-}
-
-function getPosition() {
-  const sel = document.getElementById("position");
-  if (!sel) return "";
-  if (sel.value === "other") return (document.getElementById("position-other")?.value || "").trim();
-  return sel.value;
-}
-
-function handlePosChange() {
-  const sel         = document.getElementById("position");
-  const otherWrap   = document.getElementById("other-wrap");
-  const preview     = document.getElementById("pos-preview");
-  const previewText = document.getElementById("pos-preview-text");
-  if (!sel) return;
-  if (sel.value === "other") {
-    if (otherWrap) otherWrap.style.display = "block";
-    if (preview)   preview.style.display   = "none";
-    document.getElementById("position-other")?.focus();
-  } else if (sel.value) {
-    if (otherWrap)   otherWrap.style.display   = "none";
-    if (previewText) previewText.textContent    = sel.value;
-    if (preview)     preview.style.display      = "block";
-  } else {
-    if (otherWrap) otherWrap.style.display = "none";
-    if (preview)   preview.style.display   = "none";
-  }
-}
-
-function toggleBtn() {
-  const agreed = document.getElementById("pdpa-agree")?.checked;
-  const btn    = document.getElementById("btn-reg");
-  if (btn) btn.disabled = !agreed;
-}
-
-// =========================
-// State + กรองจากกราฟ
-// =========================
-let currentPage    = 1;
-const rowsPerPage  = 30;
-let followChart;
-let chartMode      = "percent";
-let childRef       = null;
-let allChildren    = [];
-const PAGE_SIZE    = 6000;
-let lastKey        = null;
-let isLoading      = false;
-let statusFilter   = "all";
-let selectedVaccine = "all";
-
-// ตัวแปรกรองจากคลิกกราฟ
-let selectedBarKey  = null;
-let selectedBarMode = "tambon";
-
-// เก็บรายชื่อ (id) ที่ถูกติ๊กเลือกไว้สำหรับลบแบบหลายรายการ
-let selectedChildIds = new Set();
-
-// badge กรองจากกราฟ
-function showBarFilterBadge(label) {
-  let badge = document.getElementById("barFilterBadge");
-  if (!badge) {
-    badge = document.createElement("div");
-    badge.id = "barFilterBadge";
-    badge.style.cssText = [
-      "display:inline-flex","align-items:center","gap:6px",
-      "padding:5px 14px","background:#dbeafe","color:#1e40af",
-      "border-radius:99px","font-size:13px","font-weight:600",
-      "border:1px solid #93c5fd"
-    ].join(";");
-    const actionBar = document.querySelector(".action-bar");
-    if (actionBar) actionBar.appendChild(badge);
-  }
-  badge.innerHTML =
-    `<i class="fa-solid fa-chart-bar fa-xs"></i> ${label}
-     <button onclick="clearBarFilter()" title="ล้างตัวกรอง"
-       style="background:none;border:none;cursor:pointer;color:#1e40af;
-              font-size:15px;line-height:1;padding:0 2px;margin-left:2px">&times;</button>`;
-}
-
-function clearBarFilter() {
-  selectedBarKey = null;
-  const badge = document.getElementById("barFilterBadge");
-  if (badge) badge.remove();
-  currentPage = 1;
-  loadFollow();
-}
-
-// =========================
-// loadFollow
-// =========================
-function loadFollow() {
-  const keyword        = (document.getElementById("searchInput")?.value  || "").toLowerCase();
-  const tambonFilter   = document.getElementById("tambonFilter")?.value  || "all";
-  const hospitalFilter = document.getElementById("hospitalFilter")?.value || "all";
-  const typeAreaFilter = document.getElementById("typeAreaFilter")?.value || "all";
-  const ageFilter      = document.getElementById("ageFilter")?.value     || "all";
-  const mobileList     = document.getElementById("mobileList");
-  const isMobile       = window.innerWidth < 768;
-
-  if (mobileList) mobileList.innerHTML = "";
-  if (childRef)   childRef.off();
-  childRef = db.ref("children").orderByKey().limitToFirst(PAGE_SIZE);
-
-  childRef.once("value", snap => {
-    const data         = snap.val() || {};
-    const html         = [];
-    const mobileHtml   = [];
-    const filteredData = [];
-    let done = 0, notdone = 0;
-    const vaccineFilterActive = (selectedVaccine !== "all");
-
-    for (const id in data) {
-      const c = data[id] || {};
-      if (!c.name?.trim() || !c.cid?.trim()) continue;
-
-      if (ageFilter !== "all") {
-        const ageYears   = Math.floor(getAgeMonths(c.birth) / 12);
-        const targetYear = parseInt(ageFilter);
-        if (targetYear === 5) { if (ageYears < 5) continue; }
-        else                  { if (ageYears !== targetYear) continue; }
-      }
-
-      if (tambonFilter   !== "all" && c.tambon   !== tambonFilter)   continue;
-      if (hospitalFilter !== "all" && c.hospital !== hospitalFilter) continue;
-      if (typeAreaFilter !== "all") {
-        const cType = c.typeArea || "1";
-        if (cType !== typeAreaFilter) continue;
-      }
-
-      // กรองจากคลิกกราฟ
-      if (selectedBarKey !== null) {
-        if (selectedBarMode === "tambon") {
-          if ((c.tambon || "ไม่ระบุ") !== selectedBarKey) continue;
-        } else {
-          if ((c.village || "ไม่ระบุ") !== selectedBarKey) continue;
-        }
-      }
-
-      const hn   = (c.hn   || "").toLowerCase();
-      const name = (c.name || "").toLowerCase();
-      const cid  = (c.cid  || "").toLowerCase();
-      if (keyword && !name.includes(keyword) && !cid.includes(keyword) && !hn.includes(keyword)) continue;
-
-      const count = c.vaccines ? Object.keys(c.vaccines).length : 0;
-      let isDone;
-      if (vaccineFilterActive) {
-        const minAge    = vaccineAgeSchedule?.[selectedVaccine] ?? 0;
-        const hasVax    = !!(c.vaccines?.[selectedVaccine]);
-        const oldEnough = getAgeMonths(c.birth) >= minAge;
-        if      (statusFilter === "done")    { if (!hasVax)              continue; isDone = true;  }
-        else if (statusFilter === "notdone") { if (hasVax || !oldEnough) continue; isDone = false; }
-        else                                 { if (!oldEnough) continue;           isDone = hasVax; }
-      } else {
-        isDone = count >= 10;
-        if (statusFilter === "done"    && !isDone) continue;
-        if (statusFilter === "notdone" &&  isDone) continue;
-      }
-
-      if (isDone) { done++; } else { notdone++; }
-
-      if (isMobile) {
-        mobileHtml.push(`
-<div class="child-card" data-id="${id}">
-  <div class="child-card-top">
-    <div style="display:flex;align-items:flex-start;gap:8px">
-      <input type="checkbox" class="row-check-select" value="${id}"
-        style="margin-top:4px"
-        ${selectedChildIds.has(id) ? "checked" : ""}
-        onchange="toggleChildSelect(this,'${id}')">
-      <div>
-        <div class="child-card-name">
-          <i class="fa-solid fa-child fa-xs" style="color:#6b7280;margin-right:4px"></i>${c.name || '-'}
-        </div>
-        <div class="child-card-hn">HN : ${c.hn || '-'}</div>
-      </div>
-    </div>
-    <span class="tag ${isDone ? 'tag-green' : ''}" style="${isDone ? '' : 'background:#fee2e2;color:#dc2626'}">
-      ${isDone ? (vaccineFilterActive ? 'ได้รับแล้ว' : 'ฉีดครบ') : (vaccineFilterActive ? 'ยังไม่ได้รับ' : 'ยังไม่ครบ')}
-    </span>
-  </div>
-  <div class="child-card-row">
-    <i class="fa-solid fa-location-dot fa-xs" style="color:#6b7280;width:14px"></i> ${getTambonName(c.tambon)}
-  </div>
-  <div class="child-card-row">
-    <i class="fa-solid fa-house fa-xs" style="color:#6b7280;width:14px"></i> บ้าน ${c.house || "-"} ${c.tambon === "kolok" ? "" : "หมู่ "}${c.village || "-"}
-  </div>
-  <div class="child-meta">
-    <span class="tag">${getAgeBadge(c.birth)}</span>
-    <span class="tag">
-      <i class="fa-solid fa-syringe fa-xs"></i> ${count} เข็ม
-    </span>
-  </div>
-  <div style="margin-top:10px">
-    <button onclick="openVaccineModal('${id}')" class="btn btn-primary">
-      <i class="fa fa-syringe fa-sm"></i> ดูวัคซีน
-    </button>
-  </div>
-</div>`);
-      }
-
-      filteredData.push({ id, c, count, isDone });
-    }
-
-    // Pagination
-    const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
-    if (currentPage > totalPages) currentPage = totalPages;
-    const start    = (currentPage - 1) * rowsPerPage;
-    const pageData = filteredData.slice(start, start + rowsPerPage);
-
-    pageData.forEach((row, rowIndex) => {
-      const { id, c, count, isDone } = row;
-      const birthISO = formatDateInput(c.birth);
-      const rowNum   = start + rowIndex + 1;
-      html.push(`
-<tr data-id="${id}">
-  <td style="text-align:center">
-    <input type="checkbox" class="row-check-select" value="${id}"
-      ${selectedChildIds.has(id) ? "checked" : ""}
-      onchange="toggleChildSelect(this,'${id}')">
-  </td>
-  <td style="text-align:center;color:#6b7280;font-size:13px;white-space:nowrap;">${rowNum}</td>
-  <td style="min-width:120px"><input value="${escHtml(c.hn)}" onchange="autoSave('${id}','hn',this.value)" style="min-width:110px"></td>
-  <td style="min-width:155px"><input value="${escHtml(c.cid)}"  onchange="autoSave('${id}','cid',this.value)"  style="min-width:145px"></td>
-  <td style="min-width:200px"><input value="${escHtml(c.name)}" onchange="autoSave('${id}','name',this.value)" style="min-width:190px"></td>
-  <td>
-    <select class="form-select" style="min-width:130px" onchange="changeTambon(this)">
-      <option value="">-- เลือกตำบล --</option>
-      <option value="kolok"   ${c.tambon==="kolok"   ? "selected":""}>สุไหงโก-ลก</option>
-      <option value="munoh"   ${c.tambon==="munoh"   ? "selected":""}>มูโนะ</option>
-      <option value="puyoh"   ${c.tambon==="puyoh"   ? "selected":""}>ปูโยะ</option>
-      <option value="pasemas" ${c.tambon==="pasemas" ? "selected":""}>ปาเสมัส</option>
-    </select>
-  </td>
-  <td>
-    <select class="form-select" style="min-width:160px" onchange="autoSave('${id}','hospital',this.value)">
-      <option value="">-- เลือกรพ.สต --</option>
-      <option value="10170" ${c.hospital==="10170"?"selected":""}>รพ.สต.ปูโยะ</option>
-      <option value="10169" ${c.hospital==="10169"?"selected":""}>รพ.สต.มูโนะ</option>
-      <option value="10168" ${c.hospital==="10168"?"selected":""}>รพ.สต.ปาเสมัส</option>
-      <option value="77729" ${c.hospital==="77729"?"selected":""}>ศูนย์แพทย์ใกล้ใจ1</option>
-      <option value="77728" ${c.hospital==="77728"?"selected":""}>ศูนย์แพทย์ใกล้ใจ2</option>
-      <option value="10658" ${c.hospital==="10658"?"selected":""}>รพ.สต.บ้านกวาลอซีรา</option>
-    </select>
-  </td>
-  <td><input value="${escHtml(c.house)}"  onchange="autoSave('${id}','house',this.value)"></td>
-  <td>${buildVillageDropdown(c.tambon, c.village, id)}</td>
-  <td>
-    <input type="text"
-      class="form-control form-control-sm birth-datepicker"
-      data-iso="${birthISO}"
-      data-child-id="${id}"
-      placeholder="วว/ดด/ปปปป"
-      style="min-width:130px"
-      readonly>
-  </td>
-  <td class="age-cell">${getAgeBadge(c.birth)}</td>
-  <td onclick="openVaccineModal('${id}')" style="cursor:pointer;text-align:center">
-    <div style="display:inline-flex;align-items:center;justify-content:center;gap:6px;
-                min-width:90px;height:38px;padding:0 14px;border-radius:10px;border:1px solid #ddd;
-                font-size:14px;font-weight:600;
-                background:${count===0?'#fee2e2':'#dcfce7'};color:${count===0?'#dc2626':'#059669'};">
-      <i class="fa-solid fa-syringe fa-sm"></i> ${count} เข็ม
-    </div>
-  </td>
-  <td style="min-width:160px"><input value="${escHtml(c.caregiver)}" onchange="autoSave('${id}','caregiver',this.value)" placeholder="ชื่อผู้ดูแล" style="min-width:150px"></td>
-  <td style="min-width:200px"><input value="${escHtml(c.note)}"      onchange="autoSave('${id}','note',this.value)"      style="min-width:190px"></td>
-  <td>${c.updatedAt || "-"}</td>
-  <td>
-    <button onclick="deleteChild('${id}')" title="ลบ"
-      style="border:none;background:none;cursor:pointer;font-size:18px;color:#e24b4a;">
-      <i class="ti ti-trash"></i>
-    </button>
-  </td>
-  
-  <td>
-    <select onchange="updateStatus('${id}',this.value)">
-      <option value="pending" ${!isDone?"selected":""}>ยังไม่ครบ</option>
-      <option value="done"    ${isDone?"selected":""}>ฉีดครบ</option>
-    </select>
-  </td>
-  <td>
-    <select class="form-select" style="min-width:130px" onchange="autoSave('${id}','typeArea',this.value)">
-      <option value="1" ${(!c.typeArea||c.typeArea==="1")?"selected":""}>Type 1: อยู่จริงตามทะเบียน</option>
-      <option value="2" ${c.typeArea==="2"?"selected":""}>Type 2: มีชื่อ ไม่อยู่จริง</option>
-      <option value="3" ${c.typeArea==="3"?"selected":""}>Type 3: ไม่มีชื่อ แต่อยู่จริง</option>
-      <option value="4" ${c.typeArea==="4"?"selected":""}>Type 4: นอกเขต มารับบริการ</option>
-    </select>
-  </td>
-</tr>`);
-    });
-
-    const followTable = document.getElementById("followTable");
-    if (mobileList)  mobileList.innerHTML = mobileHtml.join("");
-    if (followTable) followTable.innerHTML = html.join("");
-
-    document.querySelectorAll(".birth-datepicker").forEach(el => {
-      const isoVal  = el.dataset.iso;
-      const childId = el.dataset.childId;
-      initThaiDatepicker(el, isoVal, (isoSave) => {
-        if (childId) autoSave(childId, "birth", isoSave);
-      });
-    });
-
-    renderPagination(filteredData.length);
-
-    ensureSelectAllHeader();
-    updateBulkDeleteUI();
-
-    const isDashboard = !!document.getElementById("dash-total");
-    if (!isDashboard) {
-      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-      setEl("total",   done + notdone);
-      setEl("done",    done);
-      setEl("notdone", notdone);
-      const percent = (done + notdone) > 0 ? ((done / (done + notdone)) * 100).toFixed(1) : 0;
-      setEl("percent", percent + "%");
-    }
-
-    const chartDesc = document.getElementById("chartDescription");
-    if (chartDesc) {
-      const total   = done + notdone;
-      const percent = total > 0 ? ((done / total) * 100).toFixed(1) : 0;
-      const title   = tambonFilter !== "all"
-        ? `สรุปข้อมูลการฉีดวัคซีนรายตำบล · ${tambonMap[tambonFilter] || tambonFilter}`
-        : "สรุปภาพรวมข้อมูลการฉีดวัคซีน";
-      let descHtml = `<b>${title}</b><br>
-        <span style="color:#059669">ฉีดแล้ว (ครบ 10 เข็มขึ้นไป):</span> ${done} คน (${percent}%)<br>
-        <span style="color:#dc2626">ยังไม่ครบ:</span> ${notdone} คน`;
-      if (vaccineFilterActive) {
-        descHtml += `<br><small style="color:gray">* แสดงเฉพาะเด็กที่ได้รับ ${vaccineLabel[selectedVaccine] || selectedVaccine} แล้ว</small>`;
-      }
-      chartDesc.innerHTML = descHtml;
-    }
-  });
-}
-
-// =========================
-// updateIndexKPI + กราฟ
-// =========================
-function updateIndexKPI() {
-  if (document.getElementById("dash-total")) return;
-  if (!document.getElementById("followChart")) return;
-
-  const vax          = document.getElementById("vaccineFilter")?.value  || "all";
-  const tambon       = document.getElementById("tambonFilter")?.value   || "all";
-  const typeArea     = document.getElementById("typeAreaFilter")?.value || "all";
-  const hospitalKPI  = document.getElementById("hospitalFilter")?.value || "all";
-  const ageKPI       = document.getElementById("ageFilter")?.value      || "all";
-
-  db.ref("children").once("value", snap => {
-    const data = snap.val() || {};
-    let done = 0, total = 0;
-    const vMap = {};
-
-    // เติมชุมชนโกลกทั้ง 31 ชุมชนก่อน เพื่อให้แสดงครบแม้ยังไม่มีข้อมูลเด็ก
-    if (tambon === "kolok") {
-      Object.entries(kolokCommunity).forEach(([key, info]) => {
-        vMap[key] = { done: 0, not: 0, lbl: info.name };
-      });
-    }
-
-    for (const id in data) {
-      const c = data[id] || {};
-      // ใช้เกณฑ์เดียวกับ loadFollow() (ต้องมีทั้งชื่อและเลขบัตร) ไม่งั้นตัวเลข KPI/โดนัท
-      // กับตัวเลขในตารางจะไม่ตรงกัน เพราะนับจำนวนเด็กที่ต่างกัน
-      if (!c.name?.trim() || !c.cid?.trim()) continue;
-      if (tambon     !== "all" && c.tambon            !== tambon)     continue;
-      if (typeArea   !== "all" && (c.typeArea || "1") !== typeArea)   continue;
-      if (hospitalKPI !== "all" && c.hospital         !== hospitalKPI) continue;
-      if (ageKPI !== "all") {
-        const ageYearsKPI   = Math.floor(getAgeMonths(c.birth) / 12);
-        const targetYearKPI = parseInt(ageKPI);
-        if (targetYearKPI === 5) { if (ageYearsKPI < 5) continue; }
-        else                     { if (ageYearsKPI !== targetYearKPI) continue; }
-      }
-      if (vax !== "all") {
-        const minAge = vaccineAgeSchedule?.[vax] ?? 0;
-        if (getAgeMonths(c.birth) < minAge) continue;
-      }
-
-      const isDone = vax === "all"
-        ? Object.keys(c.vaccines || {}).length >= 10
-        : !!(c.vaccines?.[vax]);
-
-      if (statusFilter === "done"    && !isDone) continue;
-      if (statusFilter === "notdone" &&  isDone) continue;
-
-      // กรองจากคลิกกราฟ (เฉพาะ village mode — tambon ถูกกรองแล้วจาก tambonFilter DOM)
-      if (selectedBarKey !== null && selectedBarMode === "village") {
-        if ((c.village || "ไม่ระบุ") !== selectedBarKey) continue;
-      }
-
-      total++;
-      if (isDone) done++;
-
-      const vKey = tambon === "all"
-        ? (c.tambon  || "ไม่ระบุ")
-        : (c.village || "ไม่ระบุ");
-      if (!vMap[vKey]) vMap[vKey] = { done: 0, not: 0, lbl: "" };
-      if (tambon === "all") {
-        vMap[vKey].lbl = tambonMap?.[c.tambon] || c.tambon || "ไม่ระบุ";
-      } else if (tambon === "kolok") {
-        const comInfo = kolokCommunity?.[c.village];
-        vMap[vKey].lbl = comInfo
-          ? comInfo.name
-          : (c.village ? `ชุมชน ${c.village}` : "ไม่ระบุ");
-      } else {
-        const vInfo = villageData?.[tambon]?.[c.village];
-        vMap[vKey].lbl = vInfo
-          ? `หมู่ ${c.village} – ${vInfo.name}`
-          : (c.village ? `หมู่ ${c.village}` : "ไม่ระบุ");
-      }
-      if (isDone) vMap[vKey].done++; else vMap[vKey].not++;
-    }
-
-    const notdone = total - done;
-    const pct     = total > 0 ? (done / total * 100).toFixed(1) : 0;
-
-    const isDash = !!document.getElementById("dash-total");
-    if (!isDash) {
-      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-      setEl("total",   total);
-      setEl("done",    done);
-      setEl("notdone", notdone);
-      setEl("percent", pct + "%");
-    }
-
-    const elDD = document.getElementById("followDonutDone");
-    const elDN = document.getElementById("followDonutNot");
-    if (elDD) elDD.textContent = done;
-    if (elDN) elDN.textContent = notdone;
-
-    const elSub = document.getElementById("villageFollowSub");
-    if (elSub) {
-      const tN = tambon === "all" ? "ทุกตำบล" : (tambonMap?.[tambon] || tambon);
-      const vN = vax    === "all" ? "ทุกวัคซีน" : (vaccineLabel?.[vax] || vax);
-      elSub.textContent = tN + " · " + vN;
-    }
-
-    // Donut chart
-    const donutEl = document.getElementById("followChart");
-    if (donutEl) {
-      if (window._idxDonut) { window._idxDonut.destroy(); window._idxDonut = null; }
-      donutEl.parentElement.innerHTML = '<canvas id="followChart"></canvas>';
-      const ctx = document.getElementById("followChart").getContext("2d");
-      const _p  = total > 0 ? Math.round(done / total * 100) : 0;
-      window._idxDonut = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-          labels: ["ฉีดครบแล้ว","ยังไม่ครบ"],
-          datasets: [{ data:[done,notdone], backgroundColor:["#059669","#f87171"], borderWidth:0, hoverOffset:6 }]
-        },
-        options: {
-          cutout:"72%", responsive:true, maintainAspectRatio:false,
-          plugins: {
-            legend:{ position:"bottom", labels:{ boxWidth:12,padding:16,font:{size:13},usePointStyle:true } },
-            tooltip:{ callbacks:{ label: c => ` ${c.label}: ${c.parsed} คน (${total>0?(c.parsed/total*100).toFixed(0):0}%)` } }
-          }
-        },
-        plugins: [{ id:"ctr", beforeDraw(chart) {
-          const { ctx, chartArea } = chart;
-          const cx = (chartArea.left+chartArea.right)/2, cy = (chartArea.top+chartArea.bottom)/2;
-          ctx.save();
-          ctx.font = "bold 22px 'IBM Plex Sans Thai',sans-serif";
-          ctx.fillStyle = "#111827"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.fillText(_p+"%", cx, cy);
-          ctx.restore();
-        }}]
-      });
-    }
-
-    // Bar chart รายหมู่/ตำบล
-    const vWrap = document.getElementById("villageFollowWrap");
-    if (vWrap) {
-      if (window._idxVillage) { window._idxVillage.destroy(); window._idxVillage = null; }
-
-      const rows = Object.entries(vMap)
-        .filter(([,r]) => r.done + r.not > 0)
-        .sort(([a,ra],[b,rb]) => {
-          if (a === "ไม่ระบุ") return 1;
-          if (b === "ไม่ระบุ") return -1;
-          if (tambon === "all") return (ra.lbl||"").localeCompare(rb.lbl||"", "th");
-          return parseInt(a) - parseInt(b);
-        });
-
-      const vLabels = rows.map(([,r]) => r.lbl || "ไม่ระบุ");
-      const doneD   = rows.map(([,r]) => r.done);
-      const notD    = rows.map(([,r]) => r.not);
-      const totD    = rows.map(([,r]) => r.done + r.not);
-
-      const bgDone = rows.map(([key]) =>
-        selectedBarKey === null ? "#059669" : (key === selectedBarKey ? "#059669" : "rgba(5,150,105,0.3)"));
-      const bgNot = rows.map(([key]) =>
-        selectedBarKey === null ? "#f87171" : (key === selectedBarKey ? "#f87171" : "rgba(248,113,113,0.3)"));
-
-      // วัดจาก container จริง — แม่นยำกว่า window.innerWidth
-      const cW    = vWrap.offsetWidth || window.innerWidth;
-      const fs    = cW < 360 ? 10 : cW < 520 ? 11 : 12;
-      const barTh = cW < 360 ? 12 : cW < 520 ? 14 : 18;
-      const rowH  = cW < 520 ? 50 : 44;
-
-      // วัดความกว้าง label จริงด้วย Canvas API — ป้องกัน label ทับแถบทุกกรณี
-      const _mc  = document.createElement("canvas").getContext("2d");
-      _mc.font   = `${fs}px 'IBM Plex Sans Thai', sans-serif`;
-      const maxW = Math.max(...vLabels.map(l => _mc.measureText(l).width), 60);
-      const lbW  = Math.ceil(maxW) + 20;   // เพิ่ม gap 20px
-
-      const innerH = Math.max(260, rows.length * rowH + 80);
-      vWrap.style.height = innerH + "px";
-      if (window._idxVillage) { window._idxVillage.destroy(); window._idxVillage = null; }
-      vWrap.innerHTML = '<canvas id="villageChartFollow"></canvas>';
-      const vCtx = document.getElementById("villageChartFollow").getContext("2d");
-
-      window._idxVillage = new Chart(vCtx, {
-        type: "bar",
-        data: {
-          labels: vLabels,
-          datasets: [
-            { label: vax==="all"?"ฉีดครบแล้ว":`ได้รับ ${vaccineLabel?.[vax]||vax}`,
-              data: doneD, backgroundColor: bgDone, borderRadius: 6, barThickness: barTh },
-            { label: vax==="all"?"ยังไม่ครบ":`ยังไม่ได้รับ ${vaccineLabel?.[vax]||vax}`,
-              data: notD,  backgroundColor: bgNot,  borderRadius: 6, barThickness: barTh }
-          ]
-        },
-        options: {
-          indexAxis: "y", responsive: true, maintainAspectRatio: false,
-          layout: { padding: { left: lbW, right: 8 } },
-          onClick(event, elements) {
-            if (!elements.length) { if (selectedBarKey !== null) clearBarFilter(); return; }
-            const idx        = elements[0].index;
-            const [key, obj] = rows[idx];
-            if (selectedBarKey === key) { clearBarFilter(); return; }
-            selectedBarKey  = key;
-            selectedBarMode = tambon === "all" ? "tambon" : "village";
-            if (selectedBarMode === "tambon" && key !== "ไม่ระบุ") {
-              const sel = document.getElementById("tambonFilter");
-              if (sel) { sel.value = key; updateHospitalFilter(); loadvaccineChart(); }
-            }
-            currentPage = 1;
-            showBarFilterBadge(obj.lbl || key);
-            loadFollow();
-            updateIndexKPI();
-          },
-          onHover(event, elements) {
-            const canvas = event.native?.target;
-            if (canvas) canvas.style.cursor = elements.length ? "pointer" : "default";
-          },
-          plugins: {
-            legend: { position:"top", labels:{ boxWidth:12,padding:16,font:{size:fs},usePointStyle:true } },
-            tooltip: { callbacks: { label: c => {
-              const t = totD[c.dataIndex] || 1;
-              return ` ${c.dataset.label}: ${c.parsed.x} คน (${(c.parsed.x/t*100).toFixed(0)}%)`;
-            }}}
-          },
-          scales: {
-            x: { grid:{color:"#f3f4f6"}, ticks:{font:{size:fs}},
-                 title:{display:true,text:"จำนวนเด็ก (คน)",font:{size:fs},color:"#6b7280"} },
-            y: { display: false }
-          }
-        },
-        // ใช้ chart.chartArea.left แทน lbW — ตรงกับตำแหน่งแถบจริงเสมอ ทุกขนาดจอ
-        plugins: [{
-          id: "yLabels",
-          afterDraw(chart) {
-            const { ctx } = chart;
-            const yScale  = chart.scales.y;
-            if (!yScale) return;
-            const x = chart.chartArea.left - 6;
-            ctx.save();
-            ctx.font         = `${fs}px 'IBM Plex Sans Thai', sans-serif`;
-            ctx.fillStyle    = "#374151";
-            ctx.textAlign    = "right";
-            ctx.textBaseline = "middle";
-            yScale.ticks.forEach((_, i) => {
-              ctx.fillText(vLabels[i] || "", x, yScale.getPixelForTick(i));
-            });
-            ctx.restore();
-          }
-        }]
-      });
-    }
-  });
-}
-
-function setMode(mode) { chartMode = mode; loadFollow(); }
-
-// =========================
-// Pagination
-// =========================
-function renderPagination(totalRows) {
-  const paginEl  = document.getElementById("pagination");
-  if (!paginEl) return;
-  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-
-  const pages = new Set();
-  pages.add(1);
-  pages.add(totalPages);
-  for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) pages.add(i);
-
-  const sorted = [...pages].sort((a, b) => a - b);
-  let html = `<button class="btn btn-sm btn-secondary me-1" ${currentPage===1?"disabled":""} onclick="changePage(${currentPage-1})">&#9664;</button>`;
-  let prev = 0;
-  sorted.forEach(p => {
-    if (prev && p - prev > 1) html += `<button class="btn btn-sm btn-outline me-1" disabled>…</button>`;
-    html += `<button class="btn btn-sm ${p===currentPage?"btn-primary":"btn-outline-primary"} me-1" onclick="changePage(${p})">${p}</button>`;
-    prev = p;
-  });
-  html += `<button class="btn btn-sm btn-secondary" ${currentPage===totalPages?"disabled":""} onclick="changePage(${currentPage+1})">&#9654;</button>`;
-  paginEl.innerHTML = html;
-}
-
-function changePage(page) {
-  const totalPages = Math.max(1, Math.ceil(/* reuse last count */ 1 / rowsPerPage));
-  currentPage = Math.max(1, page);
-  loadFollow();
-}
-
-// =========================
-// Modal วัคซีน
-// =========================
-let currentId = "";
-
-function openVaccineModal(id) {
-  currentId = id;
-  db.ref("children/" + id).once("value").then(snap => {
-    const data    = snap.val() || {};
-    const current = data.vaccines || {};
-    let html = "";
-    vaccineList.forEach(v => {
-      const saved   = current[v] || "";
-      const checked = saved ? "checked" : "";
-      const dateVal = toInputDate(saved);
-      html += `
-      <div class="vaccine-item mb-2 d-flex align-items-center gap-2 flex-wrap">
-        <input type="checkbox" value="${v}" ${checked} onchange="toggleDateInline(this,'${v}')">
-        <label style="width:120px;margin:0;">${vaccineLabel[v] || v}</label>
-        <input type="text" data-iso="${dateVal}" placeholder="วว/ดด/ปปปป" data-vaccine="${v}"
-          style="max-width:160px;${saved?'':'display:none;'}"
-          class="form-control form-control-sm thai-datepicker" readonly>
+    if(entries.length===1){
+      // พบรายการเดียว — กดที่การ์ดเพื่อไปต่อได้เลย ไม่ต้องมีปุ่มซ้ำด้านล่าง
+      foundKey=entries[0][0];foundData=entries[0][1];
+      matchMap={[foundKey]:foundData}; // ต้องใส่ไว้ด้วย ไม่งั้นกดที่การ์ดแล้ว selectMatch() จะหา foundData ไม่เจอ
+      rEl.innerHTML=`<div class="result-card result-found">
+        <div class="result-title"><i class="ti ti-circle-check" style="color:#065f46"></i> พบข้อมูลในระบบแล้ว</div>
+      </div>${matchCardHTML(foundKey,foundData)}`;
+      document.getElementById("btnContinue").style.display="none";
+      document.getElementById("btnAddNew").style.display="block";
+      document.getElementById("orDivider").style.display="block";
+    } else if(entries.length>1){
+      // ✅ พบตรงกันหลายรายการ (HN ซ้ำ หรือชื่อพ้อง) — แสดงทั้งหมดให้เลือกว่าจะแก้ไขรายการไหน
+      foundKey=null;foundData=null;matchMap={};
+      entries.forEach(([key,d])=>{matchMap[key]=d;});
+      rEl.innerHTML=`<div class="dup-warning">
+        <div class="dup-warning-icon"><i class="ti ti-alert-triangle"></i></div>
+        <div class="dup-warning-text"><strong>พบข้อมูลตรงกัน ${entries.length} รายการ</strong><br>กรุณาตรวจสอบและเลือกรายการที่ต้องการแก้ไขให้ถูกต้อง</div>
+      </div>` + entries.map(([key,d])=>matchCardHTML(key,d)).join("");
+      // ซ่อนปุ่ม "ดำเนินการต่อ" หลัก เพราะต้องเลือกจากปุ่มในการ์ดแต่ละใบแทน
+      document.getElementById("btnContinue").style.display="none";
+      document.getElementById("btnAddNew").style.display="block";
+      document.getElementById("orDivider").style.display="block";
+    } else {
+      foundKey=null;foundData=null;matchMap={};
+      const qLabel = qType==="cid" ? `เลขบัตรประชาชน "${q}"` : qType==="hn" ? `HN "${q}"` : `ชื่อ "${q}"`;
+      rEl.innerHTML=`<div class="result-card result-notfound">
+        <div class="result-title"><i class="ti ti-info-circle" style="color:#1e40af"></i> ไม่พบข้อมูลนี้ในระบบ</div>
+        <div class="result-sub">${qLabel} ยังไม่มีในฐานข้อมูล — สามารถเพิ่มข้อมูลใหม่ได้เลย</div>
       </div>`;
-    });
-    document.getElementById("vaccineEditor").innerHTML = html;
-    document.querySelectorAll("#vaccineEditor .thai-datepicker").forEach(el => {
-      initThaiDatepicker(el, el.dataset.iso, null);
-    });
-    const modalEl = document.getElementById("vaccineModal");
-    modalEl.addEventListener("shown.bs.modal", () => {
-      modalEl.querySelector(".modal-body").style.overflowY = "visible";
-      modalEl.querySelector(".modal-dialog").style.overflow = "visible";
-    }, { once: true });
-    new bootstrap.Modal(modalEl).show();
-  }).catch(err => console.error("openVaccineModal:", err));
+      document.getElementById("btnContinue").style.display="flex";
+      document.getElementById("btnContinue").innerHTML=`<i class="ti ti-user-plus"></i> <span id="btnContinueLabel">เพิ่มข้อมูลใหม่</span>`;
+      document.getElementById("btnAddNew").style.display="none";
+      document.getElementById("orDivider").style.display="none";
+    }
+  } catch(err){alert("ค้นหาไม่สำเร็จ: "+err.message);}
+  finally{btn.disabled=false;btn.innerHTML=`<i class="ti ti-search"></i> ค้นหา`;}
 }
 
-function toggleDateInline(checkbox, v) {
-  const dateInput = checkbox.closest(".vaccine-item").querySelector(".thai-datepicker");
-  const fp        = dateInput?._flatpickr;
-  if (checkbox.checked) {
-    dateInput.style.display = "";
-    if (!fp?.selectedDates?.length) { fp?.setDate(new Date(), true); setTimeout(() => fp?.open(), 50); }
+function continueWithData(){
+  const q=document.getElementById("searchHN").value.trim();
+  const qType=detectQueryType(q);
+  if(foundData){
+    state.name=foundData.name||"";
+    state.hn=foundData.hn||(qType==="hn"?q:"");
+    state.cid=foundData.cid||(qType==="cid"?q:"");
+    state.birth=toISO(foundData.birth)||"";state.tambon=foundData.tambon||"";
+    state.tambonLabel=TAMBON_LABEL[foundData.tambon]||foundData.tambon||"";
+    state.village=foundData.village||"";state.hospital=foundData.hospital||"";
+    state.hospitalName=getHospitalName(foundData.hospital||"");state.house=foundData.house||"";state.phone=foundData.phone||"";
+    state.ageMonths=state.birth?calcAge(state.birth):0;state.vaccines={};
+    if(foundData.vaccines){Object.entries(foundData.vaccines).forEach(([k,v])=>{const iso=toISO(v);if(iso) state.vaccines[k]=iso;});}
+    state.originalVaccines={...state.vaccines}; // จำวัคซีนเดิมไว้เทียบตอนบันทึก log
+    prefillPage1();
+    document.getElementById("existingBanner").style.display="flex";
+    document.getElementById("existingBannerSub").textContent=`${state.name} · HN ${state.hn} · มีวัคซีนแล้ว ${Object.keys(state.vaccines).length} เข็ม`;
+    renderPage2();showPage(2);
   } else {
-    dateInput.style.display = "none";
-    fp?.clear();
+    // ไม่พบข้อมูลเดิม — เติมเฉพาะช่องที่ตรงกับสิ่งที่พิมพ์ค้นหา (HN หรือเลขบัตรประชาชน) ไม่ปนกัน
+    startFresh(qType==="hn"?q:"", qType==="cid"?q:"");
   }
 }
 
-// =========================
-// บันทึกวัคซีน
-// =========================
-function saveVaccines() {
-  let newVaccines = {};
-  document.querySelectorAll("#vaccineEditor .vaccine-item").forEach(item => {
-    const cb        = item.querySelector("input[type=checkbox]");
-    const name      = cb.value;
-    const dateInput = item.querySelector(".thai-datepicker");
-    if (!cb.checked) return;
-    const fp           = dateInput?._flatpickr;
-    const selectedDate = fp?.selectedDates?.[0];
-    let dateVal        = selectedDate ? flatpickr.formatDate(selectedDate, "Y-m-d") : "";
-    if (!dateVal) { dateVal = todayISO(); fp?.setDate(new Date(), true); }
-    newVaccines[name] = dateVal;
+function startFresh(hn="",cid=""){
+  foundKey=null;foundData=null;clearPage1();
+  document.getElementById("childHN").value=hn||"";
+  document.getElementById("childCID").value=cid||"";
+  if(hn||cid) document.getElementById("hnFromSearch").style.display="inline-flex";
+  document.getElementById("existingBanner").style.display="none";
+  showPage(1);
+}
+
+function prefillPage1(){
+  document.getElementById("childName").value=state.name;
+  document.getElementById("childHN").value=state.hn;
+  document.getElementById("childCID").value=state.cid;
+  document.getElementById("hnFromSearch").style.display="inline-flex";
+  if(state.birth){
+    const [y,m,d]=state.birth.split("-").map(Number);
+    document.getElementById("bDay").value=d;
+    document.getElementById("bMonth").value=m;
+    document.getElementById("bYear").value=y+543;
+  }
+  if(state.tambon){
+    document.querySelectorAll(".tambon-btn").forEach(b=>b.classList.toggle("selected",b.dataset.val===state.tambon));
+    buildVH(state.tambon,state.village,state.hospital);
+  }
+  document.getElementById("house").value=state.house;
+  document.getElementById("phone").value=state.phone;
+}
+
+function clearPage1(){
+  state={name:"",hn:"",cid:"",birth:"",tambon:"",tambonLabel:"",village:"",hospital:"",hospitalName:"",house:"",phone:"",vaccines:{},originalVaccines:{},ageMonths:0};
+  ["childName","childHN","childCID","house","phone"].forEach(id=>document.getElementById(id).value="");
+  ["bDay","bMonth","bYear"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("village").innerHTML=`<option value="">-- เลือกหมู่บ้าน --</option>`;
+  document.getElementById("hospital").innerHTML=`<option value="">-- เลือก รพ.สต. --</option>`;
+  document.querySelectorAll(".tambon-btn").forEach(b=>b.classList.remove("selected"));
+  document.getElementById("hnFromSearch").style.display="none";
+}
+
+function goPage2(){
+  const name=document.getElementById("childName").value.trim();
+  const hn=document.getElementById("childHN").value.trim();
+  const day=document.getElementById("bDay").value;
+  const month=document.getElementById("bMonth").value;
+  const year=document.getElementById("bYear").value;
+  const village=document.getElementById("village").value;
+  const hospital=document.getElementById("hospital").value;
+  let ok=true;
+  showErr("errName",!name);if(!name)ok=false;
+  showErr("errHN",!hn);if(!hn)ok=false;
+  showErr("errBirth",!(day&&month&&year));if(!(day&&month&&year))ok=false;
+  showErr("errTambon",!state.tambon);if(!state.tambon)ok=false;
+  showErr("errVillage",!village);if(!village)ok=false;
+  showErr("errHospital",!hospital);if(!hospital)ok=false;
+  if(!ok)return;
+  const yearCE=parseInt(year)-543;
+  const birthISO=`${yearCE}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  state.name=name;state.hn=hn;state.cid=document.getElementById("childCID").value.trim();
+  state.birth=birthISO;state.village=village;state.hospital=hospital;
+  state.hospitalName=getHospitalName(hospital);state.house=document.getElementById("house").value.trim();state.phone=document.getElementById("phone").value.trim();
+  state.ageMonths=calcAge(birthISO);
+  renderPage2();showPage(2);
+}
+
+function renderPage2(){
+  const age=state.ageMonths;
+  const due=VACCINES.filter(v=>age>=v.minMonths);
+  const notYet=VACCINES.filter(v=>age<v.minMonths);
+  document.getElementById("bannerName").textContent=state.name;
+  document.getElementById("bannerAge").textContent=`อายุ ${Math.floor(age/12)} ปี ${age%12} เดือน · ${state.tambonLabel}`;
+  const list=document.getElementById("vaxList");list.innerHTML="";
+  due.forEach(v=>{
+    const saved=state.vaccines[v.name];const done=!!saved;
+    const key=v.name.replace(/[\s-]/g,"_");const label=VAX_LABEL[v.name]||v.name;
+    const div=document.createElement("div");div.className="vax-item "+(done?"vax-done":"vax-pending");
+    div.innerHTML=`<div class="vax-row">
+      <div class="vax-left">
+        <div class="vax-icon ${done?"done":"pending"}"><i class="ti ti-${done?"check":"x"}"></i></div>
+        <div>
+          <div class="vax-name">${label}</div>
+          <div class="vax-sub">${done?"ฉีดแล้ว "+thaiDate(saved):`ยังไม่ได้ฉีด · เริ่มฉีดได้ตั้งแต่ ${v.minMonths} เดือน`}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        ${done?`<button class="edit-date-btn" onclick="toggleEditVax('${key}')" title="แก้ไขวันที่ฉีด"><i class="ti ti-pencil"></i></button>
+        <button class="edit-date-btn del-vax-btn" onclick="deleteVax('${key}')" title="ลบรายการนี้ (กรอกผิด)"><i class="ti ti-trash"></i></button>`:""}
+        <span class="badge ${done?"badge-done":"badge-pending"}">${done?"ครบ":"ค้างอยู่"}</span>
+      </div>
+    </div>${done?buildThaiDateInputEdit(key,saved):buildThaiDateInput(key)}`;
+    list.appendChild(div);
   });
-  let childInfo   = {};
-  let oldVaccines = {};
-  db.ref("children/" + currentId).once("value").then(snap => {
-    const child = snap.val() || {};
-    childInfo   = child;
-    oldVaccines = child.vaccines || {};
-    return Promise.all([
-      db.ref("children/" + currentId).update({ vaccines: newVaccines, updatedAt: new Date().toLocaleString("th-TH") }),
-      db.ref("symptoms/" + currentId).update({
-        name: child.name || "", hn: child.hn || "", cid: child.cid || "",
-        birth: child.birth || "", house: child.house || "", tambon: child.tambon || "",
-        vaccines: newVaccines, symptom: "ยังไม่ระบุ", level: "รอติดตาม",
-        status: "รอติดตาม", priority: 1, followStep: 1, normalCount: 0,
-        nextFollowUp: Date.now() + 60000, time: Date.now()
-      })
-    ]);
-  }).then(() => {
-    // ระบุว่าเป็นวัคซีนตัวไหนบ้างที่ถูกเพิ่ม/แก้วันที่/ลบออก
-    const added = [], changed = [], removed = [];
-    Object.keys(newVaccines).forEach(v => {
-      const label = vaccineLabel[v] || v;
-      if (!oldVaccines[v]) added.push(label);
-      else if (oldVaccines[v] !== newVaccines[v]) changed.push(label);
-    });
-    Object.keys(oldVaccines).forEach(v => {
-      if (!newVaccines[v]) removed.push(vaccineLabel[v] || v);
-    });
-    const parts = [];
-    if (added.length)   parts.push(`เพิ่ม: ${added.join(", ")}`);
-    if (changed.length) parts.push(`แก้วันที่: ${changed.join(", ")}`);
-    if (removed.length) parts.push(`ลบ: ${removed.join(", ")}`);
-    const summary = parts.length ? parts.join(" | ") : "ไม่มีการเปลี่ยนแปลง";
-
-    saveLog("แก้ไขข้อมูล", `${childInfo.name || "-"} (${childInfo.cid || "-"}) — ข้อมูลวัคซีน`, "-", summary);
-    const modalEl = document.getElementById("vaccineModal");
-    if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-    try { sendLineFollowUp(currentId); } catch (e) { /* LINE ไม่ได้ตั้งค่า */ }
-    try { loadFollow(); }               catch (e) { console.error(e); }
-    try { loadvaccineChart(); }         catch (e) { console.error(e); }
-  }).catch(err => { console.error(err); alert("บันทึกไม่สำเร็จ"); });
+  const nyl=document.getElementById("notYetList");nyl.innerHTML="";
+  notYet.forEach(v=>{const s=document.createElement("span");s.className="chip";s.textContent=`${VAX_LABEL[v.name]||v.name} · อายุ ${v.minMonths} เดือน`;nyl.appendChild(s);});
+  document.getElementById("notYetSection").style.display=notYet.length?"block":"none";
 }
 
-// =========================
-// เปลี่ยนสถานะ
-// =========================
-function updateStatus(id, status) {
-  if (status === "pending") {
-    db.ref("children/" + id).once("value").then(snap => {
-      const c = snap.val() || {};
-      const vaccineNames = Object.keys(c.vaccines || {}).map(v => vaccineLabel[v] || v).join(", ") || "-";
-      return db.ref("children/" + id + "/vaccines").remove().then(() => {
-        saveLog("แก้ไขข้อมูล", `${c.name || "-"} (${c.cid || "-"}) — สถานะวัคซีน`, `มีวัคซีน: ${vaccineNames}`, "รีเซ็ตเป็นรอฉีด (ล้างข้อมูลวัคซีนทั้งหมด)");
-      });
-    }).then(() => { loadFollow(); loadvaccineChart(); })
-      .catch(err => console.error("updateStatus:", err));
-  } else { openVaccineModal(id); }
+function saveVax(key){
+  const vaxName=VACCINES.find(v=>v.name.replace(/[\s-]/g,"_")===key)?.name||key;
+  const d=document.getElementById("vd_"+key)?.value;
+  const m=document.getElementById("vm_"+key)?.value;
+  const y=document.getElementById("vy_"+key)?.value;
+  if(!d||!m||!y){alert("กรุณาเลือกวันที่ฉีด "+(VAX_LABEL[vaxName]||vaxName));return;}
+  const yearCE=parseInt(y)-543;
+  const iso=`${yearCE}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  state.vaccines[vaxName]=iso;renderPage2();
 }
 
-// =========================
-// autosave / activity log
-// =========================
-let saveTimer = {};
-
-// ป้ายชื่อฟิลด์ภาษาไทย ใช้แสดงในรายงานสรุป
-const fieldLabelMap = {
-  hn: "HN", cid: "เลขบัตรประชาชน", name: "ชื่อ-สกุล", tambon: "ตำบล",
-  hospital: "หน่วยบริการ", house: "บ้านเลขที่", birth: "วันเกิด",
-  note: "หมายเหตุ", village: "หมู่/ชุมชน", soi: "ซอย",
-  phone: "เบอร์โทร", typeArea: "ประเภทพื้นที่", vaccines: "ข้อมูลวัคซีน"
-};
-
-// บันทึกประวัติการเพิ่ม/แก้ไข/ลบ ข้อมูลเด็ก ลง Firebase (ใช้ทำรายงานสรุปรายเดือน)
-function saveLog(action, target, oldVal, newVal) {
-  const n = new Date();
-  db.ref("activityLogs").push({
-    user: localStorage.getItem("name") || "-",
-    role: localStorage.getItem("role") || "-",
-    action,
-    target: target || "-",
-    before: (oldVal === undefined || oldVal === null || oldVal === "") ? "-" : oldVal,
-    after:  (newVal === undefined || newVal === null || newVal === "") ? "-" : newVal,
-    date: n.toLocaleDateString("th-TH"),
-    time: n.toLocaleTimeString("th-TH"),
-    timestamp: Date.now()
-  }).catch(err => console.error("saveLog:", err));
+function deleteVax(key){
+  const vaxName=VACCINES.find(v=>v.name.replace(/[\s-]/g,"_")===key)?.name||key;
+  const label=VAX_LABEL[vaxName]||vaxName;
+  if(!confirm(`ต้องการลบรายการฉีด "${label}" ใช่หรือไม่?\n(ใช้สำหรับกรณีกรอกข้อมูลผิดวัคซีน รายการนี้จะกลับไปเป็น "ค้างอยู่")`))return;
+  delete state.vaccines[vaxName];
+  renderPage2();
 }
 
-function autoSave(id, field, value) {
-  clearTimeout(saveTimer[id + field]);
-  saveTimer[id + field] = setTimeout(() => {
-    db.ref("children/" + id).once("value").then(snap => {
-      const oldData  = snap.val() || {};
-      const oldValue = oldData[field] || "-";
-      return db.ref("children/" + id).update({
-        [field]: value, updatedAt: new Date().toLocaleString("th-TH")
-      }).then(() => {
-        const who = `${oldData.name || "-"} (${oldData.cid || "-"}) — ${fieldLabelMap[field] || field}`;
-        saveLog("แก้ไขข้อมูล", who, oldValue, value);
-        showSaved();
-      });
-    }).catch(err => console.error("autoSave:", err));
-  }, 800);
-}
-
-function showSaved() {
-  let toast = document.getElementById("saveToast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "saveToast";
-    Object.assign(toast.style, {
-      position:"fixed", bottom:"20px", right:"20px",
-      background:"#16a34a", color:"white", padding:"10px 16px",
-      borderRadius:"8px", boxShadow:"0 4px 10px rgba(0,0,0,0.2)",
-      zIndex:"9999", display:"flex", alignItems:"center", gap:"8px", fontSize:"14px"
-    });
-    document.body.appendChild(toast);
+function goPage3(){
+  const age=state.ageMonths;
+  document.getElementById("sumName").textContent=state.name;
+  document.getElementById("sumAge").textContent=`เกิด ${thaiDate(state.birth)} · อายุ ${Math.floor(age/12)} ปี ${age%12} เดือน`;
+  document.getElementById("sumTambon").textContent=state.tambonLabel||"—";
+  document.getElementById("sumVillage").textContent=state.village||"—";
+  document.getElementById("sumHouse").textContent=state.house||"ไม่ระบุ";
+  document.getElementById("sumHospital").textContent=state.hospitalName||"—";
+  document.getElementById("sumPhone").textContent=state.phone||"ไม่ระบุ";
+  document.getElementById("sumHN").textContent=state.hn||"—";
+  const sv=Object.entries(state.vaccines);
+  const vl=document.getElementById("sumVaxList");vl.innerHTML="";
+  if(sv.length===0){document.getElementById("sumNoVax").style.display="block";}
+  else{
+    document.getElementById("sumNoVax").style.display="none";
+    sv.forEach(([name,date])=>{vl.innerHTML+=`<div class="confirm-vax-item"><div class="confirm-vax-left"><i class="ti ti-circle-check" style="color:var(--green);font-size:17px"></i>${VAX_LABEL[name]||name}</div><span class="confirm-vax-date">${thaiDate(date)}</span></div>`;});
   }
-  toast.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกแล้ว';
-  toast.style.display = "flex";
-  setTimeout(() => { toast.style.display = "none"; }, 1500);
+  const pending=VACCINES.filter(v=>state.ageMonths>=v.minMonths&&!state.vaccines[v.name]);
+  if(pending.length>0){
+    document.getElementById("nextVaxBanner").style.display="block";
+    document.getElementById("nextVaxText").textContent=`${VAX_LABEL[pending[0].name]||pending[0].name} · ควรฉีดโดยเร็ว`;
+  } else {document.getElementById("nextVaxBanner").style.display="none";}
+  showPage(3);
 }
 
-// =========================
-// เพิ่มข้อมูล
-// =========================
-function getFormData() {
-  return {
-    hn:       document.getElementById("hn")?.value.trim()      || "",
-    cid:      document.getElementById("cid")?.value.trim()     || "",
-    name:     document.getElementById("name")?.value.trim()    || "",
-    tambon:   document.getElementById("tambon")?.value         || "",
-    hospital: document.getElementById("hospital")?.value       || "",
-    house:    document.getElementById("house")?.value          || "",
-    birth:    document.getElementById("birth")?.value          || "",
-    note:     document.getElementById("note")?.value           || "",
-    village:  document.getElementById("village")?.value        || "",
-    soi:      document.getElementById("soi")?.value            || "",
-    phone:    document.getElementById("phone")?.value.trim()   || "",
-    typeArea: document.getElementById("typeArea")?.value       || "1"
+// ====== Submit + บันทึก log ======
+async function submitData(){
+  const btn=document.getElementById("confirmBtn");
+  btn.disabled=true;btn.innerHTML=`<span class="spinner"></span> กำลังบันทึก...`;
+  const vaccinesObj={};
+  Object.entries(state.vaccines).forEach(([k,v])=>{const [y,m,d]=v.split("-");vaccinesObj[k]=`${d}/${m}/${parseInt(y)+543}`;});
+  const payload={
+    name:state.name,hn:state.hn,cid:state.cid,birth:state.birth,
+    tambon:state.tambon,village:state.village,hospital:state.hospital,
+    house:state.house,phone:state.phone,vaccines:vaccinesObj,
+    typeArea:foundData?.typeArea||"1",
+    updatedAt:new Date().toLocaleString("th-TH"),
+    createdAt:foundData?.createdAt||new Date().toISOString(),
   };
-}
+  try{
+    const sympBase={name:state.name,hn:state.hn,cid:state.cid,birth:state.birth,phone:state.phone,vaccines:vaccinesObj};
+    const target=`${state.name} (HN ${state.hn})`;
 
-function getVaccines() {
-  let vaccines = {};
-  document.querySelectorAll(".vaccine-container input[type=checkbox]:checked").forEach(cb => {
-    const name      = cb.value;
-    const dateInput = cb.closest(".vaccine-item")?.querySelector(".thai-datepicker");
-    const fp        = dateInput?._flatpickr;
-    const selected  = fp?.selectedDates?.[0];
-    vaccines[name]  = selected ? flatpickr.formatDate(selected, "Y-m-d") : todayISO();
-  });
-  return vaccines;
-}
-
-function validateChild(c) {
-  if (!c.name || !c.cid)                      { alert("กรุณากรอกชื่อและเลขบัตร"); return false; }
-  if (!c.tambon || !c.hospital || !c.village) { alert("กรุณากรอกข้อมูลให้ครบ");  return false; }
-  return true;
-}
-
-function resetForm() {
-  ["hn","cid","name","house","birth","note","phone"].forEach(fieldId => {
-    const el = document.getElementById(fieldId);
-    if (el) el.value = "";
-  });
-  const villageEl = document.getElementById("village");
-  const soiEl     = document.getElementById("soi");
-  if (villageEl) villageEl.value = "";
-  if (soiEl)     soiEl.value     = "";
-  document.querySelectorAll(".vaccine-container input[type=checkbox]").forEach(cb => cb.checked = false);
-  document.querySelectorAll(".vaccine-container .thai-datepicker").forEach(el => {
-    el.value = ""; el.style.display = "none"; el._flatpickr?.clear();
-  });
-}
-
-function saveChild(data) { return db.ref("children").push(data); }
-
-function addChildFull() {
-  const c        = getFormData();
-  const vaccines = getVaccines();
-  if (!validateChild(c)) return;
-  const data    = { ...c, vaccines, updatedAt: new Date().toLocaleString("th-TH") };
-  const newRef  = db.ref("children").push();
-  const childId = newRef.key;
-  newRef.set(data).then(() => {
-    return db.ref("symptoms/" + childId).set({
-      name: c.name || "", hn: c.hn || "", phone: c.phone || "", tambon: c.tambon || "",
-      vaccines, symptom: "ยังไม่ระบุ", level: "ปกติ",
-      status: "รอติดตาม", priority: 99, time: Date.now()
+    // ระบุว่าวัคซีนตัวไหนถูกเพิ่มใหม่ / แก้วันที่ ในการบันทึกครั้งนี้ (เทียบกับก่อนเปิดหน้า)
+    const original=state.originalVaccines||{};
+    const addedVax=[],changedVax=[],removedVax=[];
+    Object.entries(state.vaccines).forEach(([k,iso])=>{
+      const label=VAX_LABEL[k]||k;
+      if(!original[k]) addedVax.push(label);
+      else if(original[k]!==iso) changedVax.push(label);
     });
-  }).then(() => {
-    const vaccineNames = Object.keys(vaccines).map(v => vaccineLabel[v] || v).join(", ") || "ยังไม่ได้ระบุวัคซีน";
-    saveLog("เพิ่มข้อมูล", `${c.name || "-"} (${c.cid || "-"})`, "-", `เพิ่มข้อมูลใหม่ · วัคซีน: ${vaccineNames}`);
-    alert("บันทึกแล้ว"); resetForm(); loadFollow(); loadvaccineChart();
-    if (confirm("ไปหน้าติดตามอาการไหม?")) window.location.href = "symptoms.html";
-  }).catch(err => { console.error("addChildFull:", err); alert("เกิดข้อผิดพลาด:\n" + err.message); });
-}
+    Object.keys(original).forEach(k=>{
+      if(!state.vaccines[k]) removedVax.push(VAX_LABEL[k]||k);
+    });
+    const vaxParts=[];
+    if(addedVax.length)   vaxParts.push(`เพิ่ม: ${addedVax.join(", ")}`);
+    if(changedVax.length) vaxParts.push(`แก้วันที่: ${changedVax.join(", ")}`);
+    if(removedVax.length) vaxParts.push(`ลบ (กรอกผิด): ${removedVax.join(", ")}`);
+    const vaxSummary=vaxParts.length?vaxParts.join(" | "):"ไม่มีวัคซีนเปลี่ยนแปลง";
 
-function buildVillageDropdown(tambon, selected, id) {
-  const data = tambon === "kolok" ? kolokCommunity : (villageData[tambon] || {});
-  return `
-  <select id="village_${id}" class="form-select" style="min-width:130px" onchange="autoSave('${id}','village',this.value)">
-    <option value="">-- เลือกหมู่ --</option>
-    ${Object.keys(data).map(v => `
-      <option value="${v}" ${v == selected ? "selected" : ""}>
-        ${tambon === "kolok" ? data[v].name : `หมู่ ${v} - ${data[v].name}`}
-      </option>`).join("")}
-  </select>`;
-}
-
-// =========================
-// ติ๊กเลือกหลายรายการ (สำหรับลบพร้อมกัน)
-// =========================
-
-// ใส่ checkbox "เลือกทั้งหมด" ไว้ในหัวตาราง (ทำครั้งเดียว ถ้ายังไม่มี)
-function ensureSelectAllHeader() {
-  const table = document.getElementById("followTable");
-  if (!table) return;
-  const wrapper = table.closest("table");
-  if (!wrapper) return;
-  const headRow = wrapper.querySelector("thead tr");
-  if (!headRow || headRow.querySelector(".select-all-checkbox")) return;
-  const th = document.createElement("th");
-  th.style.textAlign = "center";
-  th.innerHTML = `<input type="checkbox" class="select-all-checkbox" title="เลือกทั้งหมด" onchange="toggleSelectAll(this)">`;
-  headRow.insertBefore(th, headRow.firstChild);
-}
-
-// ติ๊ก/ยกเลิกติ๊กรายชื่อเดี่ยว
-function toggleChildSelect(checkbox, id) {
-  if (checkbox.checked) selectedChildIds.add(id);
-  else selectedChildIds.delete(id);
-  updateBulkDeleteUI();
-}
-
-// ติ๊กเลือกทั้งหมด/ยกเลิกทั้งหมด เฉพาะรายการที่แสดงอยู่ในหน้าปัจจุบัน
-function toggleSelectAll(checkbox) {
-  const checked = checkbox.checked;
-  document.querySelectorAll(".row-check-select").forEach(cb => {
-    cb.checked = checked;
-    if (checked) selectedChildIds.add(cb.value);
-    else selectedChildIds.delete(cb.value);
-  });
-  updateBulkDeleteUI();
-}
-
-// สร้าง/แสดง แถบเครื่องมือลบหลายรายการ พร้อมอัปเดตจำนวนที่เลือก
-function updateBulkDeleteUI() {
-  let bar = document.getElementById("bulkDeleteBar");
-  if (!bar) {
-    bar = document.createElement("div");
-    bar.id = "bulkDeleteBar";
-    bar.style.cssText = `
-      position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
-      z-index:1050;background:#1f2937;color:#fff;padding:10px 18px;
-      border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.25);
-      display:none;align-items:center;gap:14px;font-size:14px;`;
-    bar.innerHTML = `
-      <span id="bulkDeleteCount"></span>
-      <button class="btn btn-sm" style="background:#e24b4a;color:#fff;border:none;border-radius:8px;padding:5px 12px"
-        onclick="deleteSelectedChildren()">
-        <i class="ti ti-trash"></i> ลบที่เลือก
-      </button>
-      <button class="btn btn-sm" style="background:#4b5563;color:#fff;border:none;border-radius:8px;padding:5px 12px"
-        onclick="clearChildSelection()">ยกเลิก</button>`;
-    document.body.appendChild(bar);
-  }
-
-  const count = selectedChildIds.size;
-  bar.style.display = count > 0 ? "flex" : "none";
-  const countEl = document.getElementById("bulkDeleteCount");
-  if (countEl) countEl.textContent = `เลือกแล้ว ${count} รายการ`;
-
-  // sync สถานะ checkbox "เลือกทั้งหมด" ของหน้าปัจจุบัน
-  const rowChecks = document.querySelectorAll(".row-check-select");
-  const selectAllEl = document.querySelector(".select-all-checkbox");
-  if (selectAllEl && rowChecks.length) {
-    const allChecked  = Array.from(rowChecks).every(cb => cb.checked);
-    const someChecked = Array.from(rowChecks).some(cb => cb.checked);
-    selectAllEl.checked = allChecked;
-    selectAllEl.indeterminate = someChecked && !allChecked;
-  } else if (selectAllEl) {
-    selectAllEl.checked = false;
-    selectAllEl.indeterminate = false;
-  }
-}
-
-// ยกเลิกการเลือกทั้งหมด
-function clearChildSelection() {
-  selectedChildIds.clear();
-  document.querySelectorAll(".row-check-select").forEach(cb => cb.checked = false);
-  updateBulkDeleteUI();
-}
-
-// ลบข้อมูลทุกรายการที่ถูกติ๊กเลือกไว้
-function deleteSelectedChildren() {
-  const ids = Array.from(selectedChildIds);
-  if (!ids.length) return;
-  if (!confirm(`ต้องการลบข้อมูลที่เลือกไว้ ${ids.length} รายการใช่หรือไม่?`)) return;
-
-  Promise.all(ids.map(id =>
-    db.ref("children/" + id).once("value").then(snap => {
-      const c = snap.val() || {};
-      return db.ref("children/" + id).remove().then(() => {
-        saveLog("ลบข้อมูล", `${c.name || "-"} (${c.cid || "-"})`, "มีข้อมูลในระบบ", "ถูกลบออกจากระบบ");
-      });
-    }).catch(err => console.error("deleteSelectedChildren:", id, err))
-  )).then(() => {
-    selectedChildIds.clear();
-    loadFollow();
-    loadvaccineChart();
-  });
-}
-
-// =========================
-// ลบ
-// =========================
-function deleteChild(id) {
-  if (confirm("ลบข้อมูลนี้?")) {
-    db.ref("children/" + id).once("value").then(snap => {
-      const c = snap.val() || {};
-      return db.ref("children/" + id).remove().then(() => {
-        saveLog("ลบข้อมูล", `${c.name || "-"} (${c.cid || "-"})`, "มีข้อมูลในระบบ", "ถูกลบออกจากระบบ");
-      });
-    }).then(() => { loadFollow(); loadvaccineChart(); })
-      .catch(err => console.error("deleteChild:", err));
-  }
-}
-
-// =========================
-// logout
-// =========================
-function logout() {
-  db.ref("loginLogs").push({
-    name: localStorage.getItem("name"), role: localStorage.getItem("role"),
-    action: "ออกจากระบบ", date: new Date().toLocaleDateString("th-TH"),
-    logoutTime: new Date().toLocaleTimeString("th-TH")
-  }).then(() => { localStorage.clear(); location.href = "login.html"; });
-}
-
-// =========================
-// นำเข้า Excel (เดิม)
-// =========================
-const vaccineMap = {
-  "041":"BCG","D21":"DTP1","D22":"DTP2","D23":"DTP3","D24":"DTP4","D25":"DTP5",
-  "IP1":"IPV1","IP2":"IPV2","R21":"OPV1","R22":"OPV2","R23":"OPV3","R24":"OPV4","R25":"OPV5",
-  "081":"MMR1","082":"MMR2","061":"JE1","062":"JE2"
-};
-
-function convertHDCtoVaccines(text) {
-  let vaccines = {};
-  if (!text) return vaccines;
-  text = text.replace(/<br>/g, '');
-  text.split("},").forEach(p => {
-    try {
-      if (!p.endsWith("}")) p += "}";
-      const obj  = JSON.parse(p);
-      const name = vaccineMap[obj.VACCINTYPE];
-      if (name) vaccines[name] = obj.DATE_SERV;
-    } catch (e) {}
-  });
-  return vaccines;
-}
-
-function getTambonByHospital(code) {
-  const map = {
-    "10170":"puyoh","10168":"pasemas","10658":"pasemas",
-    "10169":"munoh","77729":"kolok","77728":"kolok"
-  };
-  return map[String(code)] || "";
-}
-
-async function importExcel() {
-  const file = document.getElementById("excelFile")?.files[0];
-  if (!file) { alert("กรุณาเลือกไฟล์"); return; }
-  const reader = new FileReader();
-  reader.onload = async e => {
-    try {
-      const workbook = XLSX.read(e.target.result, { type: "binary" });
-      const sheet    = workbook.Sheets[workbook.SheetNames[0]];
-      const rows     = XLSX.utils.sheet_to_json(sheet);
-      const snap     = await db.ref("children").once("value");
-      const oldData  = snap.val() || {};
-      const hnMap    = {};
-      Object.entries(oldData).forEach(([key, c]) => {
-        const hn  = String(c.hn       || "").trim();
-        const hos = String(c.hospital || "").trim();
-        if (hn && hos) hnMap[hn + "_" + hos] = key;
-      });
-      let updates = {}, addCount = 0, updateCount = 0;
-      const vaccineTypesSeen = new Set();
-      rows.forEach(r => {
-        const hn  = cleanValue(r.pid);
-        const hos = cleanValue(r.hoscode);
-        if (!hn) return;
-        const uniqueKey = hn + "_" + hos;
-        let id = hnMap[uniqueKey];
-        if (id) { updateCount++; } else { id = db.ref().child("children").push().key; addCount++; }
-        const child = {
-          hn, cid: cleanValue(r.cid),
-          name: (cleanValue(r.name) + " " + cleanValue(r.lname)).trim(),
-          birth: cleanValue(r.birth), hospital: cleanValue(r.hoscode),
-          tambon: getTambonByHospital(r.hoscode), house: cleanValue(r.addr),
-          vaccines: {}, updatedAt: new Date().toLocaleString("th-TH")
-        };
-        const vaccineFields = {
-          BCG:"bcg_date",HBV1:"hbv1_date",HBV2:"hbv2_date",
-          DTP1:"dtp1_date",DTP2:"dtp2_date",DTP3:"dtp3_date",
-          IPV1:"ipv1_date",IPV2:"ipv2_date",
-          OPV3:"opv3_date",OPV4:"opv4_date",OPV5:"opv5_date",
-          Rota1:"rota1_date",Rota2:"rota2_date",Rota3:"rota3_date",
-          MMR1:"mmr1_date",MMR2:"mmr2_date",JE1:"je1_date",JE2:"je2_date",
-          DTP4:"dtp4_date",DTP5:"dtp5_date"
-        };
-        Object.entries(vaccineFields).forEach(([name, field]) => {
-          const value = cleanValue(r[field]);
-          if (value) { child.vaccines[name] = value; vaccineTypesSeen.add(name); }
-        });
-        if (hnMap[uniqueKey]) {
-          const oldChild = oldData[id] || {};
-          child.name     = oldChild.name     || child.name;
-          child.birth    = oldChild.birth    || child.birth;
-          child.cid      = oldChild.cid      || child.cid;
-          child.hospital = oldChild.hospital || child.hospital;
-          child.tambon   = oldChild.tambon   || child.tambon;
-          child.house    = oldChild.house    || child.house;
-          child.vaccines = { ...(oldChild.vaccines || {}), ...(child.vaccines || {}) };
-        }
-        updates[id] = child;
-      });
-      await db.ref("children").update(updates);
-      const vaccineNames = [...vaccineTypesSeen].map(v => vaccineLabel[v] || v).join(", ") || "ไม่มีข้อมูลวัคซีนในไฟล์";
-      saveLog("นำเข้า Excel", `${file.name || "ไฟล์ Excel"} — วัคซีนที่พบ: ${vaccineNames}`, `เพิ่มใหม่ ${addCount} รายการ`, `อัปเดต ${updateCount} รายการ`);
-      alert(`เพิ่มใหม่ ${addCount} รายการ\nอัปเดต ${updateCount} รายการ`);
-      loadFollow(); loadvaccineChart();
-    } catch (err) {
-      console.error("importExcel:", err);
-      alert("นำเข้าไม่สำเร็จ");
-    }
-  };
-  reader.readAsBinaryString(file);
-}
-
-function cleanValue(v) {
-  if (v === null || v === undefined) return "";
-  v = String(v).trim();
-  if (["<NA>","NaN","null","undefined"].includes(v)) return "";
-  return v;
-}
-
-function formatVillage(tambon, village) {
-  if (!village) return "-";
-  if (!isNaN(village)) return "หมู่ " + parseInt(village);
-  return village;
-}
-
-function updateVillage(id, value) {
-  const newVillage = value.replace("หมู่ ", "");
-  db.ref("children/" + id).once("value").then(snap => {
-    const c = snap.val() || {};
-    return db.ref("children/" + id).update({ village: newVillage, updatedAt: new Date().toLocaleString("th-TH") })
-      .then(() => saveLog("แก้ไขข้อมูล", `${c.name || "-"} (${c.cid || "-"}) — หมู่/ชุมชน`, c.village, newVillage));
-  }).catch(err => console.error("updateVillage:", err));
-}
-
-function reloadRealtime() { if (childRef) childRef.off(); loadFollow(); }
-
-function changeTambon(el) {
-  const tr = el.closest("tr");
-  if (!tr) return;
-  const id = tr.getAttribute("data-id");
-  autoSave(id, "tambon",  el.value);
-  autoSave(id, "village", "");
-  loadFollow();
-}
-
-function autoSaveVillage(id, value) {
-  db.ref("children/" + id).once("value").then(snap => {
-    const c = snap.val() || {};
-    return db.ref("children/" + id).update({ village: value, updatedAt: new Date().toLocaleString("th-TH") })
-      .then(() => saveLog("แก้ไขข้อมูล", `${c.name || "-"} (${c.cid || "-"}) — หมู่/ชุมชน`, c.village, value));
-  }).catch(err => console.error("autoSaveVillage:", err));
-}
-
-// =========================
-// กราฟวัคซีนรายตำบล
-// =========================
-function loadvaccineChart() {
-  const vaccineFilter = document.getElementById("vaccineFilter")?.value || "all";
-  const tambonFilter  = document.getElementById("tambonFilter")?.value  || "all";
-  selectedVaccine = vaccineFilter;
-
-  db.ref("children").once("value").then(snapshot => {
-    const data = snapshot.val() || {};
-    if (!Object.keys(data).length) return;
-
-    const allTambons = ["munoh","puyoh","pasemas","kolok"];
-    const tambonName = { munoh:"มูโนะ",puyoh:"ปูโยะ",pasemas:"ปาเสมัส",kolok:"สุไหงโก-ลก" };
-    const tambons    = tambonFilter === "all" ? allTambons : [tambonFilter];
-    const chartEl    = document.getElementById("vaccineChart");
-    if (!chartEl) return;
-    if (window.vaccineChart && typeof window.vaccineChart.destroy === "function") window.vaccineChart.destroy();
-
-    const chartCtx  = chartEl.getContext("2d");
-    const gradGreen = chartCtx.createLinearGradient(0,0,0,400);
-    gradGreen.addColorStop(0,"rgba(16,185,129,0.95)");
-    gradGreen.addColorStop(1,"rgba(6,182,212,0.75)");
-    const gradRed   = chartCtx.createLinearGradient(0,0,0,400);
-    gradRed.addColorStop(0,"rgba(239,68,68,0.95)");
-    gradRed.addColorStop(1,"rgba(251,146,60,0.75)");
-
-    let labels, doneData = [], notdoneData = [], eligibleData = [];
-
-    if (vaccineFilter !== "all") {
-      const minAge = vaccineAgeSchedule[vaccineFilter] ?? 0;
-      labels = tambons.map(t => tambonName[t] || t);
-      tambons.forEach(t => {
-        let done = 0, eligible = 0;
-        for (const id in data) {
-          if (data[id].tambon !== t) continue;
-          const age = getAgeMonths(data[id].birth);
-          if (age < minAge) continue;
-          eligible++;
-          if (data[id].vaccines?.[vaccineFilter]) done++;
-        }
-        doneData.push(done); eligibleData.push(eligible); notdoneData.push(eligible - done);
-      });
+    if(foundKey){
+      await Promise.all([
+        db.ref("children/"+foundKey).update(payload),
+        db.ref("symptoms/"+foundKey).update(sympBase),
+      ]);
+      actLog("แก้ไขข้อมูล", target, "-", vaxSummary);
+      document.getElementById("successMsg").textContent=`อัปเดตข้อมูล ${state.name} (HN: ${state.hn}) เรียบร้อยแล้ว`;
     } else {
-      labels = vaccineList.map(v => vaccineLabel[v] || v);
-      vaccineList.forEach(v => {
-        const minAge = vaccineAgeSchedule[v] ?? 0;
-        let done = 0, eligible = 0;
-        for (const id in data) {
-          if (tambonFilter !== "all" && data[id].tambon !== tambonFilter) continue;
-          const age = getAgeMonths(data[id].birth);
-          if (age < minAge) continue;
-          eligible++;
-          if (data[id].vaccines?.[v]) done++;
-        }
-        doneData.push(done); eligibleData.push(eligible); notdoneData.push(eligible - done);
-      });
+      const newRef=db.ref("children").push();
+      await Promise.all([
+        newRef.set(payload),
+        db.ref("symptoms/"+newRef.key).set({...sympBase,symptom:"ยังไม่ระบุ",level:"ปกติ",status:"รอติดตาม",priority:99,time:Date.now()}),
+      ]);
+      actLog("เพิ่มข้อมูล", target, "-", `เพิ่มข้อมูลใหม่ · ${vaxSummary}`);
+      document.getElementById("successMsg").textContent=`บันทึก ${state.name} (HN: ${state.hn}) เรียบร้อยแล้ว`;
     }
-
-    const barThick = vaccineFilter !== "all" ? 32 : 14;
-    const topLabelPlugin = {
-      id: "topLabel",
-      afterDatasetsDraw(chart) {
-        const { ctx } = chart;
-        chart.data.datasets.forEach((dataset, i) => {
-          chart.getDatasetMeta(i).data.forEach((bar, j) => {
-            const val = dataset.data[j];
-            if (!val) return;
-            const tot  = eligibleData[j] || 1;
-            const pct  = tot > 0 ? ((val / tot) * 100).toFixed(0) : 0;
-            const text = vaccineFilter !== "all" ? `${val} (${pct}%)` : `${val}`;
-            ctx.save();
-            ctx.font = `bold ${vaccineFilter !== "all" ? 11 : 10}px 'IBM Plex Sans Thai',sans-serif`;
-            const tw = ctx.measureText(text).width;
-            const ph = 17, pw = tw + 12, px = bar.x - pw/2, py = bar.y - ph - 5;
-            ctx.fillStyle = i === 0 ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)";
-            ctx.beginPath();
-            const r = 6;
-            ctx.moveTo(px+r,py); ctx.lineTo(px+pw-r,py);
-            ctx.quadraticCurveTo(px+pw,py,px+pw,py+r);
-            ctx.lineTo(px+pw,py+ph-r);
-            ctx.quadraticCurveTo(px+pw,py+ph,px+pw-r,py+ph);
-            ctx.lineTo(px+r,py+ph);
-            ctx.quadraticCurveTo(px,py+ph,px,py+ph-r);
-            ctx.lineTo(px,py+r);
-            ctx.quadraticCurveTo(px,py,px+r,py);
-            ctx.closePath(); ctx.fill();
-            ctx.shadowColor = "transparent";
-            ctx.fillStyle   = i === 0 ? "#065f46" : "#7f1d1d";
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.fillText(text, bar.x, py + ph/2);
-            ctx.restore();
-          });
-        });
-      }
-    };
-
-    window.vaccineChart = new Chart(chartEl, {
-      type: "bar",
-      data: { labels, datasets: [
-        { label:"ฉีดแล้ว",  data:doneData,    backgroundColor:gradGreen, borderWidth:1.5, borderRadius:0, borderSkipped:false, barThickness:barThick },
-        { label:"ตกหล่น",   data:notdoneData, backgroundColor:gradRed,   borderWidth:1.5, borderRadius:0, borderSkipped:false, barThickness:barThick }
-      ]},
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        animation:{ duration:700, easing:"easeOutQuart" },
-        plugins: {
-          legend:{ position:"bottom", labels:{ boxWidth:14,padding:20,font:{size:13},color:"#374151" } },
-          tooltip:{
-            backgroundColor:"rgba(17,24,39,0.92)", titleFont:{size:13,weight:"bold"},
-            bodyFont:{size:12}, padding:12, cornerRadius:10,
-            callbacks: {
-              label: (ctx) => {
-                const tot = eligibleData[ctx.dataIndex] || 1;
-                const pct = tot > 0 ? ((ctx.raw/tot)*100).toFixed(1) : 0;
-                return ` ${ctx.dataset.label}: ${ctx.raw} คน (${pct}% ของผู้มีสิทธิ์)`;
-              },
-              afterLabel: (ctx) => `ผู้มีสิทธิ์ (ถึงเกณฑ์อายุ): ${eligibleData[ctx.dataIndex]} คน`
-            }
-          }
-        },
-        scales: {
-          x:{ grid:{display:false}, border:{display:false},
-              ticks:{font:{size:vaccineFilter!=="all"?13:11},color:"#6b7280",maxRotation:vaccineFilter!=="all"?0:45} },
-          y:{ beginAtZero:true, grid:{color:"rgba(0,0,0,0.05)",lineWidth:1}, border:{display:false},
-              ticks:{precision:0,font:{size:11},color:"#9ca3af"},
-              title:{display:true,text:"จำนวนคน",color:"#6b7280",font:{size:12}} }
-        }
-      },
-      plugins: [topLabelPlugin]
-    });
-
-    const el = document.getElementById("vaccineDescription");
-    if (!el) return;
-    const totalDone     = doneData.reduce((a,b)=>a+b,0);
-    const totalNotdone  = notdoneData.reduce((a,b)=>a+b,0);
-    const totalEligible = eligibleData.reduce((a,b)=>a+b,0) || 1;
-    const tambonText    = tambonFilter !== "all" ? tambonName[tambonFilter] : "ทุกตำบล";
-    if (vaccineFilter !== "all") {
-      el.innerHTML = `<b>${vaccineLabel[vaccineFilter]||vaccineFilter}</b> | ${tambonText}<br>
-        ฉีดแล้ว: <b>${totalDone} คน (${((totalDone/totalEligible)*100).toFixed(1)}%)</b> &nbsp;
-        ตกหล่น: ${totalNotdone} คน<br>
-        <small style="color:gray">ฐาน: เด็กที่อายุถึงเกณฑ์ฉีด (${totalEligible} คน)</small>`;
-    } else {
-      el.innerHTML = `<b>เปรียบเทียบวัคซีนทั้งหมด</b> | ${tambonText}<br>
-        รวมฉีดแล้ว: <b>${totalDone} ครั้ง</b> &nbsp; รวมตกหล่น: ${totalNotdone} ครั้ง<br>
-        <small style="color:gray">แต่ละวัคซีนใช้ฐานเทียบเฉพาะเด็กที่ถึงเกณฑ์อายุ</small>`;
-    }
-  }).catch(err => console.error("loadvaccineChart:", err));
-}
-
-// =========================
-// Sidebar
-// =========================
-function toggleSidebar(btn) {
-  if (btn) btn.classList.toggle("active");
-  document.getElementById("sidebar")?.classList.toggle("show");
-  document.getElementById("backdrop")?.classList.toggle("show");
-}
-
-function closeSidebar() {
-  document.getElementById("sidebar")?.classList.remove("show");
-  document.getElementById("backdrop")?.classList.remove("show");
-  document.querySelector(".menu-btn")?.classList.remove("active");
-}
-
-// =========================
-// แผนที่
-// =========================
-function openMap(tambon, house, village) {
-  const tambonTH = getTambonName(tambon);
-  const address  = `บ้านเลขที่ ${house} หมู่ ${village} ตำบล ${tambonTH} อำเภอสุไหงโก-ลก จังหวัดนราธิวาส`;
-  window.open("https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(address), "_blank");
-}
-
-function getTambonName(t) {
-  const map = { all:"ทั้งหมด",kolok:"สุไหงโก-ลก",munoh:"มูโนะ",puyoh:"ปูโยะ",pasemas:"ปาเสมัส" };
-  return map[t] || t || "-";
-}
-
-// =========================
-// คำนวณอายุ
-// =========================
-function calculateAge(birth) {
-  if (!birth) return "-";
-  const [d,m,y] = birth.split("/");
-  const birthDate = new Date(y-543, m-1, d);
-  const today = new Date();
-  let years  = today.getFullYear() - birthDate.getFullYear();
-  let months = today.getMonth()    - birthDate.getMonth();
-  if (months < 0) { years--; months += 12; }
-  return years > 0 ? `${years} ปี ${months} เดือน` : `${months} เดือน`;
-}
-
-function parseThaiDate(birth) {
-  if (!birth) return null;
-  if (typeof birth === "number") return new Date((birth-25569)*86400*1000);
-  birth = String(birth);
-  if (birth.includes("-")) return new Date(birth);
-  if (birth.includes("/")) {
-    let [d,m,y] = birth.split("/").map(Number);
-    if (y > 2500) y -= 543;
-    return new Date(y, m-1, d);
-  }
-  return null;
-}
-
-function getAgeMonths(birth) {
-  const birthDate = parseThaiDate(birth);
-  if (!birthDate || isNaN(birthDate)) return 0;
-  const today = new Date();
-  let months = (today.getFullYear()-birthDate.getFullYear())*12 + (today.getMonth()-birthDate.getMonth());
-  if (today.getDate() < birthDate.getDate()) months--;
-  return Math.max(0, months);
-}
-
-function getAgeBadge(birth) {
-  if (!birth) return `<span class="badge bg-secondary">-</span>`;
-  const months = getAgeMonths(birth);
-  const years  = Math.floor(months/12);
-  const rem    = months % 12;
-  const text   = years > 0 ? `${years} ปี ${rem} ด.` : `${months} ด.`;
-  let color = "bg-success";
-  if      (months <= 6)  color = "bg-info";
-  else if (months <= 12) color = "bg-primary";
-  else if (months <= 24) color = "bg-warning";
-  else                   color = "bg-secondary";
-  return `<span class="badge ${color}">${text}</span>`;
-}
-
-// =========================
-// ผู้ดูแลรายตำบล
-// =========================
-function openCareByTambon() {
-  const tambon = document.getElementById("tambonFilter")?.value || "all";
-
-  function renderCareData(tambonKey, data) {
-    let html = "";
-    const villages = Object.keys(data).sort((a,b) => Number(a)-Number(b));
-    villages.forEach(v => {
-      const group = data[v];
-      if (!group.care) return;
-      let label;
-      if (tambonKey === "kolok") {
-        label = kolokCommunity[v]?.name || `ชุมชน ${v}`;
-      } else {
-        const vInfo = villageData[tambonKey]?.[v];
-        label = vInfo ? `หมู่ ${v} – ${vInfo.name}` : `หมู่ ${v}`;
-      }
-      html += `
-        <div style="border:1px solid #eee;border-radius:14px;padding:12px;margin-bottom:12px;background:#fafafa;">
-          <div style="font-weight:600;margin-bottom:6px;color:#374151;">
-            <i class="fa-solid fa-house fa-xs" style="color:#6b7280;margin-right:6px"></i>${label}
-          </div>
-          ${group.care.map(c => `
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;">
-            <div>
-              <i class="fa-solid fa-user fa-xs" style="color:#6b7280;margin-right:4px"></i>${c.name}
-              <br><small style="color:#6b7280;">${c.role||"-"}</small>
-            </div>
-            ${c.tel ? `
-            <a href="tel:${c.tel}" style="color:#16a34a;text-decoration:none;">
-              <i class="fa-solid fa-phone fa-xs"></i> ${c.tel}
-            </a>` : ""}
-          </div>`).join("")}
-        </div>`;
-    });
-    return html;
-  }
-
-  const TAMBON_ORDER = ["kolok","munoh","puyoh","pasemas"];
-
-  if (tambon === "all") {
-    db.ref("villageCare").once("value", snap => {
-      const allData = snap.val() || {};
-      let html = "";
-      TAMBON_ORDER.forEach(t => {
-        if (!allData[t]) return;
-        const section = renderCareData(t, allData[t]);
-        if (!section) return;
-        html += `
-          <div style="margin-bottom:20px;">
-            <div style="font-size:15px;font-weight:700;color:#1d4ed8;margin-bottom:8px;
-                        padding-bottom:6px;border-bottom:2px solid #dbeafe;">
-              <i class="fa-solid fa-location-dot fa-xs" style="margin-right:6px"></i>${getTambonName(t)}
-            </div>
-            ${section}
-          </div>`;
-      });
-      if (!html) html = "<p style='color:#9ca3af;text-align:center;padding:20px'>ไม่มีข้อมูลผู้ดูแล</p>";
-      document.getElementById("careTitle").innerText = "ผู้ดูแล - ทั้งหมด";
-      document.getElementById("careBody").innerHTML  = html;
-      new bootstrap.Modal(document.getElementById("careModal")).show();
-    });
-  } else {
-    db.ref("villageCare/" + tambon).once("value", snap => {
-      const data = snap.val() || {};
-      const html = renderCareData(tambon, data) ||
-        "<p style='color:#9ca3af;text-align:center;padding:20px'>ไม่มีข้อมูลผู้ดูแลในตำบลนี้</p>";
-      document.getElementById("careTitle").innerText = "ผู้ดูแล - " + getTambonName(tambon);
-      document.getElementById("careBody").innerHTML  = html;
-      new bootstrap.Modal(document.getElementById("careModal")).show();
-    });
+    // reset ปุ่มก่อนไป success — ป้องกันปุ่มค้างรอบถัดไป
+    btn.disabled=false;btn.innerHTML=`<i class="ti ti-circle-check"></i> ยืนยันบันทึกข้อมูล`;
+    showPage(4);
+  } catch(err){
+    btn.disabled=false;btn.innerHTML=`<i class="ti ti-circle-check"></i> ยืนยันบันทึกข้อมูล`;
+    alert("เกิดข้อผิดพลาด: "+err.message);
   }
 }
 
-// =========================
-// Seed ผู้ดูแล
-// =========================
-function seedVillageCareIfEmpty() {
-  db.ref("villageCare").once("value", snap => {
-    if (snap.exists()) return;
-    db.ref("villageCare").set({
-      puyoh: {
-        1:{care:[{name:"นายเฉลิมพล อำพันธ์",tel:"0807047038",role:"ผู้ใหญ่บ้าน"}]},
-        2:{care:[{name:"นายอาหามะ อูเซ็ง",tel:"0892947402",role:"กำนัน / ผู้ใหญ่บ้าน"}]},
-        3:{care:[{name:"นายไซมี มะ",tel:"0810842978",role:"ผู้ใหญ่บ้าน"}]},
-        4:{care:[{name:"นายนรวีร์ เจ๊ะเมาะ",tel:"0808466067",role:"ผู้ใหญ่บ้าน"}]},
-        5:{care:[{name:"นายสมนึก แดงดี",tel:"0872951817",role:"ผู้ใหญ่บ้าน"}]},
-        6:{care:[{name:"นายมะยูนุ มะเย็ง",tel:"0849971802",role:"ผู้ใหญ่บ้าน"}]}
-      },
-      munoh: {
-        1:{care:[{name:"นายสาลีมี สาและ",tel:"0894620868",role:"ผู้ใหญ่บ้าน"}]},
-        2:{care:[{name:"นายนาทวี ตันเหมนายู",tel:"0894646467",role:"ผู้ใหญ่บ้าน"}]},
-        3:{care:[{name:"นายมุสตอปา อาบะ",tel:"0850770975",role:"ผู้ใหญ่บ้าน"}]},
-        4:{care:[{name:"ร.ต.ประเสริฐ อาแว",tel:"0873999709",role:"กำนัน / ผู้ใหญ่บ้าน"}]},
-        5:{care:[{name:"นายอามาซะ สามะ",tel:"0806303427",role:"ผู้ใหญ่บ้าน"}]}
-      },
-      pasemas: {
-        1:{care:[{name:"นายฮารีมคาน โอระสะมันนี",tel:"0817677605",role:"ผู้ใหญ่บ้าน"}]},
-        2:{care:[{name:"นายนาซูฮา หะยีอาแว",tel:"0850787676",role:"ผู้ใหญ่บ้าน"}]},
-        3:{care:[{name:"นายณรงค์ อาแวสือแม",tel:"0629988149",role:"ผู้ใหญ่บ้าน"}]},
-        4:{care:[{name:"นายมาฮาโซ มือเยาะ",tel:"0801382240",role:"ผู้ใหญ่บ้าน"}]},
-        5:{care:[{name:"นายมะรอดี บินสะมะแอ",tel:"0896594425",role:"ผู้ใหญ่บ้าน"}]},
-        6:{care:[{name:"นายปฏิวัติ เด่นอร่ามคาน",tel:"0813686863",role:"กำนัน / ผู้ใหญ่บ้าน"}]},
-        7:{care:[{name:"นายอัสมี เจ๊ะอาแว",tel:"0824159376",role:"ผู้ใหญ่บ้าน"}]},
-        8:{care:[{name:"นายรุสวา ดอเลาะ",tel:"0649500655",role:"ผู้ใหญ่บ้าน"}]}
-      },
-      kolok: KOLOK_CARE_DATA
-    });
-  });
+function resetAll(){
+  foundKey=null;foundData=null;clearPage1();
+  document.getElementById("searchHN").value="";
+  document.getElementById("searchResult").style.display="none";
+  document.getElementById("searchActions").style.display="none";
+  document.getElementById("skipSection").style.display="block";
+  // reset ปุ่มยืนยัน ป้องกันค้างกรณีมีปัญหา
+  const btn=document.getElementById("confirmBtn");
+  if(btn){btn.disabled=false;btn.innerHTML=`<i class="ti ti-circle-check"></i> ยืนยันบันทึกข้อมูล`;}
+  showPage(0);
 }
-
-// ข้อมูลผู้รับผิดชอบ 31 ชุมชน ต.สุไหงโก-ลก
-// นำเข้าจากไฟล์ "ชุมชนสำรวจรายชื่อรับผิดชอบวัคซีน อายุ 0-5 ปี ปีงบ2569"
-// คีย์ตรงกับหมายเลขชุมชนใน kolokCommunity
-const KOLOK_CARE_DATA = {
-  1:  { care: [ {name:"นางสายยุตร ศิริรัตน์",        tel:"0658895531", role:"อสม."}, {name:"นส.สุมิตรา อูมา",              role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  2:  { care: [ {name:"นางคอซียะ ลิอีนิง",           tel:"0831912390", role:"อสม."}, {name:"นส.อาสนะ ดอเล๊าะ",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  3:  { care: [ {name:"นส.สมพิศ ว่องไว",             tel:"0896571560", role:"อสม."}, {name:"นายชื่น ทิพรัตน์",              role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  4:  { care: [ {name:"นายสุคนธ์ คงช่วย",            tel:"0848547109", role:"อสม."}, {name:"นางวารินท์ ยอดแก้ว",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  5:  { care: [ {name:"นางอุไรรัตน์ เอี่ยมสุวรรณมณี", tel:"0850771040", role:"อสม."}, {name:"นายวันชัย ยะโกะ",               role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  6:  { care: [ {name:"นส.มารียานา มักตา",            tel:"0816086914", role:"อสม."}, {name:"นส.มาสลีนา บินอาแวหะมะ",        role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  7:  { care: [ {name:"นางสัมมณี มะอีเป็ง",           tel:"0963513267", role:"อสม."}, {name:"นายสาเหะมามะนอ สาเหะมะหะมะฆานาปีเยาะ", role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  8:  { care: [ {name:"นส.โนรีซา มะแซ",              tel:"0814394057", role:"อสม."}, {name:"นส.โนรีซา มะแซ",               role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  9:  { care: [ {name:"นส.ยามิงละห์ มะ",             tel:"0831944388", role:"อสม."}, {name:"นายอาแซมะสอรี มาเจะ",           role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  10: { care: [ {name:"นส.กนกกานต์ กิ่งแก้ว",        tel:"0936590487", role:"อสม."}, {name:"นายบุญภาค สุขโร",               role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  11: { care: [ {name:"นางจารุวรรณ ด้วงชู",          tel:"0961862273", role:"อสม."}, {name:"นายเสริมมิตร ขุมขันธ์",         role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  12: { care: [ {name:"นายวสันต์ ฮะสะเล็ม",          tel:"0869655758", role:"อสม."}, {name:"นายสุฮายมิง อารง",             role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  13: { care: [ {name:"นส.อาซีเยาะ วงศ์วานโต๊ะบุน",   tel:"0822619942", role:"อสม."}, {name:"นายวัชริศ เจ๊ะเลาะ",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  14: { care: [ {name:"นส.เพ็ญบุณฑริก คล่องทองจีน",   tel:"0943175963", role:"อสม."}, {name:"นายธรรมนูญ ขุนนุ้ย",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  15: { care: [ {name:"นางมาลา บุญวงศ์",             tel:"0650457281", role:"อสม."}, {name:"นายมุสเล็ม ซามะ",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  16: { care: [ {name:"นส.บุษา สุแสวง",              tel:"0869607757", role:"อสม."}, {name:"นางสารีป๊ะ ยะโก๊ะ",             role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  17: { care: [ {name:"นส.วรรณี มะเย็ง",             tel:"0873998372", role:"อสม."}, {name:"นายอัสมิง สะแม",               role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  18: { care: [ {name:"นางฮอม สุระป้อม",             tel:"0831860931", role:"อสม."}, {name:"นางอัญชลี ยะโลมพันธ์",          role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  19: { care: [ {name:"นส.จันทร์น้อย เจนใจ",         tel:"0833168496", role:"อสม."}, {name:"นายธนัตถ์สรณ์ จันทร์วิลาศ",     role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  20: { care: [ {name:"นส.ธีรนุช เจ๊ะแว",            tel:"0848819986", role:"อสม."}, {name:"นายอาแว แวหะมะ",               role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  21: { care: [ {name:"นางเพียงใจ ศรีสุวรรณ์",       tel:"0874989794", role:"อสม."}, {name:"นายสุมาตร บุญรักษ์",            role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  22: { care: [ {name:"นางคอรีเยาะ อูเซ็ง",          tel:"0629658571", role:"อสม."}, {name:"นายอัลวา มูซอ",                role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  23: { care: [ {name:"นางยานิง แลหะ",               tel:"0805425828", role:"อสม."}, {name:"นางสุวารีย์ วาเซ็ง",            role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  24: { care: [ {name:"นางสุรีรัตน์ ยาทองไชย์",       tel:"0989568588", role:"อสม."}, {name:"นส.สุดา สือแต",                role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  25: { care: [ {name:"นส.แวสุไวด๊ะ แวมูซอ",         tel:"0834979120", role:"อสม."}, {name:"นส.อาซีซะ มาลูเด็ง",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  26: { care: [ {name:"นส.จารินี เหาะสัน",           tel:"0831842856", role:"อสม."}, {name:"นายอาเล็ม บือราเฮง",            role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  27: { care: [ {name:"นางวิลาวัณย์ เจียมวิโรจน์",    tel:"0827864284", role:"อสม."}, {name:"นายวิชาญ จันทร์เอิบ",           role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  28: { care: [ {name:"นส.อาดีรา หะมะ",              tel:"0925465842", role:"อสม."}, {name:"นายบาฮารง เจ๊ะเงาะ",            role:"ประธานชุมชน"}, {name:"นางนอร์ฮายาตี แวหะมะ", role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  29: { care: [ {name:"นางสารภี นาวี",               tel:"0633382208", role:"อสม."}, {name:"นายมนัส เจ๊ะอีซอ",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  30: { care: [ {name:"นส.นูรีดา โซ๊ชูม๊ะ",           tel:"0629016887", role:"อสม."}, {name:"นายแวกอรี เจ๊ะมะ",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] },
-  31: { care: [ {name:"นส.ยานา ยูโซ๊ะ",              tel:"0620830886", role:"อสม."}, {name:"นางนงนุช ไชยวงษ์",              role:"ประธานชุมชน"}, {name:"นางบุญทวี แวยูหัน",    role:"เจ้าหน้าที่รับผิดชอบ"} ] }
-};
-
-// force-update เฉพาะข้อมูล kolok ให้เป็นชุดใหม่ (ไม่ต้องรอ villageCare ทั้งก้อนว่าง)
-// เช็คจาก villageCare/kolok/1 — ถ้ายังไม่ใช่โครงสร้างใหม่ (ไม่มี care ของชุมชนหมายเลข 1) ให้เขียนทับ
-function seedKolokCareIfNeeded() {
-  db.ref("villageCare/kolok/1/care").once("value", snap => {
-    if (snap.exists()) return;
-    db.ref("villageCare/kolok").set(KOLOK_CARE_DATA);
-  });
-}
-
-// =========================
-// สท. รับผิดชอบรายเขต (ต.สุไหงโก-ลก)
-// นำเข้าจากไฟล์ "รายชื่อ สท. ที่รับผิดชอบชุมชน 69"
-// แต่ละเขตมี สท. 6 คน ดูแลกลุ่มชุมชนร่วมกัน (ไม่ใช่ 1 คนต่อ 1 ชุมชน)
-// communities อ้างอิงคีย์เดียวกับ kolokCommunity
-// หมายเหตุ: ชุมชน #6 (กือดำบำรู) ถูกแบ่งดูแลข้ามเขต (ซ.2 อยู่เขต 1, ซ.1/ซ.3 อยู่เขต 3) ตามไฟล์ต้นฉบับ
-// ชุมชน #13 (จือแลตูลี) มีเครื่องหมาย * กำกับในไฟล์ต้นฉบับ (ยังไม่ทราบความหมายที่แน่ชัด) จัดไว้ในเขต 3
-const KOLOK_DISTRICT_DATA = {
-  1: {
-    councilors: ["นางเขมิกา ล้อธรรมคุณ","นายมนัส เบญจสาร","นายกามัน เจ๊ะมูซอ","นายมาหามะ อาแว","นายสัตยวงศ์ สุขราช","นางสาวสายทิพย์ พุ่มชัย"],
-    communities: [9,10,20,4,7,16,2,25,27,11,6]
-  },
-  2: {
-    councilors: ["นายเดชยดา สะมะแอ","นายมนัส เจ๊ะอีซอ","นายมะวี อารอมะ","นายสุพจน์ คงช่วย","นายธนัตถ์สรณ์ จันทร์วิลาศ","นางอัญชลี ยะโลมพันธ์"],
-    communities: [26,29,18,30,14,15,19,5,28,3,21,31]
-  },
-  3: {
-    councilors: ["นายสมชาติ สุคนธ์","นายกามารอเด็ง มามะ","นายแวสดี แวอูเซ็ง","นางสาวสุมิตรา อูมา","นายเจ๊ะอาแซ เจ๊ะแว","นางสาวธันยพัต เจริญรัตนะภัทร์"],
-    communities: [8,23,24,1,17,22,12,6,13]
-  }
-};
-
-// เก็บไว้ใต้ villageCare (ไม่ใช่ path ใหม่ระดับบนสุด) เพราะ Firebase rules ของเว็บนี้
-// อนุญาตเฉพาะ path ที่กำหนดไว้แล้ว (children, users, villageCare, ฯลฯ) — path ใหม่ระดับบนสุด
-// จะโดน permission_denied ทันที
-function seedKolokDistrictsIfNeeded() {
-  db.ref("villageCare/kolokDistricts/1/councilors").once("value", snap => {
-    if (snap.exists()) return;
-    db.ref("villageCare/kolokDistricts").set(KOLOK_DISTRICT_DATA);
-  });
-}
-
-function openCouncilByDistrict() {
-  db.ref("villageCare/kolokDistricts").once("value", snap => {
-    const data = snap.val() || {};
-    const order = ["1","2","3"];
-    let html = "";
-    order.forEach(d => {
-      const group = data[d];
-      if (!group) return;
-      const communityNames = (group.communities || [])
-        .map(id => kolokCommunity[id]?.name || `ชุมชน ${id}`)
-        .join(", ");
-      html += `
-        <div style="border:1px solid #eee;border-radius:14px;padding:14px;margin-bottom:14px;background:#fafafa;">
-          <div style="font-size:15px;font-weight:700;color:#1d4ed8;margin-bottom:10px;">
-            <i class="fa-solid fa-landmark fa-xs" style="margin-right:6px"></i>เขต ${d}
-          </div>
-          <div style="margin-bottom:10px;">
-            ${(group.councilors || []).map(name => `
-              <span class="tag" style="margin:2px 4px 2px 0;display:inline-block;">
-                <i class="fa-solid fa-user fa-xs"></i> ${name}
-              </span>`).join("")}
-          </div>
-          <div style="font-size:13px;color:#374151;line-height:1.6;">
-            <b>ชุมชนที่ดูแล:</b> ${communityNames || "-"}
-          </div>
-        </div>`;
-    });
-    if (!html) html = "<p style='color:#9ca3af;text-align:center;padding:20px'>ไม่มีข้อมูล สท.</p>";
-    document.getElementById("councilBody").innerHTML = html;
-    new bootstrap.Modal(document.getElementById("councilModal")).show();
-  });
-}
-
-// =========================
-// formatDate / formatDateInput
-// =========================
-function formatDate(dateStr) {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString("th-TH", { year:"numeric",month:"short",day:"numeric" });
-}
-
-function formatDateInput(dateStr) {
-  if (!dateStr) return "";
-  if (typeof dateStr === "number") return new Date((dateStr-25569)*86400*1000).toISOString().split("T")[0];
-  dateStr = String(dateStr);
-  if (dateStr.includes("/")) {
-    const parts = dateStr.split("/");
-    let y = parseInt(parts[2]);
-    if (y >= 2500) y -= 543;
-    return `${y}-${String(parts[1]).padStart(2,"0")}-${String(parts[0]).padStart(2,"0")}`;
-  }
-  return dateStr;
-}
-
-// =========================
-// Infinite scroll
-// =========================
-function loadMore() {
-  if (!lastKey || isLoading) return;
-  isLoading = true;
-  db.ref("children").orderByKey().startAfter(lastKey).limitToFirst(PAGE_SIZE).once("value", snap => {
-    const data = snap.val();
-    if (!data) { isLoading = false; return; }
-    // append to existing data — re-render by calling loadFollow
-    lastKey   = Object.keys(data).pop();
-    isLoading = false;
-    loadFollow();
-  });
-}
-
-window.addEventListener("scroll", () => {
-  if (!isLoading && window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) loadMore();
-});
-
-// =========================
-// Profile upload
-// =========================
-function handleUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const img = document.getElementById("profileImg");
-    if (img) img.src = ev.target.result;
-    localStorage.setItem("profileImg", ev.target.result);
-  };
-  reader.readAsDataURL(file);
-}
-
-function setStatusFilter(mode) {
-  statusFilter = mode;
-  document.querySelectorAll("#btn-status-all,#btn-status-notdone,#btn-status-done")
-    .forEach(b => b.classList.remove("btn-primary"));
-  const activeBtn = document.getElementById("btn-status-" + mode);
-  if (activeBtn) activeBtn.classList.add("btn-primary");
-  currentPage = 1;
-  loadFollow();
-  if (typeof updateIndexKPI === "function") updateIndexKPI();
-}
-
-// XSS guard
-function escHtml(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-}
-
-// =========================
-// Init
-// =========================
-document.addEventListener("DOMContentLoaded", () => {
-  // add-child page: ตำบล → หมู่
-  const tambonEl = document.getElementById("tambon");
-  if (tambonEl) {
-    tambonEl.addEventListener("change", function () {
-      const villageBox = document.getElementById("villageBox");
-      const soiBox     = document.getElementById("soiBox");
-      if (villageBox) villageBox.innerHTML = buildVillageDropdown(this.value, "", "");
-      if (soiBox)     soiBox.style.display = this.value === "kolok" ? "block" : "none";
-    });
-  }
-
-  // vaccineFilter dropdown
-  const vaccineSelect = document.getElementById("vaccineFilter");
-  if (vaccineSelect) {
-    vaccineSelect.innerHTML = `<option value="all">ทุกวัคซีน</option>`;
-    vaccineList.forEach(v => {
-      const op = document.createElement("option");
-      op.value = v; op.textContent = vaccineLabel[v] || v;
-      vaccineSelect.appendChild(op);
-    });
-    vaccineSelect.addEventListener("change", () => {
-      selectedVaccine = vaccineSelect.value;
-      loadvaccineChart(); loadFollow(); updateIndexKPI();
-    });
-  }
-
-  // tambonFilter
-  const tambonSel = document.getElementById("tambonFilter");
-  if (tambonSel) {
-    tambonSel.addEventListener("change", () => {
-      selectedBarKey = null;
-      const badge = document.getElementById("barFilterBadge");
-      if (badge) badge.remove();
-      currentPage = 1;
-      updateHospitalFilter(); loadvaccineChart(); loadFollow(); updateIndexKPI();
-    });
-  }
-
-  // hospitalFilter
-  const hospitalSel = document.getElementById("hospitalFilter");
-  if (hospitalSel) {
-    hospitalSel.addEventListener("change", () => { currentPage = 1; loadFollow(); updateIndexKPI(); loadvaccineChart(); });
-  }
-
-  // ageFilter
-  const ageSel = document.getElementById("ageFilter");
-  if (ageSel) {
-    ageSel.addEventListener("change", () => { currentPage = 1; loadFollow(); updateIndexKPI(); });
-  }
-
-  // typeAreaFilter
-  const typeAreaSel = document.getElementById("typeAreaFilter");
-  if (typeAreaSel) {
-    typeAreaSel.addEventListener("change", () => { currentPage = 1; loadFollow(); updateIndexKPI(); });
-  }
-
-  seedVillageCareIfEmpty();
-  seedKolokCareIfNeeded();
-  seedKolokDistrictsIfNeeded();
-
-  // โหลดข้อมูล
-  if (document.getElementById("followTable") || document.getElementById("mobileList")) {
-    loadFollow();
-    loadvaccineChart();
-    updateIndexKPI();
-  }
-});
+</script>
+</body>
+</html>
