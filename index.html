@@ -209,18 +209,39 @@ input.form-control:focus {
 canvas { display:block; max-width:100%; }
 
 /* ── TABLE ───────────────────────────────────── */
-.table-wrap { overflow-x:auto; }
-table.tbl   { width:100%; border-collapse:collapse; font-size:13px; }
+.table-wrap { overflow:auto; max-height:70vh; }
+table.tbl   { width:100%; border-collapse:separate; border-spacing:0; font-size:15px; }
 .tbl th {
-  background:var(--canvas); font-size:11px; font-weight:600; color:var(--ink-3);
-  text-transform:uppercase; letter-spacing:.05em;
-  padding:10px 12px; border-bottom:1px solid var(--border); white-space:nowrap;
+  position:sticky; top:0; z-index:2;
+  background:#f1f5f9; font-size:13px; font-weight:600; color:var(--ink-2);
+  padding:12px 14px; text-align:left; white-space:nowrap;
+  border-bottom:2px solid var(--border);
 }
-.tbl td   { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--ink); white-space:nowrap; }
-.tbl tr:last-child td { border-bottom:none; }
-.tbl tr:hover td      { background:var(--canvas); }
-.tbl input { width:100%; border:1px solid transparent; border-radius:6px; padding:4px 8px; font-size:13px; background:transparent; }
-.tbl input:focus { border-color:var(--accent); background:var(--surface); outline:none; box-shadow:0 0 0 2px rgba(5,150,105,.1); }
+.tbl td {
+  padding:12px 14px; color:var(--ink); white-space:nowrap;
+  border-bottom:1px solid var(--border); vertical-align:middle;
+}
+.tbl tbody tr:nth-child(even) td { background:#fafbfd; }
+.tbl tbody tr:hover td           { background:var(--green-bg); }
+.tbl tr:last-child td            { border-bottom:none; }
+
+/* คอลัมน์พิเศษ */
+.tbl td:nth-child(1)  { text-align:center; color:var(--ink-3); font-size:13px; }          /* # */
+.tbl td:nth-child(2) input,
+.tbl td:nth-child(3) input { font-family:var(--mono); font-size:14px; }                   /* HN, เลขบัตร */
+.tbl td:nth-child(4) input { font-weight:600; }                                           /* ชื่อ-สกุล */
+.tbl th:nth-child(7),
+.tbl td:nth-child(7)  { min-width:220px; }                                                /* บ้านเลขที่ */
+.tbl td:nth-child(7) input { min-width:200px; }
+.tbl td:nth-child(10) { text-align:center; }                                              /* อายุ */
+
+.tbl input {
+  width:100%; min-width:110px; border:1px solid transparent; border-radius:8px;
+  padding:6px 10px; font-size:15px; font-family:var(--font); background:transparent;
+  transition:border-color .15s, background .15s;
+}
+.tbl input:hover { border-color:var(--border); background:#fff; }
+.tbl input:focus { border-color:var(--accent); background:var(--surface); outline:none; box-shadow:0 0 0 3px rgba(5,150,105,.12); }
 
 /* ── MOBILE CARDS ────────────────────────────── */
 .mobile-list { display:none; }
