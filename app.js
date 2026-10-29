@@ -512,12 +512,7 @@ function loadFollow() {
       const birthISO = formatDateInput(c.birth);
       const rowNum   = start + rowIndex + 1;
       html.push(`
-<tr data-id="${id}">
-  <td style="text-align:center">
-    <input type="checkbox" class="row-check-select" value="${id}"
-      ${selectedChildIds.has(id) ? "checked" : ""}
-      onchange="toggleChildSelect(this,'${id}')">
-  </td>
+
   <td style="text-align:center;color:#6b7280;font-size:13px;white-space:nowrap;">${rowNum}</td>
   <td style="min-width:120px"><input value="${escHtml(c.hn)}" onchange="autoSave('${id}','hn',this.value)" style="min-width:110px"></td>
   <td style="min-width:155px"><input value="${escHtml(c.cid)}"  onchange="autoSave('${id}','cid',this.value)"  style="min-width:145px"></td>
@@ -1190,109 +1185,6 @@ function buildVillageDropdown(tambon, selected, id) {
   </select>`;
 }
 
-// =========================
-// ติ๊กเลือกหลายรายการ (สำหรับลบพร้อมกัน)
-// =========================
-
-// ใส่ checkbox "เลือกทั้งหมด" ไว้ในหัวตาราง (ทำครั้งเดียว ถ้ายังไม่มี)
-function ensureSelectAllHeader() {
-  const table = document.getElementById("followTable");
-  if (!table) return;
-  const wrapper = table.closest("table");
-  if (!wrapper) return;
-  const headRow = wrapper.querySelector("thead tr");
-  if (!headRow || headRow.querySelector(".select-all-checkbox")) return;
-  const th = document.createElement("th");
-  th.style.textAlign = "center";
-  th.innerHTML = `<input type="checkbox" class="select-all-checkbox" title="เลือกทั้งหมด" onchange="toggleSelectAll(this)">`;
-  headRow.insertBefore(th, headRow.firstChild);
-}
-
-// ติ๊ก/ยกเลิกติ๊กรายชื่อเดี่ยว
-function toggleChildSelect(checkbox, id) {
-  if (checkbox.checked) selectedChildIds.add(id);
-  else selectedChildIds.delete(id);
-  updateBulkDeleteUI();
-}
-
-// ติ๊กเลือกทั้งหมด/ยกเลิกทั้งหมด เฉพาะรายการที่แสดงอยู่ในหน้าปัจจุบัน
-function toggleSelectAll(checkbox) {
-  const checked = checkbox.checked;
-  document.querySelectorAll(".row-check-select").forEach(cb => {
-    cb.checked = checked;
-    if (checked) selectedChildIds.add(cb.value);
-    else selectedChildIds.delete(cb.value);
-  });
-  updateBulkDeleteUI();
-}
-
-// สร้าง/แสดง แถบเครื่องมือลบหลายรายการ พร้อมอัปเดตจำนวนที่เลือก
-function updateBulkDeleteUI() {
-  let bar = document.getElementById("bulkDeleteBar");
-  if (!bar) {
-    bar = document.createElement("div");
-    bar.id = "bulkDeleteBar";
-    bar.style.cssText = `
-      position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
-      z-index:1050;background:#1f2937;color:#fff;padding:10px 18px;
-      border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.25);
-      display:none;align-items:center;gap:14px;font-size:14px;`;
-    bar.innerHTML = `
-      <span id="bulkDeleteCount"></span>
-      <button class="btn btn-sm" style="background:#e24b4a;color:#fff;border:none;border-radius:8px;padding:5px 12px"
-        onclick="deleteSelectedChildren()">
-        <i class="ti ti-trash"></i> ลบที่เลือก
-      </button>
-      <button class="btn btn-sm" style="background:#4b5563;color:#fff;border:none;border-radius:8px;padding:5px 12px"
-        onclick="clearChildSelection()">ยกเลิก</button>`;
-    document.body.appendChild(bar);
-  }
-
-  const count = selectedChildIds.size;
-  bar.style.display = count > 0 ? "flex" : "none";
-  const countEl = document.getElementById("bulkDeleteCount");
-  if (countEl) countEl.textContent = `เลือกแล้ว ${count} รายการ`;
-
-  // sync สถานะ checkbox "เลือกทั้งหมด" ของหน้าปัจจุบัน
-  const rowChecks = document.querySelectorAll(".row-check-select");
-  const selectAllEl = document.querySelector(".select-all-checkbox");
-  if (selectAllEl && rowChecks.length) {
-    const allChecked  = Array.from(rowChecks).every(cb => cb.checked);
-    const someChecked = Array.from(rowChecks).some(cb => cb.checked);
-    selectAllEl.checked = allChecked;
-    selectAllEl.indeterminate = someChecked && !allChecked;
-  } else if (selectAllEl) {
-    selectAllEl.checked = false;
-    selectAllEl.indeterminate = false;
-  }
-}
-
-// ยกเลิกการเลือกทั้งหมด
-function clearChildSelection() {
-  selectedChildIds.clear();
-  document.querySelectorAll(".row-check-select").forEach(cb => cb.checked = false);
-  updateBulkDeleteUI();
-}
-
-// ลบข้อมูลทุกรายการที่ถูกติ๊กเลือกไว้
-function deleteSelectedChildren() {
-  const ids = Array.from(selectedChildIds);
-  if (!ids.length) return;
-  if (!confirm(`ต้องการลบข้อมูลที่เลือกไว้ ${ids.length} รายการใช่หรือไม่?`)) return;
-
-  Promise.all(ids.map(id =>
-    db.ref("children/" + id).once("value").then(snap => {
-      const c = snap.val() || {};
-      return db.ref("children/" + id).remove().then(() => {
-        saveLog("ลบข้อมูล", `${c.name || "-"} (${c.cid || "-"})`, "มีข้อมูลในระบบ", "ถูกลบออกจากระบบ");
-      });
-    }).catch(err => console.error("deleteSelectedChildren:", id, err))
-  )).then(() => {
-    selectedChildIds.clear();
-    loadFollow();
-    loadvaccineChart();
-  });
-}
 
 // =========================
 // ลบ
