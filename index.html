@@ -343,6 +343,24 @@ table.tbl   { width:100%; border-collapse:separate; border-spacing:0; font-size:
   .kpi { padding:10px 10px 8px; }
   .kpi-label { font-size:9px; }
 }
+
+#villageFollowScroll::-webkit-scrollbar {
+    width: 7px;
+}
+
+#villageFollowScroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+#villageFollowScroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+#villageFollowWrap {
+    position: relative;
+    width: 100%;
+}
 </style>
 </head>
 <body>
@@ -544,8 +562,12 @@ table.tbl   { width:100%; border-collapse:separate; border-spacing:0; font-size:
         <div style="font-size:12px;color:var(--ink-3);" id="villageFollowSub">ทุกตำบล · ทุกวัคซีน</div>
       </div>
       <div class="chart-card-body" style="padding-bottom:24px;">
-        <div id="villageFollowWrap" style="height:260px;">
-          <canvas id="villageChartFollow"></canvas>
+        <div id="villageFollowScroll">
+
+            <div id="villageFollowWrap" style="height:260px;">
+                <canvas id="villageChartFollow"></canvas>
+            </div>
+
         </div>
       </div>
     </div>
