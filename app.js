@@ -770,11 +770,16 @@ function updateIndexKPI() {
       if (window._idxVillage) { window._idxVillage.destroy(); window._idxVillage = null; }
 
       const rows = Object.entries(vMap)
-        .filter(([,r]) => r.done + r.not > 0)
         .sort(([a,ra],[b,rb]) => {
           if (a === "ไม่ระบุ") return 1;
           if (b === "ไม่ระบุ") return -1;
-          if (tambon === "all") return (ra.lbl||"").localeCompare(rb.lbl||"", "th");
+
+          if (tambon === "all") {
+            return (ra.lbl || "").localeCompare(
+              (rb.lbl || ""), "th"
+            );
+          }
+
           return parseInt(a) - parseInt(b);
         });
 
@@ -800,8 +805,22 @@ function updateIndexKPI() {
       const maxW = Math.max(...vLabels.map(l => _mc.measureText(l).width), 60);
       const lbW  = Math.ceil(maxW) + 20;   // เพิ่ม gap 20px
 
-      const innerH = Math.max(260, rows.length * rowH + 80);
-      vWrap.style.height = innerH + "px";
+      const innerH = Math.max(
+          200,
+          rows.length * rowH + 80
+      );
+
+        vWrap.style.height = innerH + "px";
+
+        const scrollWrap = document.getElementById(
+          "villageFollowScroll"
+        );
+
+        if (scrollWrap) {
+          scrollWrap.style.maxHeight = "260px";
+          scrollWrap.style.overflowY = "auto";
+          scrollWrap.style.overflowX = "hidden";
+        }
       if (window._idxVillage) { window._idxVillage.destroy(); window._idxVillage = null; }
       vWrap.innerHTML = '<canvas id="villageChartFollow"></canvas>';
       const vCtx = document.getElementById("villageChartFollow").getContext("2d");
